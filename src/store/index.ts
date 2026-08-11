@@ -31,13 +31,29 @@ export interface Goal {
   weekKey: string
 }
 
+export type TaskStatus = 'todo' | 'in-progress' | 'done'
+export type TaskType = 'homework' | 'reading' | 'project' | 'exam' | 'other'
+export type TaskPriority = 'low' | 'medium' | 'high'
+
+export interface Task {
+  id: string
+  title: string
+  subject: string
+  type: TaskType
+  priority: TaskPriority
+  status: TaskStatus
+  /** "YYYY-MM-DD", optional */
+  dueDate?: string
+}
+
 interface AppData {
   classes: ClassEntry[]
   goals: Goal[]
+  tasks: Task[]
 }
 
 const STORAGE_KEY = 'daypilot:data'
-const EMPTY_DATA: AppData = { classes: [], goals: [] }
+const EMPTY_DATA: AppData = { classes: [], goals: [], tasks: [] }
 
 function normalizeGoalWeek(goal: Goal): Goal {
   const currentWeek = getWeekKey()
@@ -54,6 +70,7 @@ function loadData(): AppData {
     return {
       classes: Array.isArray(parsed?.classes) ? parsed.classes : [],
       goals: goals.map(normalizeGoalWeek),
+      tasks: Array.isArray(parsed?.tasks) ? parsed.tasks : [],
     }
   } catch {
     return EMPTY_DATA
@@ -145,4 +162,40 @@ export function logGoalMinutes(id: string, deltaMinutes: number) {
     }),
   }
   persist()
+}
+
+function getTasksSnapshot() {
+  return data.tasks
+}
+
+export function useTasks(): Task[] {
+  return useSyncExternalStore(subscribe, getTasksSnapshot)
+}
+
+export function addTask(input: Omit<Task, 'id'>): Task {
+  const entry: Task = { ...input, id: crypto.randomUUID() }
+  data = { ...data, tasks: [...data.tasks, entry] }
+  persist()
+  return entry
+}
+
+export function updateTask(id: string, input: Omit<Task, 'id'>) {
+  data = {
+    ...data,
+    tasks: data.tasks.map((task) => (task.id === id ? { ...input, id } : task)),
+  }
+  persist()
+}
+
+export function deleteTask(id: string) {
+  data = { ...data, tasks: data.tasks.filter((task) => task.id !== id) }
+  persist()
+}
+
+/** Bulk-add from the paste-import flow. Nothing is written until this is called. */
+export function importTasks(inputs: Omit<Task, 'id'>[]): Task[] {
+  const entries = inputs.map((input) => ({ ...input, id: crypto.randomUUID() }))
+  data = { ...data, tasks: [...data.tasks, ...entries] }
+  persist()
+  return entries
 }
