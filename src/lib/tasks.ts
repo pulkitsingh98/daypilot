@@ -28,7 +28,7 @@ export function priorityMeta(priority: TaskPriority) {
   return TASK_PRIORITIES.find((p) => p.key === priority) ?? TASK_PRIORITIES[1]
 }
 
-function todayIso(): string {
+export function todayIso(): string {
   const now = new Date()
   const y = now.getFullYear()
   const m = String(now.getMonth() + 1).padStart(2, '0')

@@ -44,6 +44,7 @@ export interface Task {
   status: TaskStatus
   /** "YYYY-MM-DD", optional */
   dueDate?: string
+  estimatedMinutes?: number
 }
 
 export type AIProvider = 'gemini' | 'claude'
