@@ -30,3 +30,15 @@ export function formatHourLabel(minutesOfDay: number): string {
   const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
   return `${hour12} ${period}`
 }
+
+/** ISO 8601 week key (e.g. "2026-W33"), used to detect when a new week has started. */
+export function getWeekKey(date: Date = new Date()): string {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = (d.getUTCDay() + 6) % 7
+  d.setUTCDate(d.getUTCDate() - dayNum + 3)
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4))
+  const firstDayNum = (firstThursday.getUTCDay() + 6) % 7
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3)
+  const weekNum = 1 + Math.round((d.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000))
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`
+}
