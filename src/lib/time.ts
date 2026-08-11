@@ -31,6 +31,26 @@ export function formatHourLabel(minutesOfDay: number): string {
   return `${hour12} ${period}`
 }
 
+export function toIsoDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+export function addDays(date: Date, days: number): Date {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
+/** Maps a JS Date to the DayOfWeek key of the ClassEntry/DAYS schedule. */
+export function dayKeyForDate(date: Date): DayOfWeek {
+  const jsDay = date.getDay() // 0 = Sun .. 6 = Sat
+  const index = (jsDay + 6) % 7 // 0 = Mon .. 6 = Sun, matching DAYS order
+  return DAYS[index].key
+}
+
 /** ISO 8601 week key (e.g. "2026-W33"), used to detect when a new week has started. */
 export function getWeekKey(date: Date = new Date()): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
