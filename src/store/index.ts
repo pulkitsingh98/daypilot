@@ -46,14 +46,24 @@ export interface Task {
   dueDate?: string
 }
 
+export type AIProvider = 'gemini' | 'claude'
+
+export interface AppSettings {
+  aiProvider: AIProvider
+  apiKey: string
+}
+
+const DEFAULT_SETTINGS: AppSettings = { aiProvider: 'gemini', apiKey: '' }
+
 interface AppData {
   classes: ClassEntry[]
   goals: Goal[]
   tasks: Task[]
+  settings: AppSettings
 }
 
 const STORAGE_KEY = 'daypilot:data'
-const EMPTY_DATA: AppData = { classes: [], goals: [], tasks: [] }
+const EMPTY_DATA: AppData = { classes: [], goals: [], tasks: [], settings: DEFAULT_SETTINGS }
 
 function normalizeGoalWeek(goal: Goal): Goal {
   const currentWeek = getWeekKey()
@@ -67,10 +77,15 @@ function loadData(): AppData {
     if (!raw) return EMPTY_DATA
     const parsed = JSON.parse(raw)
     const goals: Goal[] = Array.isArray(parsed?.goals) ? parsed.goals : []
+    const rawSettings = parsed?.settings
     return {
       classes: Array.isArray(parsed?.classes) ? parsed.classes : [],
       goals: goals.map(normalizeGoalWeek),
       tasks: Array.isArray(parsed?.tasks) ? parsed.tasks : [],
+      settings: {
+        aiProvider: rawSettings?.aiProvider === 'claude' ? 'claude' : 'gemini',
+        apiKey: typeof rawSettings?.apiKey === 'string' ? rawSettings.apiKey : '',
+      },
     }
   } catch {
     return EMPTY_DATA
@@ -198,4 +213,22 @@ export function importTasks(inputs: Omit<Task, 'id'>[]): Task[] {
   data = { ...data, tasks: [...data.tasks, ...entries] }
   persist()
   return entries
+}
+
+function getSettingsSnapshot() {
+  return data.settings
+}
+
+export function useSettings(): AppSettings {
+  return useSyncExternalStore(subscribe, getSettingsSnapshot)
+}
+
+/** Non-hook read for callers outside React (e.g. src/services/ai.ts). */
+export function getSettings(): AppSettings {
+  return data.settings
+}
+
+export function updateSettings(patch: Partial<AppSettings>) {
+  data = { ...data, settings: { ...data.settings, ...patch } }
+  persist()
 }
