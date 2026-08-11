@@ -5,6 +5,7 @@ import Backlog from './pages/Backlog'
 import Goals from './pages/Goals'
 import History from './pages/History'
 import Settings from './pages/Settings'
+import Timetable from './pages/Timetable'
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="goals" element={<Goals />} />
         <Route path="history" element={<History />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="settings/timetable" element={<Timetable />} />
       </Route>
     </Routes>
   )
