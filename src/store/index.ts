@@ -99,6 +99,8 @@ export interface AppSettings {
   sleepTime: string
   /** Subject name -> self-rated proficiency, used to pad time estimates for weak subjects. */
   subjectProficiency: Record<string, ProficiencyLevel>
+  /** "YYYY-MM-DD" of the last day the morning plan-nudge was shown or dismissed. */
+  lastPlanNudgeDate?: string
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -193,6 +195,8 @@ function loadData(): AppData {
           ? rawSettings.sleepTime
           : DEFAULT_SETTINGS.sleepTime,
         subjectProficiency,
+        lastPlanNudgeDate:
+          typeof rawSettings?.lastPlanNudgeDate === 'string' ? rawSettings.lastPlanNudgeDate : undefined,
       },
     }
   } catch {
