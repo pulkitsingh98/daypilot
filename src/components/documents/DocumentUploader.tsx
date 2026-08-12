@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { FileText, Upload } from 'lucide-react'
 import { useUploadDocument, type AppDocument, type DocKind } from '../../data/documents'
 import { ACCEPT_ATTRIBUTE, isPdf, validateFile } from '../../lib/fileValidation'
 import { normalizeImageFile } from '../../lib/fileConversion'
@@ -105,13 +106,11 @@ export default function DocumentUploader({ docKind, onUploaded }: DocumentUpload
         {previewUrl ? (
           <img src={previewUrl} alt="Preview" className="h-24 w-24 rounded-lg object-cover" />
         ) : previewIsPdf ? (
-          <span className="flex h-24 w-24 items-center justify-center rounded-lg bg-mist-line text-3xl">
-            📄
+          <span className="flex h-24 w-24 items-center justify-center rounded-lg bg-mist-line text-dusk">
+            <FileText className="h-9 w-9" aria-hidden="true" />
           </span>
         ) : (
-          <span className="text-3xl text-mist" aria-hidden="true">
-            ⬆️
-          </span>
+          <Upload className="h-8 w-8 text-mist" aria-hidden="true" />
         )}
 
         {uploading ? (

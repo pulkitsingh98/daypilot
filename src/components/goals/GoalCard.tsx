@@ -1,3 +1,4 @@
+import { AlertTriangle, Pencil } from 'lucide-react'
 import { useLogGoalMinutes, type Goal } from '../../data/goals'
 
 interface GoalCardProps {
@@ -25,7 +26,7 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
           aria-label={`Edit ${goal.title}`}
           className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
         >
-          ✏️
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
 
@@ -36,17 +37,17 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
           </span>
           <span>{pct}%</span>
         </div>
-        <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#cde2fb]">
+        <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-haze">
           <div
-            className="h-full rounded-full bg-[#2a78d6] transition-[width]"
+            className="h-full rounded-full bg-dusk transition-[width]"
             style={{ width: `${pct}%` }}
           />
         </div>
       </div>
 
       {isZero && (
-        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#d03b3b]">
-          <span aria-hidden="true">⚠️</span>
+        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-red-600">
+          <AlertTriangle className="h-3 w-3" aria-hidden="true" />
           <span>No time logged this week</span>
         </div>
       )}

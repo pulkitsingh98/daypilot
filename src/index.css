@@ -1,21 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  /* Morning Light — DayPilot's visual identity. See MEMORY notes: paper/ink
-     structure with dusk as the primary structural color and dawn reserved
-     for a single sparing job (the Today timeline's "now" marker and its
-     hero action). */
-  --color-paper: #f5f6f9;
+  /* Fresh Peach — DayPilot's visual identity. Warm cream paper, a rust-terracotta
+     structural color (deep enough to hold white text at proper contrast), and a
+     honey-gold secondary accent, built from the peach/salmon/terracotta/gold
+     reference palette. Peach and salmon show up directly as light fills; the
+     structural and hero-accent tones are deepened versions of the same hues so
+     button text stays readable. */
+  --color-paper: #fbead7;
   --color-paper-raised: #ffffff;
-  --color-ink: #1d2436;
-  --color-ink-soft: #454e63;
-  --color-dusk: #33456a;
-  --color-dusk-deep: #26344f;
-  --color-mist: #8892a6;
-  --color-mist-line: #dde1e9;
-  --color-dawn: #dda23f;
-  --color-dawn-deep: #b9822c;
-  --color-haze: #eceff4;
+  --color-ink: #3b2a1e;
+  --color-ink-soft: #6e5241;
+  --color-dusk: #b85a32;
+  --color-dusk-deep: #96492a;
+  --color-mist: #886847;
+  --color-mist-line: #d9b48a;
+  --color-dawn: #dbb06b;
+  --color-dawn-deep: #93611f;
+  --color-haze: #ffd3ac;
+  --color-blush: #ffb5ab;
 
   --font-display: "Fraunces", ui-serif, Georgia, serif;
   --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useSubjects } from '../data/subjects'
 import { useClasses } from '../data/timetableBlocks'
 import { useSessionsForSubject } from '../data/sessions'
@@ -35,8 +36,8 @@ export default function SubjectDetail() {
   if (!subject) {
     return (
       <div className="p-4">
-        <Link to="/settings/subjects" className="text-sm text-mist hover:text-ink-soft">
-          ← Subjects
+        <Link to="/settings/subjects" className="inline-flex items-center gap-1 text-sm text-mist hover:text-ink-soft">
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Subjects
         </Link>
         <p className="mt-4 text-sm text-mist">Subject not found.</p>
       </div>
@@ -66,8 +67,8 @@ export default function SubjectDetail() {
 
   return (
     <div className="p-4">
-      <Link to="/settings/subjects" className="text-sm text-mist hover:text-ink-soft">
-        ← Subjects
+      <Link to="/settings/subjects" className="inline-flex items-center gap-1 text-sm text-mist hover:text-ink-soft">
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Subjects
       </Link>
 
       <div className="mt-1 flex items-start justify-between gap-2">

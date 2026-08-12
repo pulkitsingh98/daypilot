@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AlertTriangle, Check, X } from 'lucide-react'
 import { useConfirmDocument, useSignedUrl, type AppDocument } from '../../data/documents'
 import { useClasses, useImportClasses, type ClassInput, type NewSubjectRef } from '../../data/timetableBlocks'
 import { useImportSessions, type SessionInput } from '../../data/sessions'
@@ -36,17 +37,17 @@ function ConfidenceCell({
   }
   return (
     <div>
-      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-        ⚠️ Low
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+        <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" /> Low
       </span>
       {note && <p className="mt-1 w-32 text-xs text-mist">{note}</p>}
       {!touched && (
         <button
           type="button"
           onClick={onAcknowledge}
-          className="mt-1 block text-xs font-medium text-dusk hover:text-dusk-deep"
+          className="mt-1 flex items-center gap-1 text-xs font-medium text-dusk hover:text-dusk-deep"
         >
-          ✓ Looks good
+          <Check className="h-3 w-3" aria-hidden="true" /> Looks good
         </button>
       )}
     </div>
@@ -334,7 +335,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
             aria-label="Close"
             className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
         <p className="mb-4 text-sm text-mist">
@@ -465,7 +466,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               aria-label="Remove row"
                               className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                             >
-                              ✕
+                              <X className="h-3.5 w-3.5" aria-hidden="true" />
                             </button>
                           </td>
                         </tr>
@@ -571,7 +572,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               aria-label="Remove row"
                               className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                             >
-                              ✕
+                              <X className="h-3.5 w-3.5" aria-hidden="true" />
                             </button>
                           </td>
                         </tr>
@@ -690,7 +691,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               aria-label="Remove row"
                               className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                             >
-                              ✕
+                              <X className="h-3.5 w-3.5" aria-hidden="true" />
                             </button>
                           </td>
                         </tr>

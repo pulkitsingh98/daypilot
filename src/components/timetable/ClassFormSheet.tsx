@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { useAddClass, useDeleteClass, useUpdateClass, type ClassEntry } from '../../data/timetableBlocks'
 import type { DayOfWeek } from '../../data/types'
 import { DAYS, toMinutes } from '../../lib/time'
@@ -117,7 +118,7 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
             aria-label="Close"
             className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 

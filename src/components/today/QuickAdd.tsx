@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Upload, X } from 'lucide-react'
 import { useAddTask, type TaskType } from '../../data/tasks'
 import { useAICall } from '../../services/useAICall'
 import { buildQuickAddPrompt } from '../../prompts/plannerPrompt'
@@ -134,7 +135,11 @@ export default function QuickAdd() {
           {loading ? 'Thinking…' : 'Add'}
         </button>
         <UploadDocumentButton
-          label="📄 Upload"
+          label={
+            <span className="flex items-center gap-1.5">
+              <Upload className="h-3.5 w-3.5" aria-hidden="true" /> Upload
+            </span>
+          }
           helperText="A timetable, syllabus, or session list — DayPilot reads it and turns it into classes, sessions, or tasks."
           className="shrink-0 rounded-lg border border-mist-line px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
         />
@@ -252,7 +257,7 @@ export default function QuickAdd() {
                         aria-label={`Remove prep session: ${session.title}`}
                         className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                       >
-                        ✕
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
                     </div>
                   ))}

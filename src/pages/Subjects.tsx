@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import { useSubjects, type Subject } from '../data/subjects'
 import { proficiencyMeta } from '../lib/subjects'
 import SubjectFormSheet from '../components/subjects/SubjectFormSheet'
@@ -25,8 +26,8 @@ export default function Subjects() {
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <Link to="/settings" className="text-sm text-mist hover:text-ink-soft">
-            ← Settings
+          <Link to="/settings" className="inline-flex items-center gap-1 text-sm text-mist hover:text-ink-soft">
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Settings
           </Link>
           <h1 className="font-display text-2xl font-semibold text-ink">Subjects</h1>
           <p className="mt-1 text-sm text-mist">Your classes and how comfortable you are with each.</p>
@@ -69,7 +70,7 @@ export default function Subjects() {
                   aria-label={`Edit ${subject.name}`}
                   className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
                 >
-                  ✏️
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </div>
               <div className="mt-2.5">

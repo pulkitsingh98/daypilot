@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import type { DocKind } from '../../data/documents'
 import type { ExtractionPromptKind } from '../../prompts/plannerPrompt'
 
@@ -60,7 +61,7 @@ export default function DocKindPicker({ fileName, onSelect, onCancel }: DocKindP
             aria-label="Close"
             className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
         <p className="mb-4 truncate text-sm text-mist">{fileName}</p>

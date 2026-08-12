@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import type { PlanDeferredItem } from '../../data/dailyPlans'
 
 interface DeferredSectionProps {
@@ -18,7 +19,10 @@ export default function DeferredSection({ items }: DeferredSectionProps) {
         className="flex w-full items-center justify-between p-3 text-sm font-semibold text-ink"
       >
         <span>Deferred today ({items.length})</span>
-        <span className={`text-mist transition-transform ${open ? 'rotate-180' : ''}`}>⌄</span>
+        <ChevronDown
+          className={`h-4 w-4 text-mist transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        />
       </button>
       {open && (
         <ul className="flex flex-col gap-2 border-t border-mist-line p-3">

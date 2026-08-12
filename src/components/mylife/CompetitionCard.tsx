@@ -1,3 +1,4 @@
+import { AlertTriangle, Pencil } from 'lucide-react'
 import type { Competition } from '../../data/competitions'
 import { getDeadlineInfo, statusMeta } from '../../lib/competitions'
 import { formatTimeLabel } from '../../lib/time'
@@ -26,7 +27,7 @@ export default function CompetitionCard({ competition, onEdit }: CompetitionCard
           aria-label={`Edit ${competition.title}`}
           className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
         >
-          ✏️
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
 
@@ -46,7 +47,7 @@ export default function CompetitionCard({ competition, onEdit }: CompetitionCard
                   : 'bg-haze text-ink-soft'
             }`}
           >
-            {(deadline.isOverdue || deadline.isDueSoon) && <span aria-hidden="true">⚠️</span>}
+            {(deadline.isOverdue || deadline.isDueSoon) && <AlertTriangle className="h-3 w-3" aria-hidden="true" />}
             {deadline.label}
             {competition.deadlineTime && ` · ${formatTimeLabel(competition.deadlineTime)}`}
           </span>

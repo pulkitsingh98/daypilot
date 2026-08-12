@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react'
 import type { RecurringActivity } from '../../data/recurringActivities'
 import { categoryMeta } from '../../lib/recurringActivities'
 import { dayLabel, formatTimeLabel } from '../../lib/time'
@@ -26,7 +27,7 @@ export default function RecurringActivityCard({ activity, onEdit }: RecurringAct
           aria-label={`Edit ${activity.title}`}
           className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
         >
-          ✏️
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
 

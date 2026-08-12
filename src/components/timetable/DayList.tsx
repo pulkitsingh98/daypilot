@@ -1,3 +1,4 @@
+import { BookOpen } from 'lucide-react'
 import type { ClassEntry } from '../../data/timetableBlocks'
 import type { DayOfWeek } from '../../data/types'
 import { DAYS, formatTimeLabel, toMinutes } from '../../lib/time'
@@ -49,7 +50,9 @@ export default function DayList({ classes, onEdit, onAdd }: DayListProps) {
                         </div>
                       </div>
                       {entry.prepRule && (
-                        <span className="shrink-0 text-xs text-amber-600">📖 prep</span>
+                        <span className="inline-flex shrink-0 items-center gap-0.5 text-xs text-amber-600">
+                          <BookOpen className="h-3 w-3" aria-hidden="true" /> prep
+                        </span>
                       )}
                     </button>
                   </li>

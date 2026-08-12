@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import {
   useAddTask,
   useDeleteTask,
@@ -92,7 +93,7 @@ export default function TaskFormSheet({
             aria-label="Close"
             className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 

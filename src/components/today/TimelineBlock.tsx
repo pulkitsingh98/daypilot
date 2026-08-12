@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Check, ChevronDown } from 'lucide-react'
 import type { TimelineItem } from '../../lib/todayView'
 import { formatTimeLabel } from '../../lib/time'
 import type { Task } from '../../data/tasks'
@@ -24,8 +25,8 @@ export default function TimelineBlock({ item, task }: TimelineBlockProps) {
         } ${done ? 'bg-dusk' : ''}`}
       >
         {done && (
-          <span className="flex h-full w-full items-center justify-center text-[8px] leading-none text-paper-raised">
-            ✓
+          <span className="flex h-full w-full items-center justify-center text-paper-raised">
+            <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden="true" />
           </span>
         )}
       </span>
@@ -64,9 +65,10 @@ export default function TimelineBlock({ item, task }: TimelineBlockProps) {
                   {formatTimeLabel(item.start)} – {formatTimeLabel(item.end)}
                 </div>
               </div>
-              <span className={`shrink-0 text-mist transition-transform ${expanded ? 'rotate-180' : ''}`}>
-                ⌄
-              </span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-mist transition-transform ${expanded ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              />
             </div>
 
             {expanded && (

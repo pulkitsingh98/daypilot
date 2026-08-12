@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useDocuments } from '../data/documents'
 import DocumentUploader from '../components/documents/DocumentUploader'
 import DocumentCard from '../components/documents/DocumentCard'
@@ -10,8 +11,8 @@ export default function Documents() {
 
   return (
     <div className="p-4">
-      <Link to="/settings" className="text-sm text-mist hover:text-ink-soft">
-        ← Settings
+      <Link to="/settings" className="inline-flex items-center gap-1 text-sm text-mist hover:text-ink-soft">
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Settings
       </Link>
       <h1 className="font-display text-2xl font-semibold text-ink">Documents</h1>
       <p className="mt-1 text-sm text-mist">

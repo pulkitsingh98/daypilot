@@ -15,9 +15,7 @@ export default function BottomNav() {
             }`
           }
         >
-          <span className="text-lg" aria-hidden="true">
-            {item.icon}
-          </span>
+          <item.icon className="h-5 w-5" aria-hidden="true" strokeWidth={2} />
           {item.label}
         </NavLink>
       ))}

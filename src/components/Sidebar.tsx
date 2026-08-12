@@ -19,9 +19,7 @@ export default function Sidebar() {
               }`
             }
           >
-            <span className="text-base" aria-hidden="true">
-              {item.icon}
-            </span>
+            <item.icon className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={2} />
             {item.label}
           </NavLink>
         ))}

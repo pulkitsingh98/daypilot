@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import type { AppDocument } from '../../data/documents'
 import DocumentUploader from './DocumentUploader'
 import { useDocumentUploadFlow } from './useDocumentUploadFlow'
 
 interface UploadDocumentButtonProps {
-  label?: string
+  label?: React.ReactNode
   helperText?: string
   className?: string
 }
@@ -44,7 +45,7 @@ export default function UploadDocumentButton({ label = 'Upload', helperText, cla
                 aria-label="Close"
                 className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
               >
-                ✕
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             {helperText && <p className="mb-4 text-sm text-mist">{helperText}</p>}

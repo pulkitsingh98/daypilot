@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { useAddGoal, useDeleteGoal, useUpdateGoal, type Goal, type GoalHorizon } from '../../data/goals'
 import { GOAL_HORIZONS } from '../../lib/goals'
 
@@ -72,7 +73,7 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
             aria-label="Close"
             className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 

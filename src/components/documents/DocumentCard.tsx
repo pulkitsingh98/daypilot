@@ -1,3 +1,4 @@
+import { FileText, Image as ImageIcon, Trash2 } from 'lucide-react'
 import { useDeleteDocument, useSignedUrl, type AppDocument } from '../../data/documents'
 import { docKindLabel, statusMeta } from '../../lib/documents'
 
@@ -30,8 +31,8 @@ export default function DocumentCard({ appDocument, isExtracting, onReview, onCl
             className="h-16 w-16 shrink-0 rounded-lg object-cover"
           />
         ) : (
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-haze text-2xl">
-            {isImage ? '🖼️' : '📄'}
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-haze text-dusk">
+            {isImage ? <ImageIcon className="h-6 w-6" aria-hidden="true" /> : <FileText className="h-6 w-6" aria-hidden="true" />}
           </span>
         )}
 
@@ -75,7 +76,7 @@ export default function DocumentCard({ appDocument, isExtracting, onReview, onCl
           aria-label={`Delete ${appDocument.fileName}`}
           className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-red-600 disabled:opacity-50"
         >
-          🗑️
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </div>

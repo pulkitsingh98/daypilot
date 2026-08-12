@@ -1,3 +1,4 @@
+import { AlertTriangle, Pencil } from 'lucide-react'
 import type { Task } from '../../data/tasks'
 import { formatDueDate, isOverdue, priorityMeta, typeMeta } from '../../lib/tasks'
 import TaskDoneToggle from './TaskDoneToggle'
@@ -33,7 +34,7 @@ export default function TaskCard({ task, onEdit }: TaskCardProps) {
           aria-label={`Edit ${task.title}`}
           className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
         >
-          ✏️
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
 
@@ -50,7 +51,7 @@ export default function TaskCard({ task, onEdit }: TaskCardProps) {
               overdue ? 'bg-red-100 text-red-700' : 'bg-haze text-ink-soft'
             }`}
           >
-            {overdue && <span aria-hidden="true">⚠️</span>}
+            {overdue && <AlertTriangle className="h-3 w-3" aria-hidden="true" />}
             {overdue ? 'Overdue · ' : 'Due '}
             {formatDueDate(task.dueDate)}
           </span>

@@ -11,7 +11,7 @@ interface NowMarkerProps {
 export default function NowMarker({ label }: NowMarkerProps) {
   return (
     <div className="relative flex items-center gap-2 py-0.5">
-      <span className="absolute -left-[26px] top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 border-paper-raised bg-dawn ring-1 ring-dawn" />
+      <span className="absolute -left-[26px] top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 border-paper-raised bg-dawn ring-2 ring-blush/60" />
       <span className="text-[10px] font-semibold uppercase tracking-wide text-dawn-deep">
         Now · {label}
       </span>

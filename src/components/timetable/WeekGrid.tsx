@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { BookOpen } from 'lucide-react'
 import type { ClassEntry } from '../../data/timetableBlocks'
 import { DAYS, formatHourLabel, formatTimeLabel, toMinutes } from '../../lib/time'
 
@@ -93,7 +94,11 @@ export default function WeekGrid({ classes, onEdit }: WeekGridProps) {
                     <div className="truncate text-haze">
                       {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
                     </div>
-                    {entry.prepRule && <div className="truncate text-haze">📖 prep</div>}
+                    {entry.prepRule && (
+                      <div className="flex items-center gap-0.5 truncate text-haze">
+                        <BookOpen className="h-3 w-3 shrink-0" aria-hidden="true" /> prep
+                      </div>
+                    )}
                   </button>
                 )
               })}

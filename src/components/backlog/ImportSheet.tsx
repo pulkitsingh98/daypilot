@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import { useImportTasks, type TaskInput, type TaskPriority, type TaskStatus, type TaskType } from '../../data/tasks'
 import { TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES } from '../../lib/tasks'
 import {
@@ -129,7 +130,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
             aria-label="Close"
             className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
-            ✕
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -327,7 +328,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             aria-label="Remove row"
                             className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                           >
-                            ✕
+                            <X className="h-3.5 w-3.5" aria-hidden="true" />
                           </button>
                         </td>
                       </tr>
