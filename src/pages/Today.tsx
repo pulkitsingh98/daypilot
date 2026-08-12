@@ -16,7 +16,7 @@ export default function Today() {
   const todayKey = toIsoDate(now)
 
   const { data: classes = [], isLoading: classesLoading, error: classesError } = useClasses()
-  const { data: plan, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
+  const { data: plan = null, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
   const { loading, error, generate, retry } = usePlanGeneration()
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
 

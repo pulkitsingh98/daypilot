@@ -39,14 +39,14 @@ function fromRow(row: DailyPlanRow): DailyPlan {
 
 export const dailyPlanQueryKey = (dateIso: string) => ['daily_plans', dateIso] as const
 
-export async function fetchDailyPlan(dateIso: string): Promise<DailyPlan | undefined> {
+export async function fetchDailyPlan(dateIso: string): Promise<DailyPlan | null> {
   const result = await supabase
     .from('daily_plans')
     .select('blocks, deferred, note, generated_at')
     .eq('plan_date', dateIso)
     .maybeSingle()
   const row = unwrapNullable<DailyPlanRow>(result)
-  return row ? fromRow(row) : undefined
+  return row ? fromRow(row) : null
 }
 
 export function useDailyPlan(dateIso: string) {

@@ -18,7 +18,7 @@ export interface TimelineItem {
 }
 
 /** Merges today's fixed classes with today's AI-planned blocks into one time-sorted list. */
-export function buildTimelineItems(classesToday: ClassEntry[], plan: DailyPlan | undefined): TimelineItem[] {
+export function buildTimelineItems(classesToday: ClassEntry[], plan: DailyPlan | null): TimelineItem[] {
   const items: TimelineItem[] = classesToday.map((entry) => ({
     key: `class-${entry.id}`,
     kind: 'class',
@@ -52,7 +52,7 @@ export function buildTimelineItems(classesToday: ClassEntry[], plan: DailyPlan |
  * its word-initials (e.g. "Organizational Behavior" -> "ob", since students
  * and the planner both use shorthand), and any individually distinctive word.
  */
-export function isPrepScheduledForClass(plan: DailyPlan | undefined, subject: string): boolean {
+export function isPrepScheduledForClass(plan: DailyPlan | null, subject: string): boolean {
   if (!plan || !subject.trim()) return false
   const trimmedSubject = subject.trim()
   const subjectLower = trimmedSubject.toLowerCase()

@@ -5,7 +5,7 @@ import { isPrepScheduledForClass } from '../../lib/todayView'
 
 interface TomorrowPreviewProps {
   classes: ClassEntry[]
-  plan: DailyPlan | undefined
+  plan: DailyPlan | null
 }
 
 export default function TomorrowPreview({ classes, plan }: TomorrowPreviewProps) {
