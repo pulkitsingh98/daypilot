@@ -54,10 +54,10 @@ export default function SubjectPicker({ value, onChange, placeholder }: SubjectP
         }}
         onFocus={() => setOpen(true)}
         placeholder={placeholder ?? 'e.g. Organic Chemistry'}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        className="w-full rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
       />
       {open && (matches.length > 0 || (trimmed.length > 0 && !exactMatch)) && (
-        <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+        <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-mist-line bg-paper-raised py-1 shadow-lg">
           {matches.map((s) => (
             <button
               key={s.id}
@@ -66,7 +66,7 @@ export default function SubjectPicker({ value, onChange, placeholder }: SubjectP
                 onChange(s.name)
                 setOpen(false)
               }}
-              className="block w-full px-3 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100"
+              className="block w-full px-3 py-1.5 text-left text-sm text-ink-soft hover:bg-haze"
             >
               {s.name}
             </button>
@@ -76,7 +76,7 @@ export default function SubjectPicker({ value, onChange, placeholder }: SubjectP
               type="button"
               disabled={addSubject.isPending}
               onClick={() => void handleCreate()}
-              className="block w-full px-3 py-1.5 text-left text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:opacity-50"
+              className="block w-full px-3 py-1.5 text-left text-sm font-medium text-dusk hover:bg-haze disabled:opacity-50"
             >
               {addSubject.isPending ? 'Creating…' : `+ Create "${trimmed}"`}
             </button>

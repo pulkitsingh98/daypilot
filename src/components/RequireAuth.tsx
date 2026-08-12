@@ -6,8 +6,8 @@ export default function RequireAuth() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-400">Loading…</p>
+      <div className="flex min-h-screen items-center justify-center bg-haze">
+        <p className="text-sm text-mist">Loading…</p>
       </div>
     )
   }

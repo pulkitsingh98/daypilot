@@ -56,12 +56,12 @@ export default function TaskDoneToggle({ task, className }: TaskDoneToggleProps)
         onChange={handleToggle}
         onClick={(e) => e.stopPropagation()}
         aria-label={done ? `Mark ${task.title} as not done` : `Mark ${task.title} as done`}
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300"
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-mist-line"
       />
       {showLogPrompt && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute left-0 top-6 z-10 flex w-56 flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-600 shadow-lg"
+          className="absolute left-0 top-6 z-10 flex w-56 flex-wrap items-center gap-2 rounded-lg border border-mist-line bg-paper-raised p-2 text-xs text-ink-soft shadow-lg"
         >
           <span>Took about how long?</span>
           <input
@@ -69,20 +69,20 @@ export default function TaskDoneToggle({ task, className }: TaskDoneToggleProps)
             min={1}
             value={minutesInput}
             onChange={(e) => setMinutesInput(e.target.value)}
-            className="w-16 rounded border border-slate-300 px-1.5 py-1 text-xs focus:border-slate-500 focus:outline-none"
+            className="w-16 rounded border border-mist-line px-1.5 py-1 text-xs focus:border-dusk focus:outline-none"
           />
           <span>min</span>
           <button
             type="button"
             onClick={handleLog}
-            className="font-medium text-indigo-600 hover:text-indigo-700"
+            className="font-medium text-dusk hover:text-dusk-deep"
           >
             Log
           </button>
           <button
             type="button"
             onClick={() => setShowLogPrompt(false)}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-mist hover:text-ink-soft"
           >
             Skip
           </button>

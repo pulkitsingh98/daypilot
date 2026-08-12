@@ -53,40 +53,40 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6">
-        <h1 className="text-2xl font-semibold text-slate-900">DayPilot</h1>
-        <p className="mt-1 text-sm text-slate-500">
+    <div className="flex min-h-screen items-center justify-center bg-haze p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-mist-line bg-paper-raised p-6">
+        <h1 className="font-display text-2xl font-semibold text-ink">DayPilot</h1>
+        <p className="mt-1 text-sm text-mist">
           {mode === 'signin' ? 'Sign in to your account' : 'Create your account'}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3">
           {mode === 'signup' && (
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Full name</span>
+              <span className="text-sm font-medium text-ink-soft">Full name</span>
               <input
                 type="text"
                 autoComplete="name"
                 placeholder="e.g. Alex Rivera"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
           )}
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Email</span>
+            <span className="text-sm font-medium text-ink-soft">Email</span>
             <input
               type="email"
               required
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Password</span>
+            <span className="text-sm font-medium text-ink-soft">Password</span>
             <input
               type="password"
               required
@@ -94,7 +94,7 @@ export default function Login() {
               autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
@@ -104,7 +104,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="mt-1 rounded-lg bg-dusk px-4 py-2.5 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:bg-mist-line"
           >
             {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Sign up'}
           </button>
@@ -113,7 +113,7 @@ export default function Login() {
         <button
           type="button"
           onClick={switchMode}
-          className="mt-4 w-full text-center text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="mt-4 w-full text-center text-sm font-medium text-dusk hover:text-dusk-deep"
         >
           {mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
         </button>

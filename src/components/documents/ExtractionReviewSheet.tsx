@@ -39,12 +39,12 @@ function ConfidenceCell({
       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
         ⚠️ Low
       </span>
-      {note && <p className="mt-1 w-32 text-xs text-slate-500">{note}</p>}
+      {note && <p className="mt-1 w-32 text-xs text-mist">{note}</p>}
       {!touched && (
         <button
           type="button"
           onClick={onAcknowledge}
-          className="mt-1 block text-xs font-medium text-indigo-600 hover:text-indigo-700"
+          className="mt-1 block text-xs font-medium text-dusk hover:text-dusk-deep"
         >
           ✓ Looks good
         </button>
@@ -325,19 +325,19 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-6xl sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-paper-raised p-5 sm:max-w-6xl sm:rounded-2xl">
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Review what we found</h2>
+          <h2 className="text-lg font-semibold text-ink">Review what we found</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
             ✕
           </button>
         </div>
-        <p className="mb-4 text-sm text-slate-500">
+        <p className="mb-4 text-sm text-mist">
           {itemsFoundCount} item{itemsFoundCount === 1 ? '' : 's'} found
           {needsAttentionCount > 0
             ? `, ${needsAttentionCount} need${needsAttentionCount === 1 ? 's' : ''} your attention`
@@ -346,7 +346,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
         </p>
 
         {totalFound === 0 ? (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-mist">
             Nothing was found in this document. You can close this and try a different file, or
             add things manually.
           </p>
@@ -357,28 +357,28 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                 <img
                   src={signedUrl}
                   alt={appDocument.fileName}
-                  className="max-h-[70vh] w-full rounded-lg border border-slate-200 object-contain"
+                  className="max-h-[70vh] w-full rounded-lg border border-mist-line object-contain"
                 />
               )}
               {signedUrl && isPdf && (
                 <iframe
                   src={signedUrl}
                   title={appDocument.fileName}
-                  className="h-[70vh] w-full rounded-lg border border-slate-200"
+                  className="h-[70vh] w-full rounded-lg border border-mist-line"
                 />
               )}
               {!signedUrl && (
-                <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-400">
+                <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-mist-line text-sm text-mist">
                   Loading preview…
                 </div>
               )}
             </div>
 
-            <div className="order-1 overflow-x-auto rounded-lg border border-slate-200 lg:order-2">
+            <div className="order-1 overflow-x-auto rounded-lg border border-mist-line lg:order-2">
               {extraction.kind === 'timetable' && (
                 <table className="w-full min-w-[760px] border-collapse text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs text-slate-500">
+                    <tr className="border-b border-mist-line bg-haze text-left text-xs text-mist">
                       <th className="px-3 py-2 font-medium">Subject</th>
                       <th className="px-3 py-2 font-medium">Code</th>
                       <th className="px-3 py-2 font-medium">Day</th>
@@ -395,14 +395,14 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                       return (
                         <tr
                           key={row.key}
-                          className={`border-b border-slate-100 align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
+                          className={`border-b border-mist-line align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
                         >
                           <td className="px-3 py-2">
                             <input
                               type="text"
                               value={row.subject}
                               onChange={(e) => updateTimetableRow(row.key, { subject: e.target.value })}
-                              className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-28 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -410,14 +410,14 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="text"
                               value={row.code}
                               onChange={(e) => updateTimetableRow(row.key, { code: e.target.value })}
-                              className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-20 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
                             <select
                               value={row.dayOfWeek}
                               onChange={(e) => updateTimetableRow(row.key, { dayOfWeek: Number(e.target.value) })}
-                              className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             >
                               {DAYS.map((d, i) => (
                                 <option key={d.key} value={i}>
@@ -431,7 +431,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="time"
                               value={row.startTime}
                               onChange={(e) => updateTimetableRow(row.key, { startTime: e.target.value })}
-                              className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -439,7 +439,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="time"
                               value={row.endTime}
                               onChange={(e) => updateTimetableRow(row.key, { endTime: e.target.value })}
-                              className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -447,7 +447,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="text"
                               value={row.location}
                               onChange={(e) => updateTimetableRow(row.key, { location: e.target.value })}
-                              className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-24 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -463,7 +463,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="button"
                               onClick={() => setTimetableRows((rows) => rows.filter((r) => r.key !== row.key))}
                               aria-label="Remove row"
-                              className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                             >
                               ✕
                             </button>
@@ -478,7 +478,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
               {extraction.kind === 'sessions' && (
                 <table className="w-full min-w-[920px] border-collapse text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs text-slate-500">
+                    <tr className="border-b border-mist-line bg-haze text-left text-xs text-mist">
                       <th className="px-3 py-2 font-medium">Subject</th>
                       <th className="px-3 py-2 font-medium">#</th>
                       <th className="px-3 py-2 font-medium">Title</th>
@@ -495,14 +495,14 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                       return (
                         <tr
                           key={row.key}
-                          className={`border-b border-slate-100 align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
+                          className={`border-b border-mist-line align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
                         >
                           <td className="px-3 py-2">
                             <input
                               type="text"
                               value={row.subject}
                               onChange={(e) => updateSessionRow(row.key, { subject: e.target.value })}
-                              className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-24 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                             {row.subject.trim().length === 0 && (
                               <p className="mt-1 text-xs text-red-600">Required</p>
@@ -514,7 +514,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               min={1}
                               value={row.sessionNumber}
                               onChange={(e) => updateSessionRow(row.key, { sessionNumber: e.target.value })}
-                              className="w-14 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-14 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -522,7 +522,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="text"
                               value={row.title}
                               onChange={(e) => updateSessionRow(row.key, { title: e.target.value })}
-                              className="w-36 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-36 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                             {row.title.trim().length === 0 && (
                               <p className="mt-1 text-xs text-red-600">Required</p>
@@ -534,7 +534,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               value={row.topicsText}
                               onChange={(e) => updateSessionRow(row.key, { topicsText: e.target.value })}
                               placeholder="comma-separated"
-                              className="w-40 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-40 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -542,7 +542,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="date"
                               value={row.date}
                               onChange={(e) => updateSessionRow(row.key, { date: e.target.value })}
-                              className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                             {row.date.trim().length === 0 && (
                               <p className="mt-1 w-28 text-xs text-red-600">Date required</p>
@@ -553,7 +553,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="text"
                               value={row.readingMaterial}
                               onChange={(e) => updateSessionRow(row.key, { readingMaterial: e.target.value })}
-                              className="w-40 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-40 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -569,7 +569,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="button"
                               onClick={() => setSessionRows((rows) => rows.filter((r) => r.key !== row.key))}
                               aria-label="Remove row"
-                              className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                             >
                               ✕
                             </button>
@@ -584,7 +584,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
               {extraction.kind === 'mixed' && (
                 <table className="w-full min-w-[980px] border-collapse text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs text-slate-500">
+                    <tr className="border-b border-mist-line bg-haze text-left text-xs text-mist">
                       <th className="px-3 py-2 font-medium">Title</th>
                       <th className="px-3 py-2 font-medium">Type</th>
                       <th className="px-3 py-2 font-medium">Priority</th>
@@ -602,14 +602,14 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                       return (
                         <tr
                           key={row.key}
-                          className={`border-b border-slate-100 align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
+                          className={`border-b border-mist-line align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
                         >
                           <td className="px-3 py-2">
                             <input
                               type="text"
                               value={row.title}
                               onChange={(e) => updateMixedRow(row.key, { title: e.target.value })}
-                              className="w-36 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-36 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                             {row.title.trim().length === 0 && (
                               <p className="mt-1 text-xs text-red-600">Required</p>
@@ -619,7 +619,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                             <select
                               value={row.type}
                               onChange={(e) => updateMixedRow(row.key, { type: e.target.value as TaskType })}
-                              className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             >
                               {TASK_TYPES.map((t) => (
                                 <option key={t.key} value={t.key}>
@@ -634,7 +634,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               onChange={(e) =>
                                 updateMixedRow(row.key, { priority: Number(e.target.value) as TaskPriority })
                               }
-                              className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             >
                               {TASK_PRIORITIES.map((p) => (
                                 <option key={p.key} value={p.key}>
@@ -648,7 +648,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="text"
                               value={row.subject}
                               onChange={(e) => updateMixedRow(row.key, { subject: e.target.value })}
-                              className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-24 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -656,7 +656,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="date"
                               value={row.date}
                               onChange={(e) => updateMixedRow(row.key, { date: e.target.value })}
-                              className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -664,7 +664,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="time"
                               value={row.time}
                               onChange={(e) => updateMixedRow(row.key, { time: e.target.value })}
-                              className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -672,7 +672,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="text"
                               value={row.notes}
                               onChange={(e) => updateMixedRow(row.key, { notes: e.target.value })}
-                              className="w-40 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                              className="w-40 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                           </td>
                           <td className="px-3 py-2">
@@ -688,7 +688,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="button"
                               onClick={() => setMixedRows((rows) => rows.filter((r) => r.key !== row.key))}
                               aria-label="Remove row"
-                              className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                             >
                               ✕
                             </button>
@@ -700,7 +700,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                 </table>
               )}
 
-              <div className="border-t border-slate-100 p-2">
+              <div className="border-t border-mist-line p-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -708,7 +708,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                     if (extraction.kind === 'sessions') setSessionRows((rows) => [...rows, blankSessionRow()])
                     if (extraction.kind === 'mixed') setMixedRows((rows) => [...rows, blankMixedRow()])
                   }}
-                  className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                  className="text-xs font-medium text-dusk hover:text-dusk-deep"
                 >
                   + Add row
                 </button>
@@ -718,7 +718,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
         )}
 
         {totalFound > 0 && (
-          <p className="mt-3 text-sm text-slate-500">{validCount} of {totalFound} ready to save.</p>
+          <p className="mt-3 text-sm text-mist">{validCount} of {totalFound} ready to save.</p>
         )}
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -727,7 +727,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
           >
             {totalFound === 0 ? 'Close' : 'Cancel'}
           </button>
@@ -737,7 +737,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
               disabled={validCount === 0 || needsAttentionCount > 0 || saving}
               onClick={() => void handleConfirm()}
               title={needsAttentionCount > 0 ? 'Review the low-confidence rows first' : undefined}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:bg-mist-line"
             >
               {saving ? 'Saving…' : `Confirm (${validCount})`}
             </button>

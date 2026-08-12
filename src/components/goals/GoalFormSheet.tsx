@@ -61,16 +61,16 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-paper-raised p-5 sm:max-w-md sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-ink">
             {initial ? 'Edit goal' : 'Add goal'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
             ✕
           </button>
@@ -78,22 +78,22 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Title</span>
+            <span className="text-sm font-medium text-ink-soft">Title</span>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Finish thesis draft"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Goal type</span>
+            <span className="text-sm font-medium text-ink-soft">Goal type</span>
             <select
               value={horizon}
               onChange={(e) => setHorizon(e.target.value as GoalHorizon)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             >
               {GOAL_HORIZONS.map((h) => (
                 <option key={h.key} value={h.key}>
@@ -104,13 +104,13 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Weekly target (minutes)</span>
+            <span className="text-sm font-medium text-ink-soft">Weekly target (minutes)</span>
             <input
               type="number"
               min={1}
               value={weeklyTargetMinutes}
               onChange={(e) => setWeeklyTargetMinutes(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
@@ -133,14 +133,14 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

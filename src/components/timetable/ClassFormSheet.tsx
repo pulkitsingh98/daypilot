@@ -106,16 +106,16 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-paper-raised p-5 sm:max-w-md sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-ink">
             {initial ? 'Edit class' : 'Add class'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
             ✕
           </button>
@@ -123,16 +123,16 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Subject</span>
+            <span className="text-sm font-medium text-ink-soft">Subject</span>
             <SubjectPicker value={subject} onChange={setSubject} />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Day of week</span>
+            <span className="text-sm font-medium text-ink-soft">Day of week</span>
             <select
               value={day}
               onChange={(e) => setDay(e.target.value as DayOfWeek)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             >
               {DAYS.map((d) => (
                 <option key={d.key} value={d.key}>
@@ -144,38 +144,38 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
 
           <div className="flex gap-3">
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Start time</span>
+              <span className="text-sm font-medium text-ink-soft">Start time</span>
               <input
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">End time</span>
+              <span className="text-sm font-medium text-ink-soft">End time</span>
               <input
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
           </div>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Location (optional)</span>
+            <span className="text-sm font-medium text-ink-soft">Location (optional)</span>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Room 204"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
-          <div className="rounded-xl bg-slate-50 p-3">
-            <p className="text-sm font-medium text-slate-700">
+          <div className="rounded-xl bg-haze p-3">
+            <p className="text-sm font-medium text-ink-soft">
               Does this class usually need reading or prep the day before?
             </p>
             <div className="mt-2 flex gap-2">
@@ -184,8 +184,8 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
                 onClick={() => setPrepChoice('yes')}
                 className={`flex-1 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                   prepChoice === 'yes'
-                    ? 'border-indigo-600 bg-indigo-600 text-white'
-                    : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
+                    ? 'border-dusk bg-dusk text-paper-raised'
+                    : 'border-mist-line bg-paper-raised text-ink-soft hover:bg-haze'
                 }`}
               >
                 Yes
@@ -195,8 +195,8 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
                 onClick={() => setPrepChoice('no')}
                 className={`flex-1 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                   prepChoice === 'no'
-                    ? 'border-indigo-600 bg-indigo-600 text-white'
-                    : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
+                    ? 'border-dusk bg-dusk text-paper-raised'
+                    : 'border-mist-line bg-paper-raised text-ink-soft hover:bg-haze'
                 }`}
               >
                 No
@@ -206,42 +206,42 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
             {prepChoice === 'yes' && (
               <div className="mt-3 flex flex-col gap-3">
                 <label className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-slate-700">Prep minutes</span>
+                  <span className="text-sm font-medium text-ink-soft">Prep minutes</span>
                   <input
                     type="number"
                     min={1}
                     value={prepMinutes}
                     onChange={(e) => setPrepMinutes(e.target.value)}
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-slate-700">What's the prep?</span>
+                  <span className="text-sm font-medium text-ink-soft">What's the prep?</span>
                   <input
                     type="text"
                     value={prepDescription}
                     onChange={(e) => setPrepDescription(e.target.value)}
                     placeholder="e.g. read the case"
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
                   />
                 </label>
                 <div className="flex gap-3">
                   <label className="flex flex-1 flex-col gap-1">
-                    <span className="text-sm font-medium text-slate-700">Window start</span>
+                    <span className="text-sm font-medium text-ink-soft">Window start</span>
                     <input
                       type="time"
                       value={prepWindowStart}
                       onChange={(e) => setPrepWindowStart(e.target.value)}
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                      className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
                     />
                   </label>
                   <label className="flex flex-1 flex-col gap-1">
-                    <span className="text-sm font-medium text-slate-700">Window end</span>
+                    <span className="text-sm font-medium text-ink-soft">Window end</span>
                     <input
                       type="time"
                       value={prepWindowEnd}
                       onChange={(e) => setPrepWindowEnd(e.target.value)}
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                      className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
                     />
                   </label>
                 </div>
@@ -268,14 +268,14 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

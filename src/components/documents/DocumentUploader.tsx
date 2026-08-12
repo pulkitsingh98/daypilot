@@ -91,7 +91,7 @@ export default function DocumentUploader({ docKind, onUploaded }: DocumentUpload
         onClick={() => !uploading && inputRef.current?.click()}
         className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
           uploading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
-        } ${dragActive ? 'border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
+        } ${dragActive ? 'border-dusk bg-haze' : 'border-mist-line bg-haze hover:bg-haze'}`}
       >
         <input
           ref={inputRef}
@@ -105,21 +105,21 @@ export default function DocumentUploader({ docKind, onUploaded }: DocumentUpload
         {previewUrl ? (
           <img src={previewUrl} alt="Preview" className="h-24 w-24 rounded-lg object-cover" />
         ) : previewIsPdf ? (
-          <span className="flex h-24 w-24 items-center justify-center rounded-lg bg-slate-200 text-3xl">
+          <span className="flex h-24 w-24 items-center justify-center rounded-lg bg-mist-line text-3xl">
             📄
           </span>
         ) : (
-          <span className="text-3xl text-slate-400" aria-hidden="true">
+          <span className="text-3xl text-mist" aria-hidden="true">
             ⬆️
           </span>
         )}
 
         {uploading ? (
-          <p className="text-sm font-medium text-slate-600">Uploading {pendingName}…</p>
+          <p className="text-sm font-medium text-ink-soft">Uploading {pendingName}…</p>
         ) : (
           <>
-            <p className="text-sm font-medium text-slate-700">Drag a file here, or tap to choose one</p>
-            <p className="text-xs text-slate-400">JPG, PNG, WEBP, HEIC, or PDF — up to 10MB</p>
+            <p className="text-sm font-medium text-ink-soft">Drag a file here, or tap to choose one</p>
+            <p className="text-xs text-mist">JPG, PNG, WEBP, HEIC, or PDF — up to 10MB</p>
           </>
         )}
       </div>

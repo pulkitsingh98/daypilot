@@ -14,41 +14,41 @@ import { supabase } from '../lib/supabase'
 export default function Settings() {
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-semibold text-slate-900">Settings</h1>
-      <p className="mt-2 text-slate-500">App preferences will show up here.</p>
+      <h1 className="font-display text-2xl font-semibold text-ink">Settings</h1>
+      <p className="mt-2 text-mist">App preferences will show up here.</p>
 
       <AccountCard />
 
-      <div className="mt-6 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+      <div className="mt-6 divide-y divide-mist-line rounded-xl border border-mist-line bg-paper-raised">
         <Link
           to="/settings/timetable"
-          className="flex items-center justify-between px-4 py-3 hover:bg-slate-50"
+          className="flex items-center justify-between px-4 py-3 hover:bg-haze"
         >
           <div>
-            <div className="text-sm font-medium text-slate-900">Timetable</div>
-            <div className="text-xs text-slate-500">Manage your weekly class schedule</div>
+            <div className="text-sm font-medium text-ink">Timetable</div>
+            <div className="text-xs text-mist">Manage your weekly class schedule</div>
           </div>
-          <span className="text-slate-400">›</span>
+          <span className="text-mist">›</span>
         </Link>
         <Link
           to="/settings/subjects"
-          className="flex items-center justify-between px-4 py-3 hover:bg-slate-50"
+          className="flex items-center justify-between px-4 py-3 hover:bg-haze"
         >
           <div>
-            <div className="text-sm font-medium text-slate-900">Subjects</div>
-            <div className="text-xs text-slate-500">Manage subjects and proficiency ratings</div>
+            <div className="text-sm font-medium text-ink">Subjects</div>
+            <div className="text-xs text-mist">Manage subjects and proficiency ratings</div>
           </div>
-          <span className="text-slate-400">›</span>
+          <span className="text-mist">›</span>
         </Link>
         <Link
           to="/settings/documents"
-          className="flex items-center justify-between px-4 py-3 hover:bg-slate-50"
+          className="flex items-center justify-between px-4 py-3 hover:bg-haze"
         >
           <div>
-            <div className="text-sm font-medium text-slate-900">Documents</div>
-            <div className="text-xs text-slate-500">Upload syllabi, timetables, and posters</div>
+            <div className="text-sm font-medium text-ink">Documents</div>
+            <div className="text-xs text-mist">Upload syllabi, timetables, and posters</div>
           </div>
-          <span className="text-slate-400">›</span>
+          <span className="text-mist">›</span>
         </Link>
       </div>
 
@@ -85,8 +85,8 @@ function AccountCard() {
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-slate-900">Account</h2>
+    <div className="mt-6 rounded-xl border border-mist-line bg-paper-raised p-4">
+      <h2 className="text-sm font-semibold text-ink">Account</h2>
 
       {editing ? (
         <form onSubmit={handleSaveName} className="mt-2 flex items-center gap-2">
@@ -96,19 +96,19 @@ function AccountCard() {
             placeholder="e.g. Alex Rivera"
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
-            className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="min-w-0 flex-1 rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
           />
           <button
             type="submit"
             disabled={saving}
-            className="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="shrink-0 rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:bg-mist-line"
           >
             Save
           </button>
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
           >
             Cancel
           </button>
@@ -117,16 +117,16 @@ function AccountCard() {
         <div className="mt-1 flex items-center justify-between gap-2">
           <div className="min-w-0">
             {fullName ? (
-              <p className="truncate text-sm font-medium text-slate-900">{fullName}</p>
+              <p className="truncate text-sm font-medium text-ink">{fullName}</p>
             ) : (
-              <p className="text-sm text-slate-400">No name set</p>
+              <p className="text-sm text-mist">No name set</p>
             )}
-            <p className="truncate text-sm text-slate-600">{session?.user.email}</p>
+            <p className="truncate text-sm text-ink-soft">{session?.user.email}</p>
           </div>
           <button
             type="button"
             onClick={startEditing}
-            className="shrink-0 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+            className="shrink-0 text-sm font-medium text-dusk hover:text-dusk-deep"
           >
             {fullName ? 'Edit' : 'Add name'}
           </button>
@@ -164,23 +164,23 @@ function AISettingsCard() {
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-slate-900">AI Provider</h2>
-      <p className="mt-1 text-xs text-slate-500">
+    <div className="mt-6 rounded-xl border border-mist-line bg-paper-raised p-4">
+      <h2 className="text-sm font-semibold text-ink">AI Provider</h2>
+      <p className="mt-1 text-xs text-mist">
         Your key is sent directly to the provider from your browser — never to any DayPilot
         server.
       </p>
 
       {isLoading || !profile ? (
-        <p className="mt-3 text-sm text-slate-500">Loading…</p>
+        <p className="mt-3 text-sm text-mist">Loading…</p>
       ) : (
         <div className="mt-3 flex flex-col gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Provider</span>
+            <span className="text-sm font-medium text-ink-soft">Provider</span>
             <select
               value={profile.aiProvider}
               onChange={(e) => handleProviderChange(e.target.value as AIProvider)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             >
               <option value="gemini">Gemini (free tier)</option>
               <option value="claude">Claude</option>
@@ -188,7 +188,7 @@ function AISettingsCard() {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-soft">
               {profile.aiProvider === 'gemini' ? 'Gemini API key' : 'Claude API key'}
             </span>
             <input
@@ -197,7 +197,7 @@ function AISettingsCard() {
               onChange={(e) => setApiKeyInput(e.target.value)}
               onBlur={handleApiKeyBlur}
               placeholder="Paste your API key"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
         </div>
@@ -242,8 +242,8 @@ function ImportLocalDataCard() {
 
   return (
     <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
-      <h2 className="text-sm font-semibold text-slate-900">Import my old local data</h2>
-      <p className="mt-1 text-xs text-slate-600">
+      <h2 className="text-sm font-semibold text-ink">Import my old local data</h2>
+      <p className="mt-1 text-xs text-ink-soft">
         We found data saved in this browser from before sign-in was added. Import it into your
         account — this can only be done once, since it clears local storage afterward.
       </p>
@@ -260,7 +260,7 @@ function ImportLocalDataCard() {
             type="button"
             disabled={importing}
             onClick={() => void handleImport()}
-            className="mt-3 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="mt-3 rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:bg-mist-line"
           >
             {importing ? 'Importing…' : 'Import local data'}
           </button>

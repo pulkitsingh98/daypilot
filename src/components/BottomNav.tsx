@@ -3,7 +3,7 @@ import { navItems } from '../nav'
 
 export default function BottomNav() {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 flex border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-10 flex border-t border-mist-line bg-paper-raised pb-[env(safe-area-inset-bottom)] md:hidden">
       {navItems.map((item) => (
         <NavLink
           key={item.to}
@@ -11,7 +11,7 @@ export default function BottomNav() {
           end={item.to === '/'}
           className={({ isActive }) =>
             `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium ${
-              isActive ? 'text-slate-900' : 'text-slate-400'
+              isActive ? 'text-dusk' : 'text-mist'
             }`
           }
         >

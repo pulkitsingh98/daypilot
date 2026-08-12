@@ -79,16 +79,16 @@ export default function RecurringActivityFormSheet({ initial, onClose }: Recurri
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-paper-raised p-5 sm:max-w-md sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-ink">
             {initial ? 'Edit activity' : 'Add activity'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
             ✕
           </button>
@@ -96,22 +96,22 @@ export default function RecurringActivityFormSheet({ initial, onClose }: Recurri
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Title</span>
+            <span className="text-sm font-medium text-ink-soft">Title</span>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Table tennis"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Category</span>
+            <span className="text-sm font-medium text-ink-soft">Category</span>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as ActivityCategory)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             >
               {ACTIVITY_CATEGORIES.map((c) => (
                 <option key={c.key} value={c.key}>
@@ -122,11 +122,11 @@ export default function RecurringActivityFormSheet({ initial, onClose }: Recurri
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Preferred day (optional)</span>
+            <span className="text-sm font-medium text-ink-soft">Preferred day (optional)</span>
             <select
               value={day}
               onChange={(e) => setDay(e.target.value as DayOfWeek | typeof NO_FIXED_DAY)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             >
               <option value={NO_FIXED_DAY}>No fixed day</option>
               {DAYS.map((d) => (
@@ -139,48 +139,48 @@ export default function RecurringActivityFormSheet({ initial, onClose }: Recurri
 
           <div className="flex gap-3">
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Preferred time</span>
+              <span className="text-sm font-medium text-ink-soft">Preferred time</span>
               <input
                 type="time"
                 value={preferredTime}
                 onChange={(e) => setPreferredTime(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Duration (min)</span>
+              <span className="text-sm font-medium text-ink-soft">Duration (min)</span>
               <input
                 type="number"
                 min={1}
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
           </div>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Times per week</span>
+            <span className="text-sm font-medium text-ink-soft">Times per week</span>
             <input
               type="number"
               min={1}
               max={14}
               value={timesPerWeek}
               onChange={(e) => setTimesPerWeek(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
-          <div className="rounded-xl bg-slate-50 p-3">
+          <div className="rounded-xl bg-haze p-3">
             <label className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-ink-soft">
                 Flexible — the planner may move or shorten this if deadlines are tight
               </span>
               <input
                 type="checkbox"
                 checked={isFlexible}
                 onChange={(e) => setIsFlexible(e.target.checked)}
-                className="h-4 w-4 shrink-0 rounded border-slate-300"
+                className="h-4 w-4 shrink-0 rounded border-mist-line"
               />
             </label>
           </div>
@@ -204,14 +204,14 @@ export default function RecurringActivityFormSheet({ initial, onClose }: Recurri
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

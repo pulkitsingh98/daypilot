@@ -67,16 +67,16 @@ export default function SubjectFormSheet({ initial, onClose, onDeleted }: Subjec
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-paper-raised p-5 sm:max-w-md sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-ink">
             {initial ? 'Edit subject' : 'Add subject'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
             ✕
           </button>
@@ -84,29 +84,29 @@ export default function SubjectFormSheet({ initial, onClose, onDeleted }: Subjec
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Name</span>
+            <span className="text-sm font-medium text-ink-soft">Name</span>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Organic Chemistry"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Code (optional)</span>
+            <span className="text-sm font-medium text-ink-soft">Code (optional)</span>
             <input
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="e.g. CHEM 301"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
           <div>
-            <span className="text-sm font-medium text-slate-700">Proficiency</span>
+            <span className="text-sm font-medium text-ink-soft">Proficiency</span>
             <div className="mt-2 grid grid-cols-5 gap-1.5">
               {PROFICIENCY_LEVELS.map((level) => (
                 <button
@@ -115,8 +115,8 @@ export default function SubjectFormSheet({ initial, onClose, onDeleted }: Subjec
                   onClick={() => setProficiency((prev) => (prev === level.key ? null : level.key))}
                   className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-2 text-center transition-colors ${
                     proficiency === level.key
-                      ? 'border-indigo-600 bg-indigo-600 text-white'
-                      : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
+                      ? 'border-dusk bg-dusk text-paper-raised'
+                      : 'border-mist-line bg-paper-raised text-ink-soft hover:bg-haze'
                   }`}
                 >
                   <span className="text-sm font-semibold">{level.key}</span>
@@ -124,7 +124,7 @@ export default function SubjectFormSheet({ initial, onClose, onDeleted }: Subjec
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-mist">
               Optional — helps the planner pad time estimates for weaker subjects.
             </p>
           </div>
@@ -148,14 +148,14 @@ export default function SubjectFormSheet({ initial, onClose, onDeleted }: Subjec
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

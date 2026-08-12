@@ -81,16 +81,16 @@ export default function TaskFormSheet({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-paper-raised p-5 sm:max-w-md sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-ink">
             {initial ? 'Edit task' : 'Add task'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
             ✕
           </button>
@@ -98,28 +98,28 @@ export default function TaskFormSheet({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Title</span>
+            <span className="text-sm font-medium text-ink-soft">Title</span>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Problem set 4"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Subject</span>
+            <span className="text-sm font-medium text-ink-soft">Subject</span>
             <SubjectPicker value={subject} onChange={setSubject} placeholder="e.g. Biology" />
           </label>
 
           <div className="flex gap-3">
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Type</span>
+              <span className="text-sm font-medium text-ink-soft">Type</span>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as TaskType)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               >
                 {TASK_TYPES.map((t) => (
                   <option key={t.key} value={t.key}>
@@ -129,11 +129,11 @@ export default function TaskFormSheet({
               </select>
             </label>
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Priority</span>
+              <span className="text-sm font-medium text-ink-soft">Priority</span>
               <select
                 value={priority}
                 onChange={(e) => setPriority(Number(e.target.value) as TaskPriority)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               >
                 {TASK_PRIORITIES.map((p) => (
                   <option key={p.key} value={p.key}>
@@ -146,11 +146,11 @@ export default function TaskFormSheet({
 
           <div className="flex gap-3">
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Status</span>
+              <span className="text-sm font-medium text-ink-soft">Status</span>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               >
                 {TASK_STATUSES.map((s) => (
                   <option key={s.key} value={s.key}>
@@ -160,12 +160,12 @@ export default function TaskFormSheet({
               </select>
             </label>
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Due date</span>
+              <span className="text-sm font-medium text-ink-soft">Due date</span>
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
           </div>
@@ -189,14 +189,14 @@ export default function TaskFormSheet({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

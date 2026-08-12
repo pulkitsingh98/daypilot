@@ -45,15 +45,15 @@ export default function History() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-semibold text-slate-900">History</h1>
-      <p className="mt-1 text-sm text-slate-500">Review what got done, day by day.</p>
+      <h1 className="font-display text-2xl font-semibold text-ink">History</h1>
+      <p className="mt-1 text-sm text-mist">Review what got done, day by day.</p>
 
-      {plansLoading && <p className="mt-4 text-sm text-slate-500">Loading…</p>}
+      {plansLoading && <p className="mt-4 text-sm text-mist">Loading…</p>}
       {plansError && (
         <p className="mt-4 text-sm text-red-600">Could not load your history. Try refreshing.</p>
       )}
 
-      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="mt-4 rounded-xl border border-mist-line bg-paper-raised p-4">
         <MonthCalendar
           viewedMonth={viewedMonth}
           onPrevMonth={() => goToMonth(-1)}

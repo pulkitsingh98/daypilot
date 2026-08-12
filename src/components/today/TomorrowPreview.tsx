@@ -14,14 +14,14 @@ export default function TomorrowPreview({ classes, plan }: TomorrowPreviewProps)
   const sorted = [...classes].sort((a, b) => a.startTime.localeCompare(b.startTime))
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3">
-      <h2 className="text-sm font-semibold text-slate-900">Tomorrow</h2>
+    <div className="mb-4 rounded-xl border border-mist-line bg-paper-raised p-3">
+      <h2 className="text-sm font-semibold text-ink">Tomorrow</h2>
       <ul className="mt-2 flex flex-col gap-2">
         {sorted.map((entry) => {
           const scheduled = entry.prepRule ? isPrepScheduledForClass(plan, entry.subject) : null
           return (
             <li key={entry.id} className="flex items-center justify-between gap-2 text-sm">
-              <span className="truncate text-slate-700">
+              <span className="truncate text-ink-soft">
                 {entry.subject} · {formatTimeLabel(entry.startTime)}
               </span>
               {scheduled !== null && (

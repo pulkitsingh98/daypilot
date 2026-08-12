@@ -118,16 +118,16 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-3xl sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-paper-raised p-5 sm:max-w-3xl sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-ink">
             {step === 'paste' ? 'Import from Excel / Sheets' : 'Review & fix values'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
             ✕
           </button>
@@ -136,7 +136,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
         {step === 'paste' && (
           <div className="flex flex-col gap-4">
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-ink-soft">
                 Paste rows copied from Excel or Google Sheets
               </span>
               <textarea
@@ -144,31 +144,31 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                 onChange={(e) => handleRawTextChange(e.target.value)}
                 rows={6}
                 placeholder={'Title\tSubject\tDue Date\nProblem set 4\tBiology\t2026-08-20'}
-                className="rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 font-mono text-xs focus:border-dusk focus:outline-none"
               />
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-ink-soft">
               <input
                 type="checkbox"
                 checked={hasHeader}
                 onChange={(e) => setHasHeader(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300"
+                className="h-4 w-4 rounded border-mist-line"
               />
               First row contains headers
             </label>
 
             {columnCount > 0 && (
               <div>
-                <p className="mb-2 text-sm text-slate-500">
+                <p className="mb-2 text-sm text-mist">
                   {dataRows.length} row{dataRows.length === 1 ? '' : 's'} detected. Map each column
                   to a field:
                 </p>
-                <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <div className="overflow-x-auto rounded-lg border border-mist-line">
                   <div className="flex min-w-max gap-3 p-3">
                     {Array.from({ length: columnCount }).map((_, i) => (
                       <div key={i} className="w-36 shrink-0">
-                        <div className="truncate text-xs text-slate-400">
+                        <div className="truncate text-xs text-mist">
                           Column {i + 1}
                           {hasHeader && headerRow[i] ? ` — "${headerRow[i]}"` : ''}
                         </div>
@@ -180,7 +180,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                               [i]: e.target.value as ImportField,
                             }))
                           }
-                          className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-mist-line px-2 py-1.5 text-sm focus:border-dusk focus:outline-none"
                         >
                           {IMPORT_FIELDS.map((f) => (
                             <option key={f.key} value={f.key}>
@@ -202,7 +202,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
@@ -210,7 +210,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                 type="button"
                 disabled={!hasTitleColumn || dataRows.length === 0}
                 onClick={handleContinue}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:bg-mist-line"
               >
                 Continue
               </button>
@@ -220,14 +220,14 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
 
         {step === 'preview' && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-mist">
               Nothing is saved yet — fix any values below, then confirm.
             </p>
 
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <div className="overflow-x-auto rounded-lg border border-mist-line">
               <table className="w-full min-w-[720px] border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs text-slate-500">
+                  <tr className="border-b border-mist-line bg-haze text-left text-xs text-mist">
                     <th className="px-3 py-2 font-medium">Title</th>
                     <th className="px-3 py-2 font-medium">Subject</th>
                     <th className="px-3 py-2 font-medium">Type</th>
@@ -243,14 +243,14 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                     return (
                       <tr
                         key={row.key}
-                        className={`border-b border-slate-100 align-top ${titleMissing ? 'bg-red-50' : ''}`}
+                        className={`border-b border-mist-line align-top ${titleMissing ? 'bg-red-50' : ''}`}
                       >
                         <td className="px-3 py-2">
                           <input
                             type="text"
                             value={row.title}
                             onChange={(e) => updateRow(row.key, { title: e.target.value })}
-                            className="w-36 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                            className="w-36 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           />
                           {titleMissing && (
                             <p className="mt-1 text-xs text-red-600">Title required — row skipped</p>
@@ -261,7 +261,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             type="text"
                             value={row.subject}
                             onChange={(e) => updateRow(row.key, { subject: e.target.value })}
-                            className="w-32 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                            className="w-32 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           />
                         </td>
                         <td className="px-3 py-2">
@@ -270,7 +270,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             onChange={(e) =>
                               updateRow(row.key, { type: e.target.value as TaskType })
                             }
-                            className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                            className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           >
                             {TASK_TYPES.map((t) => (
                               <option key={t.key} value={t.key}>
@@ -285,7 +285,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             onChange={(e) =>
                               updateRow(row.key, { priority: Number(e.target.value) as TaskPriority })
                             }
-                            className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                            className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           >
                             {TASK_PRIORITIES.map((p) => (
                               <option key={p.key} value={p.key}>
@@ -300,7 +300,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             onChange={(e) =>
                               updateRow(row.key, { status: e.target.value as TaskStatus })
                             }
-                            className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                            className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           >
                             {TASK_STATUSES.map((s) => (
                               <option key={s.key} value={s.key}>
@@ -314,7 +314,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             type="date"
                             value={row.dueDate}
                             onChange={(e) => updateRow(row.key, { dueDate: e.target.value })}
-                            className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                            className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           />
                           {row.dueDateWarning && (
                             <p className="mt-1 w-32 text-xs text-amber-600">{row.dueDateWarning}</p>
@@ -325,7 +325,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             type="button"
                             onClick={() => removeRow(row.key)}
                             aria-label="Remove row"
-                            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                            className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                           >
                             ✕
                           </button>
@@ -337,7 +337,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
               </table>
             </div>
 
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-mist">
               {validRows.length} task{validRows.length === 1 ? '' : 's'} ready to import
               {skippedCount > 0 ? `, ${skippedCount} skipped (missing title)` : ''}.
             </p>
@@ -348,14 +348,14 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
               <button
                 type="button"
                 onClick={() => setStep('paste')}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
@@ -363,7 +363,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                 type="button"
                 disabled={validRows.length === 0 || importTasks.isPending}
                 onClick={handleConfirm}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:bg-mist-line"
               >
                 {importTasks.isPending ? 'Importing…' : `Confirm import (${validRows.length})`}
               </button>

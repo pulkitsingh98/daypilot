@@ -11,21 +11,21 @@ export default function DeferredSection({ items }: DeferredSectionProps) {
   if (items.length === 0) return null
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-white">
+    <div className="mt-4 rounded-xl border border-mist-line bg-paper-raised">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between p-3 text-sm font-semibold text-slate-900"
+        className="flex w-full items-center justify-between p-3 text-sm font-semibold text-ink"
       >
         <span>Deferred today ({items.length})</span>
-        <span className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}>⌄</span>
+        <span className={`text-mist transition-transform ${open ? 'rotate-180' : ''}`}>⌄</span>
       </button>
       {open && (
-        <ul className="flex flex-col gap-2 border-t border-slate-200 p-3">
+        <ul className="flex flex-col gap-2 border-t border-mist-line p-3">
           {items.map((item, index) => (
             <li key={index}>
-              <div className="text-sm font-medium text-slate-800">{item.title}</div>
-              <div className="text-xs text-slate-500">{item.reason}</div>
+              <div className="text-sm font-medium text-ink">{item.title}</div>
+              <div className="text-xs text-mist">{item.reason}</div>
             </li>
           ))}
         </ul>

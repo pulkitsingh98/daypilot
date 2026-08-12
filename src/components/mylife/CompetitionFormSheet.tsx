@@ -76,16 +76,16 @@ export default function CompetitionFormSheet({ initial, onClose }: CompetitionFo
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-paper-raised p-5 sm:max-w-md sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-ink">
             {initial ? 'Edit entry' : 'Add competition or opportunity'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
           >
             ✕
           </button>
@@ -93,78 +93,78 @@ export default function CompetitionFormSheet({ initial, onClose }: CompetitionFo
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-700">Title</span>
+            <span className="text-sm font-medium text-ink-soft">Title</span>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. McKinsey Case Competition"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
 
           <div className="flex gap-3">
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Organiser</span>
+              <span className="text-sm font-medium text-ink-soft">Organiser</span>
               <input
                 type="text"
                 value={organiser}
                 onChange={(e) => setOrganiser(e.target.value)}
                 placeholder="e.g. McKinsey & Co."
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Current stage</span>
+              <span className="text-sm font-medium text-ink-soft">Current stage</span>
               <input
                 type="text"
                 value={stage}
                 onChange={(e) => setStage(e.target.value)}
                 placeholder="e.g. Round 2"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
           </div>
 
           <div className="flex gap-3">
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Deadline date</span>
+              <span className="text-sm font-medium text-ink-soft">Deadline date</span>
               <input
                 type="date"
                 value={deadlineDate}
                 onChange={(e) => setDeadlineDate(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Deadline time</span>
+              <span className="text-sm font-medium text-ink-soft">Deadline time</span>
               <input
                 type="time"
                 value={deadlineTime}
                 onChange={(e) => setDeadlineTime(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
           </div>
 
           <div className="flex gap-3">
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Effort estimate (min)</span>
+              <span className="text-sm font-medium text-ink-soft">Effort estimate (min)</span>
               <input
                 type="number"
                 min={1}
                 value={effortEstimateMinutes}
                 onChange={(e) => setEffortEstimateMinutes(e.target.value)}
                 placeholder="e.g. 600"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
             <label className="flex flex-1 flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Status</span>
+              <span className="text-sm font-medium text-ink-soft">Status</span>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as CompetitionStatus)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               >
                 {COMPETITION_STATUSES.map((s) => (
                   <option key={s.key} value={s.key}>
@@ -194,14 +194,14 @@ export default function CompetitionFormSheet({ initial, onClose }: CompetitionFo
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

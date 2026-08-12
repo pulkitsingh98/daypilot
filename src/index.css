@@ -1,1 +1,33 @@
 @import "tailwindcss";
+
+@theme {
+  /* Morning Light — DayPilot's visual identity. See MEMORY notes: paper/ink
+     structure with dusk as the primary structural color and dawn reserved
+     for a single sparing job (the Today timeline's "now" marker and its
+     hero action). */
+  --color-paper: #f5f6f9;
+  --color-paper-raised: #ffffff;
+  --color-ink: #1d2436;
+  --color-ink-soft: #454e63;
+  --color-dusk: #33456a;
+  --color-dusk-deep: #26344f;
+  --color-mist: #8892a6;
+  --color-mist-line: #dde1e9;
+  --color-dawn: #dda23f;
+  --color-dawn-deep: #b9822c;
+  --color-haze: #eceff4;
+
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Retunes the app's existing rounded-xl / rounded-2xl usage to the
+     proposed 8 / 14 / 20 scale without touching component markup. */
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}

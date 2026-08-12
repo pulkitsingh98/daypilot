@@ -16,21 +16,21 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
   const isZero = goal.minutesThisWeek === 0
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-xl border border-mist-line bg-paper-raised p-4">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">{goal.title}</h3>
+        <h3 className="text-sm font-semibold text-ink">{goal.title}</h3>
         <button
           type="button"
           onClick={() => onEdit(goal)}
           aria-label={`Edit ${goal.title}`}
-          className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-ink-soft"
         >
           ✏️
         </button>
       </div>
 
       <div className="mt-3">
-        <div className="flex items-baseline justify-between text-xs text-slate-500">
+        <div className="flex items-baseline justify-between text-xs text-mist">
           <span>
             {goal.minutesThisWeek} / {goal.weeklyTargetMinutes} min this week
           </span>
@@ -57,7 +57,7 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
             key={minutes}
             type="button"
             onClick={() => logGoalMinutes.mutate({ goalId: goal.id, deltaMinutes: minutes })}
-            className="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-full border border-mist-line px-2.5 py-1 text-xs font-medium text-ink-soft hover:bg-haze"
           >
             +{minutes}m
           </button>

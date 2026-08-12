@@ -15,11 +15,11 @@ interface MonthCalendarProps {
 }
 
 function cellColorClass(plan: DailyPlan | undefined, completion: DayCompletion): string {
-  if (!plan) return 'bg-slate-50 text-slate-300'
-  if (completion.total === 0) return 'bg-slate-100 text-slate-500'
-  if (completion.done === completion.total) return 'bg-emerald-500 text-white'
-  if (completion.done === 0) return 'bg-red-400 text-white'
-  return 'bg-amber-400 text-white'
+  if (!plan) return 'bg-haze text-mist-line'
+  if (completion.total === 0) return 'bg-haze text-mist'
+  if (completion.done === completion.total) return 'bg-emerald-500 text-paper-raised'
+  if (completion.done === 0) return 'bg-red-400 text-paper-raised'
+  return 'bg-amber-400 text-paper-raised'
 }
 
 export default function MonthCalendar({
@@ -50,24 +50,24 @@ export default function MonthCalendar({
           type="button"
           onClick={onPrevMonth}
           aria-label="Previous month"
-          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+          className="rounded-lg p-1.5 text-mist hover:bg-haze"
         >
           ‹
         </button>
-        <h2 className="text-sm font-semibold text-slate-900">
+        <h2 className="text-sm font-semibold text-ink">
           {viewedMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         </h2>
         <button
           type="button"
           onClick={onNextMonth}
           aria-label="Next month"
-          className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+          className="rounded-lg p-1.5 text-mist hover:bg-haze"
         >
           ›
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wide text-slate-400">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wide text-mist">
         {DAYS.map((d) => (
           <div key={d.key}>{d.short}</div>
         ))}
@@ -91,7 +91,7 @@ export default function MonthCalendar({
               className={`flex aspect-square items-center justify-center rounded-lg text-xs font-medium transition-shadow ${cellColorClass(
                 plan,
                 completion,
-              )} ${isSelected ? 'ring-2 ring-indigo-600 ring-offset-1' : ''} ${isToday ? 'font-bold underline' : ''}`}
+              )} ${isSelected ? 'ring-2 ring-dusk ring-offset-1' : ''} ${isToday ? 'font-bold underline' : ''}`}
             >
               {cellDate.getDate()}
             </button>
@@ -99,7 +99,7 @@ export default function MonthCalendar({
         })}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-mist">
         <span className="flex items-center gap-1">
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> All done
         </span>
@@ -110,7 +110,7 @@ export default function MonthCalendar({
           <span className="h-2.5 w-2.5 rounded-full bg-red-400" /> None done
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-full bg-slate-50" /> No plan
+          <span className="h-2.5 w-2.5 rounded-full bg-haze" /> No plan
         </span>
       </div>
     </div>

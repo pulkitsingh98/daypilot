@@ -46,21 +46,21 @@ export default function Backlog() {
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Backlog</h1>
-          <p className="mt-1 text-sm text-slate-500">Your unscheduled tasks.</p>
+          <h1 className="font-display text-2xl font-semibold text-ink">Backlog</h1>
+          <p className="mt-1 text-sm text-mist">Your unscheduled tasks.</p>
         </div>
         <div className="flex shrink-0 gap-2">
           <button
             type="button"
             onClick={() => setImportOpen(true)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-lg border border-mist-line px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
           >
             Import
           </button>
           <button
             type="button"
             onClick={() => openAdd()}
-            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
           >
             + Add task
           </button>
@@ -71,7 +71,7 @@ export default function Backlog() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-700 focus:border-slate-500 focus:outline-none"
+          className="rounded-lg border border-mist-line px-2.5 py-1.5 text-sm text-ink-soft focus:border-dusk focus:outline-none"
         >
           <option value="all">All types</option>
           {TASK_TYPES.map((t) => (
@@ -83,7 +83,7 @@ export default function Backlog() {
         <select
           value={subjectFilter}
           onChange={(e) => setSubjectFilter(e.target.value)}
-          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-700 focus:border-slate-500 focus:outline-none"
+          className="rounded-lg border border-mist-line px-2.5 py-1.5 text-sm text-ink-soft focus:border-dusk focus:outline-none"
         >
           <option value="all">All subjects</option>
           {subjects.map((s) => (
@@ -94,7 +94,7 @@ export default function Backlog() {
         </select>
       </div>
 
-      {isLoading && <p className="mb-4 text-sm text-slate-500">Loading your backlog…</p>}
+      {isLoading && <p className="mb-4 text-sm text-mist">Loading your backlog…</p>}
       {error && <p className="mb-4 text-sm text-red-600">Could not load your backlog. Try refreshing.</p>}
 
       <div className="flex flex-col gap-6">
@@ -103,21 +103,21 @@ export default function Backlog() {
           return (
             <section key={statusMeta.key}>
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-ink">
                   {statusMeta.label}{' '}
-                  <span className="font-normal text-slate-400">({statusTasks.length})</span>
+                  <span className="font-normal text-mist">({statusTasks.length})</span>
                 </h2>
                 <button
                   type="button"
                   onClick={() => openAdd(statusMeta.key)}
-                  className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                  className="text-xs font-medium text-dusk hover:text-dusk-deep"
                 >
                   + Add
                 </button>
               </div>
 
               {statusTasks.length === 0 ? (
-                <p className="text-sm text-slate-400">No tasks</p>
+                <p className="text-sm text-mist">No tasks</p>
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {statusTasks.map((task) => (

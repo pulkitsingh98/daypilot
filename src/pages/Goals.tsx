@@ -29,19 +29,19 @@ export default function Goals() {
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Goals</h1>
-          <p className="mt-1 text-sm text-slate-500">Track weekly progress toward your goals.</p>
+          <h1 className="font-display text-2xl font-semibold text-ink">Goals</h1>
+          <p className="mt-1 text-sm text-mist">Track weekly progress toward your goals.</p>
         </div>
         <button
           type="button"
           onClick={() => openAdd()}
-          className="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          className="shrink-0 rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
         >
           + Add goal
         </button>
       </div>
 
-      {isLoading && <p className="mb-4 text-sm text-slate-500">Loading your goals…</p>}
+      {isLoading && <p className="mb-4 text-sm text-mist">Loading your goals…</p>}
       {error && <p className="mb-4 text-sm text-red-600">Could not load your goals. Try refreshing.</p>}
 
       <div className="flex flex-col gap-6">
@@ -50,18 +50,18 @@ export default function Goals() {
           return (
             <section key={horizon.key}>
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-slate-900">{horizon.label}</h2>
+                <h2 className="text-sm font-semibold text-ink">{horizon.label}</h2>
                 <button
                   type="button"
                   onClick={() => openAdd(horizon.key)}
-                  className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                  className="text-xs font-medium text-dusk hover:text-dusk-deep"
                 >
                   + Add
                 </button>
               </div>
 
               {horizonGoals.length === 0 ? (
-                <p className="text-sm text-slate-400">No goals yet</p>
+                <p className="text-sm text-mist">No goals yet</p>
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {horizonGoals.map((goal) => (

@@ -124,19 +124,19 @@ export default function QuickAdd() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder='e.g. "quiz on marketing in 3 days"'
-          className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          className="min-w-0 flex-1 rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
         />
         <button
           type="submit"
           disabled={loading || !text.trim()}
-          className="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="shrink-0 rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? 'Thinking…' : 'Add'}
         </button>
         <UploadDocumentButton
           label="📄 Upload"
           helperText="A timetable, syllabus, or session list — DayPilot reads it and turns it into classes, sessions, or tasks."
-          className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          className="shrink-0 rounded-lg border border-mist-line px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
         />
       </form>
 
@@ -154,28 +154,28 @@ export default function QuickAdd() {
       )}
 
       {draft && (
-        <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
-          <h3 className="text-sm font-semibold text-slate-900">Confirm task</h3>
-          <p className="mt-1 text-xs text-slate-500">Nothing is saved until you confirm.</p>
+        <div className="mt-3 rounded-xl border border-mist-line bg-paper-raised p-4">
+          <h3 className="text-sm font-semibold text-ink">Confirm task</h3>
+          <p className="mt-1 text-xs text-mist">Nothing is saved until you confirm.</p>
 
           <div className="mt-3 flex flex-col gap-3">
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-700">Title</span>
+              <span className="text-sm font-medium text-ink-soft">Title</span>
               <input
                 type="text"
                 value={draft.title}
                 onChange={(e) => updateDraft({ title: e.target.value })}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
               />
             </label>
 
             <div className="flex gap-3">
               <label className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-sm font-medium text-slate-700">Type</span>
+                <span className="text-sm font-medium text-ink-soft">Type</span>
                 <select
                   value={draft.type}
                   onChange={(e) => updateDraft({ type: e.target.value as TaskType })}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                  className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
                 >
                   {TASK_TYPES.map((t) => (
                     <option key={t.key} value={t.key}>
@@ -185,55 +185,55 @@ export default function QuickAdd() {
                 </select>
               </label>
               <label className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-sm font-medium text-slate-700">Subject</span>
+                <span className="text-sm font-medium text-ink-soft">Subject</span>
                 <SubjectPicker value={draft.subject} onChange={(subject) => updateDraft({ subject })} />
               </label>
             </div>
 
             <div className="flex gap-3">
               <label className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-sm font-medium text-slate-700">Due date</span>
+                <span className="text-sm font-medium text-ink-soft">Due date</span>
                 <input
                   type="date"
                   value={draft.dueDate}
                   onChange={(e) => updateDraft({ dueDate: e.target.value })}
-                  className="min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                  className="min-w-0 rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
                 />
               </label>
               <label className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-sm font-medium text-slate-700">Est. minutes</span>
+                <span className="text-sm font-medium text-ink-soft">Est. minutes</span>
                 <input
                   type="number"
                   min={1}
                   value={draft.estimatedMinutes}
                   onChange={(e) => updateDraft({ estimatedMinutes: e.target.value })}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                  className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
                 />
               </label>
             </div>
 
             {draft.prepSessions.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-slate-700">Suggested prep sessions</p>
+                <p className="text-sm font-medium text-ink-soft">Suggested prep sessions</p>
                 <div className="mt-2 flex flex-col gap-2">
                   {draft.prepSessions.map((session) => (
                     <div
                       key={session.key}
-                      className="flex items-start gap-2 rounded-lg border border-slate-200 p-2"
+                      className="flex items-start gap-2 rounded-lg border border-mist-line p-2"
                     >
                       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                         <input
                           type="text"
                           value={session.title}
                           onChange={(e) => updatePrepSession(session.key, { title: e.target.value })}
-                          className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                          className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                         />
                         <div className="flex gap-2">
                           <input
                             type="date"
                             value={session.date}
                             onChange={(e) => updatePrepSession(session.key, { date: e.target.value })}
-                            className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                            className="min-w-0 flex-1 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           />
                           <input
                             type="number"
@@ -242,7 +242,7 @@ export default function QuickAdd() {
                             onChange={(e) =>
                               updatePrepSession(session.key, { minutes: Number(e.target.value) })
                             }
-                            className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+                            className="w-20 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           />
                         </div>
                       </div>
@@ -250,7 +250,7 @@ export default function QuickAdd() {
                         type="button"
                         onClick={() => removePrepSession(session.key)}
                         aria-label={`Remove prep session: ${session.title}`}
-                        className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+                        className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
                       >
                         ✕
                       </button>
@@ -267,7 +267,7 @@ export default function QuickAdd() {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
               >
                 Cancel
               </button>
@@ -275,7 +275,7 @@ export default function QuickAdd() {
                 type="button"
                 disabled={!draft.title.trim() || addTask.isPending}
                 onClick={() => void handleConfirm()}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {addTask.isPending
                   ? 'Saving…'

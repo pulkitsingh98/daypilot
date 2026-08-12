@@ -3,7 +3,7 @@ import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
 import { useSubjects } from '../data/subjects'
-import { addDays, dayKeyForDate, toIsoDate } from '../lib/time'
+import { addDays, dayKeyForDate, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
 import { dismissOnboardingBanner, isOnboardingBannerDismissed } from '../lib/onboardingBanner'
 import { buildTimelineItems } from '../lib/todayView'
@@ -12,6 +12,7 @@ import QuickAdd from '../components/today/QuickAdd'
 import MorningNudge from '../components/today/MorningNudge'
 import TomorrowPreview from '../components/today/TomorrowPreview'
 import TimelineBlock from '../components/today/TimelineBlock'
+import NowMarker from '../components/today/NowMarker'
 import DeferredSection from '../components/today/DeferredSection'
 import UploadDocumentButton from '../components/documents/UploadDocumentButton'
 
@@ -58,14 +59,33 @@ export default function Today() {
     markNudgeHandled()
   }
 
+  // Slots a NowMarker into the sorted timeline at the point matching the
+  // current time — a real row in the sequence, not a proportionally
+  // positioned overlay, so it stays correct regardless of block heights.
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  const nowLabel = formatTimeLabel(formatTimeOfDay(now))
+  const timelineRows: Array<{ key: string; node: React.ReactNode }> = []
+  let nowInserted = false
+  timelineItems.forEach((item) => {
+    if (!nowInserted && toMinutes(item.start) > nowMinutes) {
+      timelineRows.push({ key: 'now-marker', node: <NowMarker label={nowLabel} /> })
+      nowInserted = true
+    }
+    timelineRows.push({
+      key: item.key,
+      node: <TimelineBlock item={item} task={item.taskId ? tasksById.get(item.taskId) : undefined} />,
+    })
+  })
+  if (!nowInserted) timelineRows.push({ key: 'now-marker', node: <NowMarker label={nowLabel} /> })
+
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-semibold text-slate-900">Today</h1>
+      <h1 className="font-display text-2xl font-semibold text-ink">Today</h1>
 
       {showOnboardingBanner && (
-        <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3">
-          <p className="text-sm font-medium text-indigo-900">New here? Set up your term in one step</p>
-          <p className="mt-0.5 text-sm text-indigo-700">
+        <div className="mt-4 rounded-xl border border-mist-line bg-haze p-3">
+          <p className="text-sm font-medium text-dusk-deep">New here? Set up your term in one step</p>
+          <p className="mt-0.5 text-sm text-dusk">
             Upload a photo or PDF of your timetable and DayPilot builds your class schedule for
             you — a one-time thing per term, not something you'll need to redo daily.
           </p>
@@ -73,12 +93,12 @@ export default function Today() {
             <UploadDocumentButton
               label="Upload timetable"
               helperText="A photo or PDF of your class schedule."
-              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+              className="rounded-lg bg-dusk px-3 py-1.5 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
             />
             <button
               type="button"
               onClick={dismissBanner}
-              className="text-sm font-medium text-indigo-700 hover:underline"
+              className="text-sm font-medium text-dusk hover:underline"
             >
               I'll do this later
             </button>
@@ -98,7 +118,7 @@ export default function Today() {
         />
       )}
 
-      {classesLoading && <p className="mb-4 text-sm text-slate-500">Loading your timetable…</p>}
+      {classesLoading && <p className="mb-4 text-sm text-mist">Loading your timetable…</p>}
 
       <TomorrowPreview classes={tomorrowClasses} plan={plan} />
 
@@ -120,40 +140,37 @@ export default function Today() {
       )}
 
       {planLoading ? (
-        <p className="text-sm text-slate-500">Loading today's plan…</p>
+        <p className="text-sm text-mist">Loading today's plan…</p>
       ) : !plan ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
-          <p className="text-sm text-slate-500">No plan yet for today.</p>
+        <div className="rounded-xl border border-dashed border-mist-line bg-paper-raised p-6 text-center">
+          <p className="text-sm text-mist">No plan yet for today.</p>
           <button
             type="button"
             disabled={loading}
             onClick={() => void handleGenerate(false)}
-            className="mt-3 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="mt-3 rounded-lg bg-dawn-deep px-5 py-2.5 text-sm font-medium text-paper-raised hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Planning…' : 'Plan my day'}
           </button>
         </div>
       ) : (
         <>
-          <div className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-3">
-            <p className="text-sm text-indigo-900">{plan.note}</p>
+          <div className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-mist-line bg-haze p-3">
+            <p className="text-sm text-dusk-deep">{plan.note}</p>
             <button
               type="button"
               disabled={loading}
               onClick={() => void handleGenerate(true)}
-              className="shrink-0 rounded-lg border border-indigo-300 bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="shrink-0 rounded-lg border border-mist-line bg-paper-raised px-3 py-1.5 text-xs font-medium text-dusk hover:bg-haze disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Replanning…' : 'Replan rest of day'}
             </button>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {timelineItems.map((item) => (
-              <TimelineBlock
-                key={item.key}
-                item={item}
-                task={item.taskId ? tasksById.get(item.taskId) : undefined}
-              />
+          <div className="relative flex flex-col gap-3 pl-[26px]">
+            <div className="absolute bottom-2 left-[7px] top-2 w-0.5 bg-mist-line" />
+            {timelineRows.map((row) => (
+              <div key={row.key}>{row.node}</div>
             ))}
           </div>
 

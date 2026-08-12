@@ -45,8 +45,8 @@ export default function MyLife() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-semibold text-slate-900">My Life</h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <h1 className="font-display text-2xl font-semibold text-ink">My Life</h1>
+      <p className="mt-1 text-sm text-mist">
         Your personal time and your competitions, both protected on the calendar.
       </p>
 
@@ -55,11 +55,11 @@ export default function MyLife() {
           className={`mt-4 rounded-xl border p-3 ${
             nearestDeadlineInfo.isOverdue || nearestDeadlineInfo.isDueSoon
               ? 'border-amber-200 bg-amber-50'
-              : 'border-slate-200 bg-white'
+              : 'border-mist-line bg-paper-raised'
           }`}
         >
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Nearest deadline</p>
-          <p className="mt-0.5 text-sm text-slate-900">
+          <p className="text-xs font-medium uppercase tracking-wide text-mist">Nearest deadline</p>
+          <p className="mt-0.5 text-sm text-ink">
             <span className="font-semibold">{nearestDeadline.title}</span> — {nearestDeadlineInfo.label}
             {nearestDeadline.deadlineTime && ` at ${formatTimeLabel(nearestDeadline.deadlineTime)}`}
           </p>
@@ -86,22 +86,22 @@ export default function MyLife() {
 
       <section className="mt-6">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">Recurring activities</h2>
+          <h2 className="text-sm font-semibold text-ink">Recurring activities</h2>
           <button
             type="button"
             onClick={openAddActivity}
-            className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+            className="text-xs font-medium text-dusk hover:text-dusk-deep"
           >
             + Add
           </button>
         </div>
 
-        {activitiesLoading && <p className="text-sm text-slate-500">Loading…</p>}
+        {activitiesLoading && <p className="text-sm text-mist">Loading…</p>}
         {activitiesError && (
           <p className="text-sm text-red-600">Could not load your activities. Try refreshing.</p>
         )}
         {!activitiesLoading && activities.length === 0 && (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-mist">
             Nothing yet — add the things you do regularly that aren't academic, like sport or family
             time, so the planner protects them.
           </p>
@@ -116,22 +116,22 @@ export default function MyLife() {
 
       <section className="mt-6">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">Competitions & opportunities</h2>
+          <h2 className="text-sm font-semibold text-ink">Competitions & opportunities</h2>
           <button
             type="button"
             onClick={openAddCompetition}
-            className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+            className="text-xs font-medium text-dusk hover:text-dusk-deep"
           >
             + Add
           </button>
         </div>
 
-        {competitionsLoading && <p className="text-sm text-slate-500">Loading…</p>}
+        {competitionsLoading && <p className="text-sm text-mist">Loading…</p>}
         {competitionsError && (
           <p className="text-sm text-red-600">Could not load your competitions. Try refreshing.</p>
         )}
         {!competitionsLoading && competitions.length === 0 && (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-mist">
             No competitions or opportunities tracked yet — add a case competition, hackathon, or
             application.
           </p>

@@ -36,13 +36,13 @@ export default function WeekGrid({ classes, onEdit }: WeekGridProps) {
   }, [bounds])
 
   return (
-    <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+    <div className="hidden overflow-x-auto rounded-xl border border-mist-line bg-paper-raised md:block">
       <div className="grid min-w-[760px] grid-cols-[56px_repeat(7,1fr)]">
-        <div className="border-b border-slate-200" />
+        <div className="border-b border-mist-line" />
         {DAYS.map((day) => (
           <div
             key={day.key}
-            className="border-b border-l border-slate-200 py-2 text-center text-sm font-semibold text-slate-700"
+            className="border-b border-l border-mist-line py-2 text-center text-sm font-semibold text-ink-soft"
           >
             {day.short}
           </div>
@@ -52,7 +52,7 @@ export default function WeekGrid({ classes, onEdit }: WeekGridProps) {
           {hourMarks.map((mark) => (
             <div
               key={mark}
-              className="absolute right-2 -translate-y-1/2 text-xs text-slate-400"
+              className="absolute right-2 -translate-y-1/2 text-xs text-mist"
               style={{ top: mark - bounds.start }}
             >
               {formatHourLabel(mark)}
@@ -65,13 +65,13 @@ export default function WeekGrid({ classes, onEdit }: WeekGridProps) {
           return (
             <div
               key={day.key}
-              className="relative border-l border-slate-100"
+              className="relative border-l border-mist-line"
               style={{ height: totalMinutes }}
             >
               {hourMarks.map((mark) => (
                 <div
                   key={mark}
-                  className="absolute inset-x-0 border-t border-slate-100"
+                  className="absolute inset-x-0 border-t border-mist-line"
                   style={{ top: mark - bounds.start }}
                 />
               ))}
@@ -86,14 +86,14 @@ export default function WeekGrid({ classes, onEdit }: WeekGridProps) {
                     key={entry.id}
                     type="button"
                     onClick={() => onEdit(entry)}
-                    className="absolute left-1 right-1 overflow-hidden rounded-md bg-indigo-600 px-2 py-1 text-left text-xs text-white shadow-sm hover:bg-indigo-700"
+                    className="absolute left-1 right-1 overflow-hidden rounded-md bg-dusk px-2 py-1 text-left text-xs text-paper-raised shadow-sm hover:bg-dusk-deep"
                     style={{ top, height }}
                   >
                     <div className="truncate font-semibold">{entry.subject.trim() || '(untitled class)'}</div>
-                    <div className="truncate text-indigo-100">
+                    <div className="truncate text-haze">
                       {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
                     </div>
-                    {entry.prepRule && <div className="truncate text-indigo-100">📖 prep</div>}
+                    {entry.prepRule && <div className="truncate text-haze">📖 prep</div>}
                   </button>
                 )
               })}

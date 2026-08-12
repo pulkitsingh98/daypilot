@@ -29,16 +29,16 @@ export default function SubjectDetail() {
   } = useSessionsForSubject(subject?.id ?? '')
 
   if (subjectsLoading) {
-    return <div className="p-4 text-sm text-slate-500">Loading…</div>
+    return <div className="p-4 text-sm text-mist">Loading…</div>
   }
 
   if (!subject) {
     return (
       <div className="p-4">
-        <Link to="/settings/subjects" className="text-sm text-slate-400 hover:text-slate-600">
+        <Link to="/settings/subjects" className="text-sm text-mist hover:text-ink-soft">
           ← Subjects
         </Link>
-        <p className="mt-4 text-sm text-slate-500">Subject not found.</p>
+        <p className="mt-4 text-sm text-mist">Subject not found.</p>
       </div>
     )
   }
@@ -66,19 +66,19 @@ export default function SubjectDetail() {
 
   return (
     <div className="p-4">
-      <Link to="/settings/subjects" className="text-sm text-slate-400 hover:text-slate-600">
+      <Link to="/settings/subjects" className="text-sm text-mist hover:text-ink-soft">
         ← Subjects
       </Link>
 
       <div className="mt-1 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold text-slate-900">{subject.name}</h1>
-          {subject.code && <p className="mt-0.5 text-sm text-slate-500">{subject.code}</p>}
+          <h1 className="truncate font-display text-2xl font-semibold text-ink">{subject.name}</h1>
+          {subject.code && <p className="mt-0.5 text-sm text-mist">{subject.code}</p>}
         </div>
         <button
           type="button"
           onClick={() => setEditingSubject(true)}
-          className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          className="shrink-0 rounded-lg border border-mist-line px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
         >
           Edit
         </button>
@@ -90,28 +90,28 @@ export default function SubjectDetail() {
             {proficiency.key} · {proficiency.label}
           </span>
         ) : (
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+          <span className="rounded-full bg-haze px-2 py-0.5 text-xs font-medium text-mist">
             No rating yet
           </span>
         )}
       </div>
 
       <section className="mt-6">
-        <h2 className="text-sm font-semibold text-slate-900">Weekly classes</h2>
+        <h2 className="text-sm font-semibold text-ink">Weekly classes</h2>
         {upcomingClasses.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-400">No classes scheduled for this subject.</p>
+          <p className="mt-2 text-sm text-mist">No classes scheduled for this subject.</p>
         ) : (
           <ul className="mt-2 flex flex-col gap-2">
             {upcomingClasses.map((entry) => (
-              <li key={entry.id} className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+              <li key={entry.id} className="rounded-xl border border-mist-line bg-paper-raised p-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-900">{dayLabel(entry.day)}</span>
-                  <span className="text-slate-500">
+                  <span className="font-medium text-ink">{dayLabel(entry.day)}</span>
+                  <span className="text-mist">
                     {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
                   </span>
                 </div>
                 {entry.prepRule && (
-                  <p className="mt-1 text-xs text-slate-500">Prep: {entry.prepRule.description}</p>
+                  <p className="mt-1 text-xs text-mist">Prep: {entry.prepRule.description}</p>
                 )}
               </li>
             ))}
@@ -120,15 +120,15 @@ export default function SubjectDetail() {
       </section>
 
       <section className="mt-6">
-        <h2 className="text-sm font-semibold text-slate-900">Sessions</h2>
-        {sessionsLoading && <p className="mt-2 text-sm text-slate-500">Loading…</p>}
+        <h2 className="text-sm font-semibold text-ink">Sessions</h2>
+        {sessionsLoading && <p className="mt-2 text-sm text-mist">Loading…</p>}
         {sessionsError && (
           <p className="mt-2 text-sm text-red-600">Could not load sessions. Try refreshing.</p>
         )}
 
         {!sessionsLoading && sessions.length === 0 && (
-          <div className="mt-2 rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center">
-            <p className="text-sm text-slate-500">
+          <div className="mt-2 rounded-xl border border-dashed border-mist-line bg-paper-raised p-5 text-center">
+            <p className="text-sm text-mist">
               No sessions yet — upload a session list or syllabus and DayPilot will read the
               topics and reading material for you.
             </p>
@@ -136,7 +136,7 @@ export default function SubjectDetail() {
               <UploadDocumentButton
                 label="Upload session list"
                 helperText="A session list or syllabus with dates, topics, or readings."
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
               />
             </div>
           </div>
@@ -149,14 +149,14 @@ export default function SubjectDetail() {
               return (
                 <li
                   key={s.id}
-                  className={`rounded-xl border border-slate-200 bg-white p-3 text-sm ${isPast ? 'opacity-60' : ''}`}
+                  className={`rounded-xl border border-mist-line bg-paper-raised p-3 text-sm ${isPast ? 'opacity-60' : ''}`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate font-medium text-slate-900">
+                    <span className="min-w-0 truncate font-medium text-ink">
                       {s.sessionNumber ? `#${s.sessionNumber} — ` : ''}
                       {s.title}
                     </span>
-                    <span className="shrink-0 text-xs text-slate-500">
+                    <span className="shrink-0 text-xs text-mist">
                       {new Date(`${s.scheduledDate}T00:00:00`).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -164,10 +164,10 @@ export default function SubjectDetail() {
                     </span>
                   </div>
                   {s.topics.length > 0 && (
-                    <p className="mt-1 text-xs text-slate-500">Topics: {s.topics.join(', ')}</p>
+                    <p className="mt-1 text-xs text-mist">Topics: {s.topics.join(', ')}</p>
                   )}
                   {s.readingMaterial && (
-                    <p className="mt-1 text-xs text-slate-500">Read: {s.readingMaterial}</p>
+                    <p className="mt-1 text-xs text-mist">Read: {s.readingMaterial}</p>
                   )}
                 </li>
               )
@@ -178,17 +178,17 @@ export default function SubjectDetail() {
 
       <section className="mt-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">Open tasks</h2>
+          <h2 className="text-sm font-semibold text-ink">Open tasks</h2>
           <button
             type="button"
             onClick={openAddTask}
-            className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+            className="text-xs font-medium text-dusk hover:text-dusk-deep"
           >
             + Add
           </button>
         </div>
         {openTasks.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-400">No open tasks for this subject.</p>
+          <p className="mt-2 text-sm text-mist">No open tasks for this subject.</p>
         ) : (
           <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {openTasks.map((task) => (
