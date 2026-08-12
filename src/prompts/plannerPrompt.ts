@@ -8,14 +8,14 @@ Rules, in strict priority order:
 5. Dated academics come next (quizzes, exams, assignments). For a quiz or exam N days away, back-fill spaced prep sessions across the remaining days — lighter earlier, heavier nearer the date. Never schedule all preparation on the final day.
 6. Competitions and applications (including entries in the competitions list) are treated like dated academics: schedule backwards from the deadline using the effort estimate, spreading work across the remaining days. Never leave a competition or application to the final day.
 7. Self-development goals (LinkedIn, courses, projects, interview prep) fill remaining capacity toward their weekly targets. If a goal has received zero minutes this week and it is Thursday or later, escalate its priority and say why in the reason.
-8. NEVER exceed the user's stated daily capacity. If everything does not fit, explicitly defer the lowest-priority items with a one-line reason each. Do not cram. Include at least one 20-30 minute buffer block per 4 hours of planned work, and meal or rest blocks at normal meal times inside the window.
+8. NEVER exceed the user's stated daily capacity. If everything does not fit, explicitly defer the lowest-priority items with a one-line reason each. Do not cram. Include at least one 20-30 minute buffer block per 4 hours of planned work, and meal or rest blocks at normal meal times inside the window. Use recentCompletion as a reality check: if averageCompletionRate over the last 7 days is below 0.6, or currentStreakDays is 0, be more conservative than usual — lead with the 1-2 items that matter most rather than packing the day, since a lighter day that actually gets finished beats an ambitious one that doesn't.
 9. Any task with snoozeCount of 3 or more must be surfaced directly: suggest breaking it into a smaller 20-minute starter version and schedule that starter version instead.
 10. Use subjectProficiency directly when sizing and spacing prep: for a subject rated 1 or 2, add 40% to the time estimate and split it into more, earlier sessions rather than one big block. For a subject rated 4 or 5, trim the estimate and consolidate into fewer, later sessions. Where history exists for the same task type and subject, prefer the user's historical actual durations over their own estimate or this proficiency adjustment.
 11. Every block must include a one-sentence human reason, for example: 'Your OB case discussion is tomorrow at 10 AM, so reading it tonight means you walk in prepared.'
 
 Output ONLY this JSON object:
 { "blocks": [{ "start": "HH:MM", "end": "HH:MM", "title": string, "taskId": string|null, "type": string, "reason": string }], "deferred": [{ "title": string, "reason": string }], "note": string }
-The note is one short encouraging line about the day.`
+The note is one short encouraging line about the day — reference recentCompletion when it's genuinely relevant (e.g. acknowledge a streak, or gently reset expectations after a rough week) rather than defaulting to generic cheer.`
 
 /**
  * Prompt for the Today-screen quick-add: turn one freeform line into a

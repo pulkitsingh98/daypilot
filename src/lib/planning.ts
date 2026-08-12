@@ -18,7 +18,8 @@ import { fetchCompetitions } from '../data/competitions'
 import type { UpcomingSession } from '../data/sessions'
 import { fetchUpcomingSessions } from '../data/sessions'
 import { ACTIVE_STATUSES as ACTIVE_COMPETITION_STATUSES } from './competitions'
-import { fetchDailyPlan } from '../data/dailyPlans'
+import { fetchDailyPlan, fetchDailyPlansInRange } from '../data/dailyPlans'
+import { computeDayCompletion } from './dayCompletion'
 import { addDays, dayKeyForDate, toIsoDate } from './time'
 
 export interface PlanningTimetableBlock {
@@ -97,6 +98,16 @@ export interface PlanningHistorySummary {
   sampleSize: number
 }
 
+/** How the last week actually went, for pacing today's plan realistically. */
+export interface PlanningCompletionSummary {
+  /** Of the last 7 days, how many had a plan with at least one task-linked block. */
+  daysWithData: number
+  /** Average done/total ratio across those days, 0-1. */
+  averageCompletionRate: number
+  /** Consecutive fully-completed days counting back from yesterday. */
+  currentStreakDays: number
+}
+
 export interface PlanningState {
   today: string
   tomorrow: string
@@ -112,6 +123,7 @@ export interface PlanningState {
   sleepTime: string
   subjectProficiency: Record<string, number>
   historySummary: PlanningHistorySummary[]
+  recentCompletion: PlanningCompletionSummary
 }
 
 function summarizeTaskHistory(taskHistory: TaskHistoryEntry[]): PlanningHistorySummary[] {
@@ -211,6 +223,40 @@ function toPlanningCompetition(competition: Competition): PlanningCompetition {
   }
 }
 
+/** Walks the last 7 days (yesterday back to 7 days ago) to see how much actually got done. */
+async function computeRecentCompletion(tasks: Task[], now: Date): Promise<PlanningCompletionSummary> {
+  const tasksById = new Map(tasks.map((t) => [t.id, t]))
+  const startIso = toIsoDate(addDays(now, -7))
+  const endIso = toIsoDate(addDays(now, -1))
+  const plans = await fetchDailyPlansInRange(startIso, endIso)
+  const plansByDate = new Map(plans.map((p) => [p.planDate, p]))
+
+  const ratios: number[] = []
+  let currentStreakDays = 0
+  let stillStreaking = true
+
+  for (let i = 1; i <= 7; i++) {
+    const dateIso = toIsoDate(addDays(now, -i))
+    const plan = plansByDate.get(dateIso)
+    const completion = computeDayCompletion(plan, dateIso, tasksById)
+    const fullyDone = completion.total > 0 && completion.done === completion.total
+
+    if (completion.total > 0) ratios.push(completion.done / completion.total)
+
+    if (stillStreaking) {
+      if (fullyDone) currentStreakDays += 1
+      else stillStreaking = false
+    }
+  }
+
+  return {
+    daysWithData: ratios.length,
+    averageCompletionRate:
+      ratios.length > 0 ? Math.round((ratios.reduce((a, b) => a + b, 0) / ratios.length) * 100) / 100 : 0,
+    currentStreakDays,
+  }
+}
+
 function buildSubjectProficiency(subjects: Subject[]): Record<string, number> {
   const map: Record<string, number> = {}
   for (const subject of subjects) {
@@ -281,6 +327,7 @@ export async function gatherPlanningState(now: Date, userId: string): Promise<Pl
     sleepTime: profileTyped.sleepTime,
     subjectProficiency: buildSubjectProficiency(subjects),
     historySummary: summarizeTaskHistory(taskHistory),
+    recentCompletion: await computeRecentCompletion(tasks, now),
   }
 }
 
