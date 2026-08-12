@@ -1,11 +1,16 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { updateSettings, useSettings, type AIProvider } from '../store'
+import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 export default function Settings() {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-semibold text-slate-900">Settings</h1>
       <p className="mt-2 text-slate-500">App preferences will show up here.</p>
+
+      <AccountCard />
 
       <div className="mt-6 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
         <Link
@@ -21,6 +26,91 @@ export default function Settings() {
       </div>
 
       <AISettingsCard />
+    </div>
+  )
+}
+
+function AccountCard() {
+  const { session } = useAuth()
+  const fullName = (session?.user.user_metadata?.full_name as string | undefined) ?? ''
+
+  const [editing, setEditing] = useState(false)
+  const [nameInput, setNameInput] = useState(fullName)
+  const [saving, setSaving] = useState(false)
+
+  function startEditing() {
+    setNameInput(fullName)
+    setEditing(true)
+  }
+
+  async function handleSaveName(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    await supabase.auth.updateUser({ data: { full_name: nameInput.trim() } })
+    setSaving(false)
+    setEditing(false)
+  }
+
+  async function handleLogOut() {
+    await supabase.auth.signOut()
+  }
+
+  return (
+    <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+      <h2 className="text-sm font-semibold text-slate-900">Account</h2>
+
+      {editing ? (
+        <form onSubmit={handleSaveName} className="mt-2 flex items-center gap-2">
+          <input
+            type="text"
+            autoFocus
+            placeholder="e.g. Alex Rivera"
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={saving}
+            className="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Cancel
+          </button>
+        </form>
+      ) : (
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            {fullName ? (
+              <p className="truncate text-sm font-medium text-slate-900">{fullName}</p>
+            ) : (
+              <p className="text-sm text-slate-400">No name set</p>
+            )}
+            <p className="truncate text-sm text-slate-600">{session?.user.email}</p>
+          </div>
+          <button
+            type="button"
+            onClick={startEditing}
+            className="shrink-0 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          >
+            {fullName ? 'Edit' : 'Add name'}
+          </button>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => void handleLogOut()}
+        className="mt-3 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+      >
+        Log out
+      </button>
     </div>
   )
 }
