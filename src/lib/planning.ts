@@ -1,4 +1,4 @@
-import type { PrepRule } from '../data/types'
+import type { DayOfWeek, PrepRule } from '../data/types'
 import type { ClassEntry } from '../data/timetableBlocks'
 import { fetchTimetableBlocks } from '../data/timetableBlocks'
 import type { Task, TaskPriority, TaskStatus, TaskType } from '../data/tasks'
@@ -11,6 +11,8 @@ import type { Subject } from '../data/subjects'
 import { fetchSubjects } from '../data/subjects'
 import type { TaskHistoryEntry } from '../data/taskHistory'
 import { fetchTaskHistory } from '../data/taskHistory'
+import type { ActivityCategory, RecurringActivity } from '../data/recurringActivities'
+import { fetchRecurringActivities } from '../data/recurringActivities'
 import { fetchDailyPlan } from '../data/dailyPlans'
 import { addDays, dayKeyForDate, toIsoDate } from './time'
 
@@ -33,6 +35,17 @@ export interface PlanningTask {
   dueDate?: string
   estimatedMinutes?: number
   snoozeCount: number
+}
+
+export interface PlanningRecurringActivity {
+  title: string
+  category: ActivityCategory
+  /** Null means no fixed day — use timesPerWeek as a rough guide for how often to fit it in. */
+  day: DayOfWeek | null
+  preferredTime: string | null
+  durationMinutes: number | null
+  timesPerWeek: number | null
+  isFlexible: boolean
 }
 
 export interface PlanningGoal {
@@ -65,6 +78,7 @@ export interface PlanningState {
   today: string
   tomorrow: string
   timetable: PlanningTimetableBlock[]
+  recurringActivities: PlanningRecurringActivity[]
   openTasks: PlanningTask[]
   goals: PlanningGoal[]
   yesterdayIncompleteBlocks: PlanningIncompleteBlock[]
@@ -138,6 +152,18 @@ async function gatherYesterdayIncompleteBlocks(
   })
 }
 
+function toPlanningRecurringActivity(activity: RecurringActivity): PlanningRecurringActivity {
+  return {
+    title: activity.title,
+    category: activity.category,
+    day: activity.day,
+    preferredTime: activity.preferredTime,
+    durationMinutes: activity.durationMinutes,
+    timesPerWeek: activity.timesPerWeek,
+    isFlexible: activity.isFlexible,
+  }
+}
+
 function buildSubjectProficiency(subjects: Subject[]): Record<string, number> {
   const map: Record<string, number> = {}
   for (const subject of subjects) {
@@ -154,13 +180,14 @@ export async function gatherPlanningState(now: Date, userId: string): Promise<Pl
   const tomorrowIso = toIsoDate(tomorrow)
   const yesterdayIso = toIsoDate(yesterday)
 
-  const [classes, tasks, goals, profile, subjects, taskHistory] = await Promise.all([
+  const [classes, tasks, goals, profile, subjects, taskHistory, recurringActivities] = await Promise.all([
     fetchTimetableBlocks(),
     fetchTasks(),
     fetchGoals(),
     fetchProfile(userId),
     fetchSubjects(),
     fetchTaskHistory(),
+    fetchRecurringActivities(),
   ])
 
   const openTasks: PlanningTask[] = tasks
@@ -191,6 +218,7 @@ export async function gatherPlanningState(now: Date, userId: string): Promise<Pl
     today: todayIso,
     tomorrow: tomorrowIso,
     timetable: gatherTimetable(classes, now, tomorrow),
+    recurringActivities: recurringActivities.map(toPlanningRecurringActivity),
     openTasks,
     goals: planningGoals,
     yesterdayIncompleteBlocks: await gatherYesterdayIncompleteBlocks(yesterdayIso, tasks),
