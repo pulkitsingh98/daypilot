@@ -1,5 +1,7 @@
+import type { ClassEntry } from '../data/timetableBlocks'
 import type { DailyPlan } from '../data/dailyPlans'
 import type { Task } from '../data/tasks'
+import { buildTimelineItems, type TimelineItem } from './todayView'
 import { toIsoDate } from './time'
 
 /**
@@ -14,8 +16,27 @@ export function wasTaskCompletedOn(task: Task | undefined, dateIso: string): boo
   return toIsoDate(new Date(task.completedAt)) === dateIso
 }
 
+/**
+ * Whether a timeline item was done specifically on dateIso — unlike
+ * isTimelineItemDone (todayView.ts), which reports LIVE/current status and
+ * is only correct for "today". Task-linked items check completedAt against
+ * that exact date, so a task carried across several re-planned days only
+ * counts as done on the day it actually was. Non-task items (classes,
+ * buffer blocks) check that day's own completedItemKeys, which is already
+ * scoped to that date's daily_plans row — no extra date check needed there.
+ */
+export function wasTimelineItemCompletedOn(
+  item: TimelineItem,
+  tasksById: Map<string, Task>,
+  completedItemKeys: string[],
+  dateIso: string,
+): boolean {
+  if (item.taskId) return wasTaskCompletedOn(tasksById.get(item.taskId), dateIso)
+  return completedItemKeys.includes(item.key)
+}
+
 export interface DayCompletion {
-  /** Task-linked blocks that day (buffer/meal blocks and fixed classes aren't counted). */
+  /** Every timeline item that day — classes, task-linked blocks, and un-linked blocks alike. */
   total: number
   done: number
 }
@@ -24,8 +45,10 @@ export function computeDayCompletion(
   plan: DailyPlan | null | undefined,
   dateIso: string,
   tasksById: Map<string, Task>,
+  classesForDay: ClassEntry[] = [],
 ): DayCompletion {
-  const taskBlocks = (plan?.blocks ?? []).filter((b) => b.taskId)
-  const done = taskBlocks.filter((b) => wasTaskCompletedOn(tasksById.get(b.taskId as string), dateIso)).length
-  return { total: taskBlocks.length, done }
+  const items = buildTimelineItems(classesForDay, plan ?? null)
+  const completedItemKeys = plan?.completedItemKeys ?? []
+  const done = items.filter((item) => wasTimelineItemCompletedOn(item, tasksById, completedItemKeys, dateIso)).length
+  return { total: items.length, done }
 }

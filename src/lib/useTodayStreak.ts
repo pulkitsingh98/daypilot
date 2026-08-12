@@ -42,9 +42,9 @@ export function useTodayStreak(): TodayStreak {
   const todayDone = timelineItems.filter((item) => isTimelineItemDone(item, tasksById, completedKeys)).length
 
   const { data: streakDays = 0, isLoading: streakLoading } = useQuery({
-    queryKey: ['today-streak', todayIso, tasks.length],
-    queryFn: async () => (await computeRecentCompletion(tasks, now)).currentStreakDays,
-    enabled: !tasksLoading,
+    queryKey: ['today-streak', todayIso, tasks.length, classes.length],
+    queryFn: async () => (await computeRecentCompletion(tasks, now, classes)).currentStreakDays,
+    enabled: !tasksLoading && !classesLoading,
   })
 
   return {

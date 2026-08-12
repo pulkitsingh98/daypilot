@@ -230,8 +230,17 @@ function toPlanningCompetition(competition: Competition): PlanningCompetition {
   }
 }
 
-/** Walks the last 7 days (yesterday back to 7 days ago) to see how much actually got done. */
-export async function computeRecentCompletion(tasks: Task[], now: Date): Promise<PlanningCompletionSummary> {
+/**
+ * Walks the last 7 days (yesterday back to 7 days ago) to see how much
+ * actually got done. classes reflects the CURRENT timetable, applied
+ * retroactively by day-of-week — the same approximation the History
+ * calendar uses, since past timetable_blocks rows aren't versioned.
+ */
+export async function computeRecentCompletion(
+  tasks: Task[],
+  now: Date,
+  classes: ClassEntry[] = [],
+): Promise<PlanningCompletionSummary> {
   const tasksById = new Map(tasks.map((t) => [t.id, t]))
   const startIso = toIsoDate(addDays(now, -7))
   const endIso = toIsoDate(addDays(now, -1))
@@ -244,8 +253,10 @@ export async function computeRecentCompletion(tasks: Task[], now: Date): Promise
 
   for (let i = 1; i <= 7; i++) {
     const dateIso = toIsoDate(addDays(now, -i))
+    const dayDate = addDays(now, -i)
     const plan = plansByDate.get(dateIso)
-    const completion = computeDayCompletion(plan, dateIso, tasksById)
+    const classesForDay = classes.filter((c) => c.day === dayKeyForDate(dayDate))
+    const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay)
     const fullyDone = completion.total > 0 && completion.done === completion.total
 
     if (completion.total > 0) ratios.push(completion.done / completion.total)
@@ -332,7 +343,7 @@ export async function getPlanningContext(userId: string, date: Date): Promise<Pl
     sleepTime: profileTyped.sleepTime,
     subjectProficiency: buildSubjectProficiency(subjects),
     historySummary: summarizeTaskHistory(taskHistory),
-    recentCompletion: await computeRecentCompletion(tasks, date),
+    recentCompletion: await computeRecentCompletion(tasks, date, classes),
   }
 }
 

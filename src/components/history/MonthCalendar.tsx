@@ -1,3 +1,4 @@
+import type { ClassEntry } from '../../data/timetableBlocks'
 import type { DailyPlan } from '../../data/dailyPlans'
 import type { Task } from '../../data/tasks'
 import { computeDayCompletion, type DayCompletion } from '../../lib/dayCompletion'
@@ -11,6 +12,7 @@ interface MonthCalendarProps {
   onSelectDate: (dateIso: string) => void
   plansByDate: Map<string, DailyPlan>
   tasksById: Map<string, Task>
+  classes: ClassEntry[]
   todayIso: string
 }
 
@@ -30,6 +32,7 @@ export default function MonthCalendar({
   onSelectDate,
   plansByDate,
   tasksById,
+  classes,
   todayIso,
 }: MonthCalendarProps) {
   const year = viewedMonth.getFullYear()
@@ -78,7 +81,8 @@ export default function MonthCalendar({
           if (!cellDate) return <div key={`blank-${i}`} />
           const dateIso = toIsoDate(cellDate)
           const plan = plansByDate.get(dateIso)
-          const completion = computeDayCompletion(plan, dateIso, tasksById)
+          const classesForDay = classes.filter((c) => c.day === dayKeyForDate(cellDate))
+          const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay)
           const isSelected = dateIso === selectedDateIso
           const isToday = dateIso === todayIso
 

@@ -2,7 +2,7 @@ import type { ClassEntry } from '../../data/timetableBlocks'
 import type { DailyPlan } from '../../data/dailyPlans'
 import type { Task } from '../../data/tasks'
 import { buildTimelineItems } from '../../lib/todayView'
-import { wasTaskCompletedOn, computeDayCompletion } from '../../lib/dayCompletion'
+import { wasTimelineItemCompletedOn, computeDayCompletion } from '../../lib/dayCompletion'
 import { formatTimeLabel } from '../../lib/time'
 
 interface DayDetailProps {
@@ -14,7 +14,8 @@ interface DayDetailProps {
 
 export default function DayDetail({ dateIso, classesForDay, plan, tasksById }: DayDetailProps) {
   const items = buildTimelineItems(classesForDay, plan ?? null)
-  const completion = computeDayCompletion(plan, dateIso, tasksById)
+  const completedItemKeys = plan?.completedItemKeys ?? []
+  const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay)
 
   const dateLabel = new Date(`${dateIso}T00:00:00`).toLocaleDateString(undefined, {
     weekday: 'long',
@@ -40,8 +41,7 @@ export default function DayDetail({ dateIso, classesForDay, plan, tasksById }: D
       {items.length > 0 && (
         <ul className="mt-3 flex flex-col gap-1.5">
           {items.map((item) => {
-            const task = item.taskId ? tasksById.get(item.taskId) : undefined
-            const done = item.taskId ? wasTaskCompletedOn(task, dateIso) : null
+            const done = wasTimelineItemCompletedOn(item, tasksById, completedItemKeys, dateIso)
 
             return (
               <li key={item.key} className="flex items-start justify-between gap-2 text-sm">
@@ -53,19 +53,20 @@ export default function DayDetail({ dateIso, classesForDay, plan, tasksById }: D
                     {formatTimeLabel(item.start)}–{formatTimeLabel(item.end)}
                   </span>
                 </div>
-                {item.kind === 'class' ? (
-                  <span className="shrink-0 rounded-full bg-haze px-2 py-0.5 text-[10px] font-medium text-mist">
-                    Fixed
-                  </span>
-                ) : done !== null ? (
+                <div className="flex shrink-0 items-center gap-1">
+                  {item.kind === 'class' && (
+                    <span className="rounded-full bg-haze px-2 py-0.5 text-[10px] font-medium text-mist">
+                      Fixed
+                    </span>
+                  )}
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                       done ? 'bg-emerald-100 text-emerald-700' : 'bg-haze text-mist'
                     }`}
                   >
                     {done ? 'Done' : 'Not completed'}
                   </span>
-                ) : null}
+                </div>
               </li>
             )
           })}

@@ -62,6 +62,7 @@ export default function History() {
           onSelectDate={setSelectedDateIso}
           plansByDate={plansByDate}
           tasksById={tasksById}
+          classes={classes}
           todayIso={todayIso}
         />
       </div>
