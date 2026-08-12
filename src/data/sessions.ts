@@ -70,6 +70,18 @@ export async function fetchUpcomingSessions(daysAhead = 14, now: Date = new Date
   return unwrap<SessionRow[]>(result).map(fromRow)
 }
 
+export const HAS_SESSIONS_QUERY_KEY = ['sessions', 'has-any'] as const
+
+/** Existence check, not a real fetch — for the "have you set anything up yet" onboarding checklist. */
+export async function fetchHasAnySession(): Promise<boolean> {
+  const result = await supabase.from('sessions').select('id').limit(1)
+  return unwrap<{ id: string }[]>(result).length > 0
+}
+
+export function useHasSessions() {
+  return useQuery({ queryKey: HAS_SESSIONS_QUERY_KEY, queryFn: fetchHasAnySession })
+}
+
 export const sessionsForSubjectQueryKey = (subjectId: string) => ['sessions', 'by-subject', subjectId] as const
 
 /** All sessions for a subject (past and future), for its detail page — a genuine reference view, not just planner input. */

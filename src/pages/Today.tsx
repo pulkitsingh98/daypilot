@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan, useToggleTimelineItemDone } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
-import { useSubjects } from '../data/subjects'
 import { addDays, dayKeyForDate, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
 import { dismissOnboardingBanner, isOnboardingBannerDismissed } from '../lib/onboardingBanner'
+import { useOnboardingSteps } from '../lib/useOnboardingSteps'
 import { buildTimelineItems, isTimelineItemDone, type TimelineItem } from '../lib/todayView'
 import { useTodayStreak } from '../lib/useTodayStreak'
 import StreakSummary from '../components/StreakSummary'
@@ -16,7 +16,7 @@ import TomorrowPreview from '../components/today/TomorrowPreview'
 import TimelineBlock from '../components/today/TimelineBlock'
 import NowMarker from '../components/today/NowMarker'
 import DeferredSection from '../components/today/DeferredSection'
-import UploadDocumentButton from '../components/documents/UploadDocumentButton'
+import OnboardingChecklist from '../components/today/OnboardingChecklist'
 
 export default function Today() {
   const now = useMemo(() => new Date(), [])
@@ -25,10 +25,10 @@ export default function Today() {
   const { data: classes = [], isLoading: classesLoading, error: classesError } = useClasses()
   const { data: plan = null, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
   const { data: tasks = [] } = useTasks()
-  const { data: subjects = [], isLoading: subjectsLoading } = useSubjects()
   const { loading, error, generate, retry } = usePlanGeneration()
   const toggleTimelineItemDone = useToggleTimelineItemDone(todayKey)
   const streak = useTodayStreak()
+  const onboarding = useOnboardingSteps()
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   const [bannerDismissed, setBannerDismissed] = useState(() => isOnboardingBannerDismissed())
 
@@ -45,8 +45,7 @@ export default function Today() {
 
   const showNudge =
     !plan && !planLoading && !loading && !nudgeDismissed && getLastPlanNudgeDate() !== todayKey
-  const showOnboardingBanner =
-    !classesLoading && !subjectsLoading && classes.length === 0 && subjects.length === 0 && !bannerDismissed
+  const showOnboardingBanner = !onboarding.loading && !onboarding.allDone && !bannerDismissed
 
   function markNudgeHandled() {
     setLastPlanNudgeDate(todayKey)
@@ -109,26 +108,8 @@ export default function Today() {
       <h1 className="font-display text-2xl font-semibold text-ink">Today</h1>
 
       {showOnboardingBanner && (
-        <div className="mt-4 rounded-xl border border-mist-line bg-haze p-3">
-          <p className="text-sm font-medium text-dusk-deep">New here? Set up your term in one step</p>
-          <p className="mt-0.5 text-sm text-dusk">
-            Upload a photo or PDF of your timetable and DayPilot builds your class schedule for
-            you — a one-time thing per term, not something you'll need to redo daily.
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <UploadDocumentButton
-              label="Upload timetable"
-              helperText="A photo or PDF of your class schedule."
-              className="rounded-lg bg-dusk px-3 py-1.5 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
-            />
-            <button
-              type="button"
-              onClick={dismissBanner}
-              className="text-sm font-medium text-dusk hover:underline"
-            >
-              I'll do this later
-            </button>
-          </div>
+        <div className="mt-4">
+          <OnboardingChecklist onDismiss={dismissBanner} />
         </div>
       )}
 
