@@ -1,8 +1,43 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  GraduationCap,
+  NotebookPen,
+  PenLine,
+  Target,
+  type LucideIcon,
+} from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import AppLogo from '../components/AppLogo'
 
 type Mode = 'signin' | 'signup'
+
+interface FloatingIconConfig {
+  Icon: LucideIcon
+  top: string
+  left: string
+  size: number
+  duration: number
+  delay: number
+  driftX: number
+  driftY: number
+  rotate: number
+}
+
+const FLOATING_ICONS: FloatingIconConfig[] = [
+  { Icon: BookOpen, top: '8%', left: '10%', size: 56, duration: 9, delay: 0, driftX: 14, driftY: -18, rotate: 8 },
+  { Icon: CheckCircle2, top: '16%', left: '84%', size: 38, duration: 7, delay: 1.2, driftX: -10, driftY: 16, rotate: -10 },
+  { Icon: Clock3, top: '72%', left: '8%', size: 46, duration: 10, delay: 0.5, driftX: 12, driftY: 14, rotate: 6 },
+  { Icon: CalendarDays, top: '78%', left: '86%', size: 50, duration: 8, delay: 2, driftX: -16, driftY: -12, rotate: -6 },
+  { Icon: PenLine, top: '42%', left: '4%', size: 34, duration: 6.5, delay: 1.6, driftX: 10, driftY: 10, rotate: 12 },
+  { Icon: GraduationCap, top: '4%', left: '55%', size: 42, duration: 8.5, delay: 0.8, driftX: -12, driftY: 18, rotate: -8 },
+  { Icon: Target, top: '58%', left: '92%', size: 36, duration: 7.5, delay: 2.4, driftX: 14, driftY: -10, rotate: 10 },
+  { Icon: NotebookPen, top: '88%', left: '48%', size: 40, duration: 9.5, delay: 1, driftX: -14, driftY: -16, rotate: -12 },
+]
 
 export default function Login() {
   const [mode, setMode] = useState<Mode>('signin')
@@ -53,9 +88,34 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-haze p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-mist-line bg-paper-raised p-6">
-        <h1 className="font-display text-2xl font-semibold text-ink">DayPilot</h1>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-haze p-4">
+      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+        {FLOATING_ICONS.map(({ Icon, top, left, size, duration, delay, driftX, driftY, rotate }, i) => (
+          <Icon
+            key={i}
+            className="floating-icon absolute text-dusk/10"
+            style={
+              {
+                top,
+                left,
+                width: size,
+                height: size,
+                animationDuration: `${duration}s`,
+                animationDelay: `${delay}s`,
+                '--drift-x': `${driftX}px`,
+                '--drift-y': `${driftY}px`,
+                '--drift-r': `${rotate}deg`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-mist-line bg-paper-raised p-6">
+        <div className="flex items-center gap-2.5">
+          <AppLogo size="md" />
+          <h1 className="font-display text-2xl font-semibold text-ink">DayPilot</h1>
+        </div>
         <p className="mt-1 text-sm text-mist">
           {mode === 'signin' ? 'Sign in to your account' : 'Create your account'}
         </p>

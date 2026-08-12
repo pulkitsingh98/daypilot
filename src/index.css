@@ -63,3 +63,25 @@ body {
     transition: none;
   }
 }
+
+/* Slow drifting study/planning icons behind the Login card — decorative,
+   never the focal point, so they stay very low-opacity and out of the way. */
+@keyframes float-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(var(--drift-x, 12px), var(--drift-y, -16px)) rotate(var(--drift-r, 6deg));
+  }
+}
+.floating-icon {
+  animation-name: float-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-icon {
+    animation: none;
+  }
+}
