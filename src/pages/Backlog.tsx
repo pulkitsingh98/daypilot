@@ -135,7 +135,6 @@ export default function Backlog() {
           key={editing?.id ?? 'new'}
           initial={editing}
           defaultStatus={defaultStatus}
-          subjectSuggestions={subjects}
           onClose={closeForm}
         />
       )}

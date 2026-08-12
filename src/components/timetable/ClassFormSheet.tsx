@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAddClass, useDeleteClass, useUpdateClass, type ClassEntry } from '../../data/timetableBlocks'
 import type { DayOfWeek } from '../../data/types'
 import { DAYS, toMinutes } from '../../lib/time'
+import SubjectPicker from '../subjects/SubjectPicker'
 
 interface ClassFormSheetProps {
   initial: ClassEntry | null
@@ -121,13 +122,7 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-slate-700">Subject</span>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Organic Chemistry"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-            />
+            <SubjectPicker value={subject} onChange={setSubject} />
           </label>
 
           <label className="flex flex-col gap-1">

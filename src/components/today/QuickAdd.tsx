@@ -4,6 +4,7 @@ import { useAICall } from '../../services/useAICall'
 import { buildQuickAddPrompt } from '../../prompts/plannerPrompt'
 import { normalizeQuickAddResult, type QuickAddPrepSession } from '../../lib/quickAdd'
 import { TASK_TYPES, todayIso } from '../../lib/tasks'
+import SubjectPicker from '../subjects/SubjectPicker'
 
 interface DraftPrepSession extends QuickAddPrepSession {
   key: string
@@ -179,12 +180,7 @@ export default function QuickAdd() {
               </label>
               <label className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="text-sm font-medium text-slate-700">Subject</span>
-                <input
-                  type="text"
-                  value={draft.subject}
-                  onChange={(e) => updateDraft({ subject: e.target.value })}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-                />
+                <SubjectPicker value={draft.subject} onChange={(subject) => updateDraft({ subject })} />
               </label>
             </div>
 

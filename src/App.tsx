@@ -8,6 +8,8 @@ import Goals from './pages/Goals'
 import History from './pages/History'
 import Settings from './pages/Settings'
 import Timetable from './pages/Timetable'
+import Subjects from './pages/Subjects'
+import SubjectDetail from './pages/SubjectDetail'
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
           <Route path="history" element={<History />} />
           <Route path="settings" element={<Settings />} />
           <Route path="settings/timetable" element={<Timetable />} />
+          <Route path="settings/subjects" element={<Subjects />} />
+          <Route path="settings/subjects/:id" element={<SubjectDetail />} />
         </Route>
       </Route>
     </Routes>

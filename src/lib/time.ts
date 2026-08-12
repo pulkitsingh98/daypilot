@@ -67,6 +67,10 @@ export function indexToDayOfWeek(index: number): DayOfWeek {
   return DAYS[index]?.key ?? 'mon'
 }
 
+export function dayLabel(day: DayOfWeek): string {
+  return DAYS.find((d) => d.key === day)?.label ?? day
+}
+
 /** ISO 8601 week key (e.g. "2026-W33"), used to detect when a new week has started. */
 export function getWeekKey(date: Date = new Date()): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))

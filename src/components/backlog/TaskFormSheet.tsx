@@ -9,22 +9,24 @@ import {
   type TaskType,
 } from '../../data/tasks'
 import { TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES } from '../../lib/tasks'
+import SubjectPicker from '../subjects/SubjectPicker'
 
 interface TaskFormSheetProps {
   initial: Task | null
   defaultStatus: TaskStatus
-  subjectSuggestions: string[]
+  /** Pre-fills the subject picker when adding a new task (e.g. from a subject's detail view). */
+  defaultSubject?: string
   onClose: () => void
 }
 
 export default function TaskFormSheet({
   initial,
   defaultStatus,
-  subjectSuggestions,
+  defaultSubject,
   onClose,
 }: TaskFormSheetProps) {
   const [title, setTitle] = useState(initial?.title ?? '')
-  const [subject, setSubject] = useState(initial?.subject ?? '')
+  const [subject, setSubject] = useState(initial?.subject ?? defaultSubject ?? '')
   const [type, setType] = useState<TaskType>(initial?.type ?? 'assignment')
   const [priority, setPriority] = useState<TaskPriority>(initial?.priority ?? 2)
   const [status, setStatus] = useState<TaskStatus>(initial?.status ?? defaultStatus)
@@ -108,19 +110,7 @@ export default function TaskFormSheet({
 
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-slate-700">Subject</span>
-            <input
-              type="text"
-              list="subject-suggestions"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Biology"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-            />
-            <datalist id="subject-suggestions">
-              {subjectSuggestions.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
+            <SubjectPicker value={subject} onChange={setSubject} placeholder="e.g. Biology" />
           </label>
 
           <div className="flex gap-3">
