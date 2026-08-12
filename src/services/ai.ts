@@ -47,7 +47,7 @@ export async function callAI({ system, user, fileBase64, mimeType, kind = 'other
 
   if (!apiKey) {
     throw new AIError(
-      'Add your Gemini or Claude API key in Settings to use AI features.',
+      'Add an API key for your chosen AI provider in Settings to use AI features.',
       'missing-api-key',
     )
   }
@@ -55,10 +55,7 @@ export async function callAI({ system, user, fileBase64, mimeType, kind = 'other
   const systemWithJsonInstruction = `${system}${JSON_ONLY_INSTRUCTION}`
 
   try {
-    const raw =
-      profile.aiProvider === 'gemini'
-        ? await callGemini(apiKey, systemWithJsonInstruction, user, fileBase64, mimeType)
-        : await callClaude(apiKey, systemWithJsonInstruction, user, fileBase64, mimeType)
+    const raw = await CALLERS[profile.aiProvider](apiKey, systemWithJsonInstruction, user, fileBase64, mimeType)
     logAICall({ kind, system: systemWithJsonInstruction, user, response: raw, error: null })
     return raw
   } catch (err) {
@@ -66,6 +63,21 @@ export async function callAI({ system, user, fileBase64, mimeType, kind = 'other
     logAICall({ kind, system: systemWithJsonInstruction, user, response: null, error: message })
     throw err
   }
+}
+
+type ProviderCaller = (
+  apiKey: string,
+  system: string,
+  user: string,
+  fileBase64?: string,
+  mimeType?: string,
+) => Promise<string>
+
+const CALLERS: Record<import('../data/profiles').AIProvider, ProviderCaller> = {
+  gemini: callGemini,
+  claude: callClaude,
+  openai: callOpenAI,
+  perplexity: callPerplexity,
 }
 
 async function callGemini(
@@ -162,6 +174,104 @@ async function callClaude(
     throw new AIError('Claude returned an unexpected response shape.', 'parse')
   }
   return textBlock.text
+}
+
+/**
+ * Shared caller for OpenAI-compatible chat-completions endpoints (OpenAI
+ * itself, and Perplexity's Sonar API, which deliberately mirrors OpenAI's
+ * request/response shape). PDFs aren't supported this way — neither provider
+ * reads them through this simple endpoint — so a PDF upload fails with a
+ * clear message instead of a confusing provider error.
+ */
+async function callOpenAICompatible(
+  url: string,
+  model: string,
+  useJsonMode: boolean,
+  apiKey: string,
+  system: string,
+  user: string,
+  fileBase64?: string,
+  mimeType?: string,
+): Promise<string> {
+  if (mimeType === 'application/pdf') {
+    throw new AIError(
+      'This provider only reads images for document uploads, not PDFs. Switch to Gemini or Claude in Settings, or upload a photo instead of a PDF.',
+      'http',
+    )
+  }
+
+  const content: Array<Record<string, unknown>> = [{ type: 'text', text: user }]
+  if (fileBase64 && mimeType) {
+    content.push({ type: 'image_url', image_url: { url: `data:${mimeType};base64,${fileBase64}` } })
+  }
+
+  const body: Record<string, unknown> = {
+    model,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content },
+    ],
+  }
+  if (useJsonMode) body.response_format = { type: 'json_object' }
+
+  const response = await fetchOrThrow(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    throw new AIError(`Request failed: ${await extractErrorMessage(response)}`, 'http')
+  }
+
+  const data = await response.json()
+  const text = data?.choices?.[0]?.message?.content
+  if (typeof text !== 'string') {
+    throw new AIError('Received an unexpected response shape.', 'parse')
+  }
+  return text
+}
+
+async function callOpenAI(
+  apiKey: string,
+  system: string,
+  user: string,
+  fileBase64?: string,
+  mimeType?: string,
+): Promise<string> {
+  return callOpenAICompatible(
+    'https://api.openai.com/v1/chat/completions',
+    'gpt-4o-mini',
+    true,
+    apiKey,
+    system,
+    user,
+    fileBase64,
+    mimeType,
+  )
+}
+
+async function callPerplexity(
+  apiKey: string,
+  system: string,
+  user: string,
+  fileBase64?: string,
+  mimeType?: string,
+): Promise<string> {
+  // response_format support varies by Perplexity plan/model, so this relies
+  // on the JSON-only prompt instruction instead of forcing a response_format
+  // — if this endpoint ever changes shape, docs.perplexity.ai is the place
+  // to check first.
+  return callOpenAICompatible(
+    'https://api.perplexity.ai/chat/completions',
+    'sonar',
+    false,
+    apiKey,
+    system,
+    user,
+    fileBase64,
+    mimeType,
+  )
 }
 
 async function fetchOrThrow(url: string, init: RequestInit): Promise<Response> {

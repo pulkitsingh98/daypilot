@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Upload, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Mic, Upload, X } from 'lucide-react'
 import { useAddTask, type TaskType } from '../../data/tasks'
 import { useAICall } from '../../services/useAICall'
 import { buildQuickAddPrompt } from '../../prompts/plannerPrompt'
@@ -21,12 +21,63 @@ interface Draft {
   prepSessions: DraftPrepSession[]
 }
 
+interface SpeechRecognitionResultLike {
+  results: { [index: number]: { [index: number]: { transcript: string } } }
+}
+
+interface SpeechRecognitionLike {
+  lang: string
+  interimResults: boolean
+  maxAlternatives: number
+  start: () => void
+  stop: () => void
+  onresult: ((event: SpeechRecognitionResultLike) => void) | null
+  onend: (() => void) | null
+  onerror: (() => void) | null
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike
+
+/** Chrome/Edge/Safari expose this; Firefox doesn't — feature-detected, never assumed. */
+function getSpeechRecognitionCtor(): SpeechRecognitionConstructor | null {
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionConstructor
+    webkitSpeechRecognition?: SpeechRecognitionConstructor
+  }
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
+}
+
 export default function QuickAdd() {
   const [text, setText] = useState('')
   const { data, loading, error, call, retry } = useAICall<Record<string, unknown>>()
   const [draft, setDraft] = useState<Draft | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [listening, setListening] = useState(false)
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  const speechSupported = useMemo(() => getSpeechRecognitionCtor() !== null, [])
   const addTask = useAddTask()
+
+  function toggleListening() {
+    if (listening) {
+      recognitionRef.current?.stop()
+      return
+    }
+    const Ctor = getSpeechRecognitionCtor()
+    if (!Ctor) return
+    const recognition = new Ctor()
+    recognition.lang = 'en-US'
+    recognition.interimResults = false
+    recognition.maxAlternatives = 1
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript
+      if (transcript) setText((prev) => (prev ? `${prev} ${transcript}` : transcript))
+    }
+    recognition.onend = () => setListening(false)
+    recognition.onerror = () => setListening(false)
+    recognitionRef.current = recognition
+    recognition.start()
+    setListening(true)
+  }
 
   useEffect(() => {
     if (!data) return
@@ -45,6 +96,10 @@ export default function QuickAdd() {
     // Only re-derive the draft when a fresh AI response arrives, not on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
+
+  useEffect(() => {
+    return () => recognitionRef.current?.stop()
+  }, [])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -119,7 +174,12 @@ export default function QuickAdd() {
 
   return (
     <div className="mb-4">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <h2 className="text-sm font-semibold text-ink">Anything urgent? Add it here</h2>
+      <p className="mt-0.5 text-xs text-mist">
+        Type it naturally — like "quiz on marketing in 3 days" — and DayPilot turns it into a task
+        with the right due date{speechSupported ? ', or tap the mic to speak it instead' : ''}.
+      </p>
+      <form onSubmit={handleSubmit} className="mt-2 flex gap-2">
         <input
           type="text"
           value={text}
@@ -127,6 +187,21 @@ export default function QuickAdd() {
           placeholder='e.g. "quiz on marketing in 3 days"'
           className="min-w-0 flex-1 rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
         />
+        {speechSupported && (
+          <button
+            type="button"
+            onClick={toggleListening}
+            aria-label={listening ? 'Stop voice input' : 'Add by voice'}
+            aria-pressed={listening}
+            className={`shrink-0 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+              listening
+                ? 'border-red-300 bg-red-100 text-red-700'
+                : 'border-mist-line text-ink-soft hover:bg-haze'
+            }`}
+          >
+            <Mic className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
         <button
           type="submit"
           disabled={loading || !text.trim()}

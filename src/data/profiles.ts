@@ -3,7 +3,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { unwrap, unwrapNullable } from './shared'
 
-export type AIProvider = 'gemini' | 'claude'
+export type AIProvider = 'gemini' | 'claude' | 'openai' | 'perplexity'
+
+const VALID_PROVIDERS: AIProvider[] = ['gemini', 'claude', 'openai', 'perplexity']
 
 export interface Profile {
   displayName: string | null
@@ -37,7 +39,7 @@ function fromRow(row: ProfileRow): Profile {
     dailyCapacityMinutes: row.daily_capacity_minutes,
     wakeTime: row.wake_time?.slice(0, 5) ?? DEFAULTS.wakeTime,
     sleepTime: row.sleep_time?.slice(0, 5) ?? DEFAULTS.sleepTime,
-    aiProvider: row.ai_provider === 'claude' ? 'claude' : 'gemini',
+    aiProvider: VALID_PROVIDERS.includes(row.ai_provider as AIProvider) ? (row.ai_provider as AIProvider) : 'gemini',
     apiKey: row.ai_api_key ?? '',
     darkMode: row.dark_mode,
   }

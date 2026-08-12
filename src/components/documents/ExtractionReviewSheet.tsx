@@ -338,6 +338,10 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
+        <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          AI reads documents well but not perfectly — double-check every row below, especially
+          anything marked "Low" confidence, and edit whatever looks off before confirming.
+        </p>
         <p className="mb-4 text-sm text-mist">
           {itemsFoundCount} item{itemsFoundCount === 1 ? '' : 's'} found
           {needsAttentionCount > 0

@@ -158,6 +158,13 @@ function AccountCard() {
   )
 }
 
+const PROVIDER_META: Record<AIProvider, { label: string; keyLabel: string; pdfSupport: boolean }> = {
+  gemini: { label: 'Gemini (free tier)', keyLabel: 'Gemini API key', pdfSupport: true },
+  claude: { label: 'Claude', keyLabel: 'Claude API key', pdfSupport: true },
+  openai: { label: 'ChatGPT (OpenAI)', keyLabel: 'OpenAI API key', pdfSupport: false },
+  perplexity: { label: 'Perplexity', keyLabel: 'Perplexity API key', pdfSupport: false },
+}
+
 function AISettingsCard() {
   const { data: profile, isLoading } = useProfile()
   const updateProfile = useUpdateProfile()
@@ -196,15 +203,16 @@ function AISettingsCard() {
               onChange={(e) => handleProviderChange(e.target.value as AIProvider)}
               className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             >
-              <option value="gemini">Gemini (free tier)</option>
-              <option value="claude">Claude</option>
+              {(Object.keys(PROVIDER_META) as AIProvider[]).map((provider) => (
+                <option key={provider} value={provider}>
+                  {PROVIDER_META[provider].label}
+                </option>
+              ))}
             </select>
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink-soft">
-              {profile.aiProvider === 'gemini' ? 'Gemini API key' : 'Claude API key'}
-            </span>
+            <span className="text-sm font-medium text-ink-soft">{PROVIDER_META[profile.aiProvider].keyLabel}</span>
             <input
               type="password"
               value={apiKeyInput}
@@ -214,6 +222,13 @@ function AISettingsCard() {
               className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
+
+          {!PROVIDER_META[profile.aiProvider].pdfSupport && (
+            <p className="text-xs text-mist">
+              This provider reads images for document uploads (photos work great) but not PDFs —
+              use Gemini or Claude for PDF timetables/syllabi.
+            </p>
+          )}
         </div>
       )}
     </div>

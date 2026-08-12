@@ -5,6 +5,7 @@ import { useHasSessions } from '../data/sessions'
 import { useGoals } from '../data/goals'
 import { useCompetitions } from '../data/competitions'
 import { useRecurringActivities } from '../data/recurringActivities'
+import { useProfile } from '../data/profiles'
 
 export interface OnboardingStep {
   key: string
@@ -23,6 +24,7 @@ export interface OnboardingSteps {
 
 /** Drives the "Getting started" checklist on Today — one step per area the planner actually reasons about, each done-check reading the real data instead of a one-time flag. */
 export function useOnboardingSteps(): OnboardingSteps {
+  const { data: profile, isLoading: profileLoading } = useProfile()
   const { data: classes = [], isLoading: classesLoading } = useClasses()
   const { data: subjects = [], isLoading: subjectsLoading } = useSubjects()
   const { data: hasSessions = false, isLoading: sessionsLoading } = useHasSessions()
@@ -32,6 +34,12 @@ export function useOnboardingSteps(): OnboardingSteps {
 
   const steps: OnboardingStep[] = useMemo(
     () => [
+      {
+        key: 'ai-provider',
+        label: 'Add your AI provider & API key',
+        done: !!profile?.apiKey.trim(),
+        to: '/settings',
+      },
       { key: 'timetable', label: 'Upload your timetable', done: classes.length > 0, to: '/settings/timetable' },
       {
         key: 'subjects',
@@ -59,7 +67,7 @@ export function useOnboardingSteps(): OnboardingSteps {
         to: '/my-life',
       },
     ],
-    [classes, subjects, hasSessions, goals, competitions, recurringActivities],
+    [profile, classes, subjects, hasSessions, goals, competitions, recurringActivities],
   )
 
   const completedCount = steps.filter((s) => s.done).length
@@ -70,6 +78,12 @@ export function useOnboardingSteps(): OnboardingSteps {
     totalCount: steps.length,
     allDone: completedCount === steps.length,
     loading:
-      classesLoading || subjectsLoading || sessionsLoading || goalsLoading || competitionsLoading || activitiesLoading,
+      profileLoading ||
+      classesLoading ||
+      subjectsLoading ||
+      sessionsLoading ||
+      goalsLoading ||
+      competitionsLoading ||
+      activitiesLoading,
   }
 }
