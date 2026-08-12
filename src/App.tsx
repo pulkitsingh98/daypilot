@@ -25,8 +25,8 @@ export default function App() {
           <Route path="goals" element={<Goals />} />
           <Route path="my-life" element={<MyLife />} />
           <Route path="history" element={<History />} />
+          <Route path="timetable" element={<Timetable />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="settings/timetable" element={<Timetable />} />
           <Route path="settings/subjects" element={<Subjects />} />
           <Route path="settings/subjects/:id" element={<SubjectDetail />} />
           <Route path="settings/documents" element={<Documents />} />

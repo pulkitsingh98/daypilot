@@ -1,4 +1,4 @@
-import { ClipboardList, History, Leaf, Settings, Sun, Target, type LucideIcon } from 'lucide-react'
+import { CalendarDays, ClipboardList, History, Leaf, Settings, Sun, Target, type LucideIcon } from 'lucide-react'
 
 export interface NavItem {
   to: string
@@ -8,6 +8,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { to: '/', label: 'Today', icon: Sun },
+  { to: '/timetable', label: 'Timetable', icon: CalendarDays },
   { to: '/backlog', label: 'Backlog', icon: ClipboardList },
   { to: '/goals', label: 'Goals', icon: Target },
   { to: '/my-life', label: 'Life', icon: Leaf },

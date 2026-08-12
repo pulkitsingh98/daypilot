@@ -23,16 +23,6 @@ export default function Settings() {
 
       <div className="mt-6 divide-y divide-mist-line rounded-xl border border-mist-line bg-paper-raised">
         <Link
-          to="/settings/timetable"
-          className="flex items-center justify-between px-4 py-3 hover:bg-haze"
-        >
-          <div>
-            <div className="text-sm font-medium text-ink">Timetable</div>
-            <div className="text-xs text-mist">Manage your weekly class schedule</div>
-          </div>
-          <span className="text-mist">›</span>
-        </Link>
-        <Link
           to="/settings/subjects"
           className="flex items-center justify-between px-4 py-3 hover:bg-haze"
         >

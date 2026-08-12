@@ -47,12 +47,7 @@ function fromRow(row: SessionRow): UpcomingSession {
 const SELECT_COLUMNS =
   'id, session_number, title, topics, scheduled_date, reading_material, status, subjects(name)'
 
-/**
- * Plain fetcher (no hook yet — nothing renders sessions today; there's no UI
- * to create them either, this is planner-input plumbing ahead of a future
- * syllabus/document-import feature). Returns sessions in the next `daysAhead`
- * days that haven't already happened.
- */
+/** Returns sessions in the next `daysAhead` days that haven't already happened — planner input, and the Timetable page's session-matching for upcoming classes. */
 export async function fetchUpcomingSessions(daysAhead = 14, now: Date = new Date()): Promise<UpcomingSession[]> {
   const todayIso = toIsoDate(now)
   const until = new Date(now)
@@ -68,6 +63,13 @@ export async function fetchUpcomingSessions(daysAhead = 14, now: Date = new Date
     .order('scheduled_date', { ascending: true })
 
   return unwrap<SessionRow[]>(result).map(fromRow)
+}
+
+export function useUpcomingSessions(daysAhead = 14, now: Date = new Date()) {
+  return useQuery({
+    queryKey: ['sessions', 'upcoming', daysAhead, toIsoDate(now)],
+    queryFn: () => fetchUpcomingSessions(daysAhead, now),
+  })
 }
 
 export const HAS_SESSIONS_QUERY_KEY = ['sessions', 'has-any'] as const

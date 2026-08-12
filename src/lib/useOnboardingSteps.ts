@@ -40,7 +40,7 @@ export function useOnboardingSteps(): OnboardingSteps {
         done: !!profile?.apiKey.trim(),
         to: '/settings',
       },
-      { key: 'timetable', label: 'Upload your timetable', done: classes.length > 0, to: '/settings/timetable' },
+      { key: 'timetable', label: 'Upload your timetable', done: classes.length > 0, to: '/timetable' },
       {
         key: 'subjects',
         label: 'Add subjects & rate your proficiency',
