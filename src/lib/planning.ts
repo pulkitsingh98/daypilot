@@ -1,17 +1,17 @@
-import {
-  getClasses,
-  getDailyPlan,
-  getGoals,
-  getSettings,
-  getTaskHistory,
-  getTasks,
-  type GoalHorizon,
-  type PrepRule,
-  type ProficiencyLevel,
-  type TaskPriority,
-  type TaskStatus,
-  type TaskType,
-} from '../store'
+import type { PrepRule } from '../data/types'
+import type { ClassEntry } from '../data/timetableBlocks'
+import { fetchTimetableBlocks } from '../data/timetableBlocks'
+import type { Task, TaskPriority, TaskStatus, TaskType } from '../data/tasks'
+import { fetchTasks } from '../data/tasks'
+import type { Goal, GoalHorizon } from '../data/goals'
+import { fetchGoals } from '../data/goals'
+import type { Profile } from '../data/profiles'
+import { fetchProfile } from '../data/profiles'
+import type { Subject } from '../data/subjects'
+import { fetchSubjects } from '../data/subjects'
+import type { TaskHistoryEntry } from '../data/taskHistory'
+import { fetchTaskHistory } from '../data/taskHistory'
+import { fetchDailyPlan } from '../data/dailyPlans'
 import { addDays, dayKeyForDate, toIsoDate } from './time'
 
 export interface PlanningTimetableBlock {
@@ -71,14 +71,14 @@ export interface PlanningState {
   capacityMinutes: number
   wakeTime: string
   sleepTime: string
-  subjectProficiency: Record<string, ProficiencyLevel>
+  subjectProficiency: Record<string, number>
   historySummary: PlanningHistorySummary[]
 }
 
-function summarizeTaskHistory(): PlanningHistorySummary[] {
+function summarizeTaskHistory(taskHistory: TaskHistoryEntry[]): PlanningHistorySummary[] {
   const groups = new Map<string, { type: TaskType; subject: string; planned: number[]; actual: number[] }>()
 
-  for (const entry of getTaskHistory()) {
+  for (const entry of taskHistory) {
     const key = `${entry.type}::${entry.subject}`
     const group = groups.get(key) ?? { type: entry.type, subject: entry.subject, planned: [], actual: [] }
     group.planned.push(entry.plannedMinutes)
@@ -97,8 +97,7 @@ function summarizeTaskHistory(): PlanningHistorySummary[] {
   }))
 }
 
-function gatherTimetable(today: Date, tomorrow: Date): PlanningTimetableBlock[] {
-  const classes = getClasses()
+function gatherTimetable(classes: ClassEntry[], today: Date, tomorrow: Date): PlanningTimetableBlock[] {
   const todayKey = dayKeyForDate(today)
   const tomorrowKey = dayKeyForDate(tomorrow)
 
@@ -125,11 +124,13 @@ function gatherTimetable(today: Date, tomorrow: Date): PlanningTimetableBlock[] 
   return blocks
 }
 
-function gatherYesterdayIncompleteBlocks(yesterdayIso: string): PlanningIncompleteBlock[] {
-  const plan = getDailyPlan(yesterdayIso)
+async function gatherYesterdayIncompleteBlocks(
+  yesterdayIso: string,
+  tasks: Task[],
+): Promise<PlanningIncompleteBlock[]> {
+  const plan = await fetchDailyPlan(yesterdayIso)
   if (!plan) return []
 
-  const tasks = getTasks()
   return plan.blocks.filter((block) => {
     if (!block.taskId) return false
     const task = tasks.find((t) => t.id === block.taskId)
@@ -137,17 +138,32 @@ function gatherYesterdayIncompleteBlocks(yesterdayIso: string): PlanningIncomple
   })
 }
 
-/** Gathers everything the planner needs to reason about today, read fresh from the store. */
-export function gatherPlanningState(now: Date = new Date()): PlanningState {
+function buildSubjectProficiency(subjects: Subject[]): Record<string, number> {
+  const map: Record<string, number> = {}
+  for (const subject of subjects) {
+    if (subject.proficiency !== null) map[subject.name] = subject.proficiency
+  }
+  return map
+}
+
+/** Gathers everything the planner needs to reason about today, fetched fresh from Supabase. */
+export async function gatherPlanningState(now: Date, userId: string): Promise<PlanningState> {
   const tomorrow = addDays(now, 1)
   const yesterday = addDays(now, -1)
   const todayIso = toIsoDate(now)
   const tomorrowIso = toIsoDate(tomorrow)
   const yesterdayIso = toIsoDate(yesterday)
 
-  const settings = getSettings()
+  const [classes, tasks, goals, profile, subjects, taskHistory] = await Promise.all([
+    fetchTimetableBlocks(),
+    fetchTasks(),
+    fetchGoals(),
+    fetchProfile(userId),
+    fetchSubjects(),
+    fetchTaskHistory(),
+  ])
 
-  const openTasks: PlanningTask[] = getTasks()
+  const openTasks: PlanningTask[] = tasks
     .filter((task) => task.status !== 'done')
     .map((task) => ({
       id: task.id,
@@ -158,10 +174,10 @@ export function gatherPlanningState(now: Date = new Date()): PlanningState {
       status: task.status,
       dueDate: task.dueDate,
       estimatedMinutes: task.estimatedMinutes,
-      snoozeCount: task.snoozeCount ?? 0,
+      snoozeCount: task.snoozeCount,
     }))
 
-  const goals: PlanningGoal[] = getGoals().map((goal) => ({
+  const planningGoals: PlanningGoal[] = goals.map((goal: Goal) => ({
     id: goal.id,
     title: goal.title,
     horizon: goal.horizon,
@@ -169,18 +185,20 @@ export function gatherPlanningState(now: Date = new Date()): PlanningState {
     minutesThisWeek: goal.minutesThisWeek,
   }))
 
+  const profileTyped: Profile = profile
+
   return {
     today: todayIso,
     tomorrow: tomorrowIso,
-    timetable: gatherTimetable(now, tomorrow),
+    timetable: gatherTimetable(classes, now, tomorrow),
     openTasks,
-    goals,
-    yesterdayIncompleteBlocks: gatherYesterdayIncompleteBlocks(yesterdayIso),
-    capacityMinutes: settings.dailyCapacityMinutes,
-    wakeTime: settings.wakeTime,
-    sleepTime: settings.sleepTime,
-    subjectProficiency: settings.subjectProficiency,
-    historySummary: summarizeTaskHistory(),
+    goals: planningGoals,
+    yesterdayIncompleteBlocks: await gatherYesterdayIncompleteBlocks(yesterdayIso, tasks),
+    capacityMinutes: profileTyped.dailyCapacityMinutes,
+    wakeTime: profileTyped.wakeTime,
+    sleepTime: profileTyped.sleepTime,
+    subjectProficiency: buildSubjectProficiency(subjects),
+    historySummary: summarizeTaskHistory(taskHistory),
   }
 }
 

@@ -1,4 +1,5 @@
-import { setDailyPlan, type DailyPlan } from '../store'
+import type { DailyPlan } from '../data/dailyPlans'
+import { saveDailyPlan } from '../data/dailyPlans'
 import { PLANNER_SYSTEM_PROMPT } from '../prompts/plannerPrompt'
 import { buildPlanUserMessage, gatherPlanningState } from '../lib/planning'
 import { normalizeDailyPlanResult } from '../lib/dailyPlan'
@@ -17,9 +18,9 @@ export interface GeneratePlanOptions {
  * by today's date. Throws AIError on failure (missing key, network, http,
  * or unparseable response) — callers should catch it and offer a retry.
  */
-export async function generateDailyPlan(options: GeneratePlanOptions = {}): Promise<DailyPlan> {
+export async function generateDailyPlan(userId: string, options: GeneratePlanOptions = {}): Promise<DailyPlan> {
   const now = options.now ?? new Date()
-  const state = gatherPlanningState(now)
+  const state = await gatherPlanningState(now, userId)
   const effectiveState = options.remainingOnly ? { ...state, wakeTime: formatTimeOfDay(now) } : state
 
   const userMessage = buildPlanUserMessage(effectiveState, { remainingOnly: options.remainingOnly })
@@ -28,6 +29,6 @@ export async function generateDailyPlan(options: GeneratePlanOptions = {}): Prom
   const parsed = parseJsonResponse<unknown>(raw)
   const plan = normalizeDailyPlanResult(parsed)
 
-  setDailyPlan(state.today, plan)
+  await saveDailyPlan(state.today, plan, userId)
   return plan
 }

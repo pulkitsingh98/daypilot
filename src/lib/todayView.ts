@@ -1,4 +1,6 @@
-import type { ClassEntry, DailyPlan, PrepRule } from '../store'
+import type { ClassEntry } from '../data/timetableBlocks'
+import type { DailyPlan } from '../data/dailyPlans'
+import type { PrepRule } from '../data/types'
 import { toMinutes } from './time'
 
 export interface TimelineItem {

@@ -1,4 +1,5 @@
-import { getSettings } from '../store'
+import { supabase } from '../lib/supabase'
+import { fetchProfile } from '../data/profiles'
 
 export interface CallAIParams {
   system: string
@@ -31,8 +32,15 @@ const JSON_ONLY_INSTRUCTION =
  * consistent everywhere.
  */
 export async function callAI({ system, user, imageBase64, mimeType }: CallAIParams): Promise<string> {
-  const settings = getSettings()
-  const apiKey = settings.apiKey.trim()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) {
+    throw new AIError('Sign in to use AI features.', 'missing-api-key')
+  }
+
+  const profile = await fetchProfile(session.user.id)
+  const apiKey = profile.apiKey.trim()
 
   if (!apiKey) {
     throw new AIError(
@@ -43,7 +51,7 @@ export async function callAI({ system, user, imageBase64, mimeType }: CallAIPara
 
   const systemWithJsonInstruction = `${system}${JSON_ONLY_INSTRUCTION}`
 
-  if (settings.aiProvider === 'gemini') {
+  if (profile.aiProvider === 'gemini') {
     return callGemini(apiKey, systemWithJsonInstruction, user, imageBase64, mimeType)
   }
   return callClaude(apiKey, systemWithJsonInstruction, user, imageBase64, mimeType)

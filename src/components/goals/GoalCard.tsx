@@ -1,4 +1,4 @@
-import { logGoalMinutes, type Goal } from '../../store'
+import { useLogGoalMinutes, type Goal } from '../../data/goals'
 
 interface GoalCardProps {
   goal: Goal
@@ -8,6 +8,7 @@ interface GoalCardProps {
 const QUICK_LOG_MINUTES = [15, 30, 60]
 
 export default function GoalCard({ goal, onEdit }: GoalCardProps) {
+  const logGoalMinutes = useLogGoalMinutes()
   const pct =
     goal.weeklyTargetMinutes > 0
       ? Math.min(100, Math.round((goal.minutesThisWeek / goal.weeklyTargetMinutes) * 100))
@@ -55,7 +56,7 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
           <button
             key={minutes}
             type="button"
-            onClick={() => logGoalMinutes(goal.id, minutes)}
+            onClick={() => logGoalMinutes.mutate({ goalId: goal.id, deltaMinutes: minutes })}
             className="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
           >
             +{minutes}m

@@ -1,4 +1,5 @@
-import type { ClassEntry, DayOfWeek } from '../../store'
+import type { ClassEntry } from '../../data/timetableBlocks'
+import type { DayOfWeek } from '../../data/types'
 import { DAYS, formatTimeLabel, toMinutes } from '../../lib/time'
 
 interface DayListProps {

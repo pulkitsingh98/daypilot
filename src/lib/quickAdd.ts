@@ -1,4 +1,4 @@
-import type { TaskType } from '../store'
+import type { TaskType } from '../data/tasks'
 import { normalizeDueDate, normalizeType } from './tsv'
 
 export interface QuickAddPrepSession {

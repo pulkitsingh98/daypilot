@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { importTasks, type Task, type TaskPriority, type TaskStatus, type TaskType } from '../../store'
+import { useImportTasks, type TaskInput, type TaskPriority, type TaskStatus, type TaskType } from '../../data/tasks'
 import { TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES } from '../../lib/tasks'
 import {
   guessFieldForHeader,
@@ -35,6 +35,8 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
   const [hasHeader, setHasHeader] = useState(true)
   const [mappingOverrides, setMappingOverrides] = useState<Record<number, ImportField>>({})
   const [previewRows, setPreviewRows] = useState<PreviewRow[]>([])
+  const [importError, setImportError] = useState<string | null>(null)
+  const importTasks = useImportTasks()
 
   const parsedMatrix = useMemo(() => parseTsv(rawText), [rawText])
   const headerRow = hasHeader ? (parsedMatrix[0] ?? []) : []
@@ -97,8 +99,8 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
   const validRows = previewRows.filter((row) => row.title.trim().length > 0)
   const skippedCount = previewRows.length - validRows.length
 
-  function handleConfirm() {
-    const inputs: Omit<Task, 'id'>[] = validRows.map((row) => ({
+  async function handleConfirm() {
+    const inputs: TaskInput[] = validRows.map((row) => ({
       title: row.title.trim(),
       subject: row.subject.trim(),
       type: row.type,
@@ -106,8 +108,12 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
       status: row.status,
       dueDate: row.dueDate || undefined,
     }))
-    importTasks(inputs)
-    onClose()
+    try {
+      await importTasks.mutateAsync(inputs)
+      onClose()
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Could not import these tasks. Try again.')
+    }
   }
 
   return (
@@ -277,7 +283,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                           <select
                             value={row.priority}
                             onChange={(e) =>
-                              updateRow(row.key, { priority: e.target.value as TaskPriority })
+                              updateRow(row.key, { priority: Number(e.target.value) as TaskPriority })
                             }
                             className="rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
                           >
@@ -336,6 +342,8 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
               {skippedCount > 0 ? `, ${skippedCount} skipped (missing title)` : ''}.
             </p>
 
+            {importError && <p className="text-sm text-red-600">{importError}</p>}
+
             <div className="mt-1 flex items-center justify-end gap-2">
               <button
                 type="button"
@@ -353,11 +361,11 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
               </button>
               <button
                 type="button"
-                disabled={validRows.length === 0}
+                disabled={validRows.length === 0 || importTasks.isPending}
                 onClick={handleConfirm}
                 className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                Confirm import ({validRows.length})
+                {importTasks.isPending ? 'Importing…' : `Confirm import (${validRows.length})`}
               </button>
             </div>
           </div>

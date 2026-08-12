@@ -29,7 +29,7 @@ Today's date is ${todayIso} (YYYY-MM-DD). The student will type a short, casual 
 Return JSON matching exactly this shape:
 {
   "title": string — a short, clear task title,
-  "type": one of "homework" | "reading" | "project" | "exam" | "other",
+  "type": one of "class-prep" | "quiz-exam" | "assignment" | "application" | "competition" | "self-dev" | "personal" | "errand",
   "subject": string — the class or subject this relates to; empty string if none is mentioned,
   "dueDate": string in "YYYY-MM-DD" format — resolve relative dates ("tomorrow", "in 3 days", "Saturday", "next Friday") against today's date; if no date is mentioned, use today's date,
   "estimatedMinutes": number — a reasonable estimate of how long the task itself will take, in minutes. If the student gives an explicit estimate (e.g. "want 2 hours to prep"), use it,

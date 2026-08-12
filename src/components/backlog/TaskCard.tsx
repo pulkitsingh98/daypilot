@@ -1,4 +1,4 @@
-import type { Task } from '../../store'
+import type { Task } from '../../data/tasks'
 import { formatDueDate, isOverdue, priorityMeta, typeMeta } from '../../lib/tasks'
 
 interface TaskCardProps {

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import {
-  addTask,
-  deleteTask,
-  updateTask,
+  useAddTask,
+  useDeleteTask,
+  useUpdateTask,
   type Task,
   type TaskPriority,
   type TaskStatus,
   type TaskType,
-} from '../../store'
+} from '../../data/tasks'
 import { TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES } from '../../lib/tasks'
 
 interface TaskFormSheetProps {
@@ -25,13 +25,18 @@ export default function TaskFormSheet({
 }: TaskFormSheetProps) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [subject, setSubject] = useState(initial?.subject ?? '')
-  const [type, setType] = useState<TaskType>(initial?.type ?? 'homework')
-  const [priority, setPriority] = useState<TaskPriority>(initial?.priority ?? 'medium')
+  const [type, setType] = useState<TaskType>(initial?.type ?? 'assignment')
+  const [priority, setPriority] = useState<TaskPriority>(initial?.priority ?? 2)
   const [status, setStatus] = useState<TaskStatus>(initial?.status ?? defaultStatus)
   const [dueDate, setDueDate] = useState(initial?.dueDate ?? '')
   const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  const addTask = useAddTask()
+  const updateTask = useUpdateTask()
+  const deleteTask = useDeleteTask()
+  const saving = addTask.isPending || updateTask.isPending
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!title.trim()) {
@@ -39,7 +44,7 @@ export default function TaskFormSheet({
       return
     }
 
-    const payload: Omit<Task, 'id'> = {
+    const payload = {
       title: title.trim(),
       subject: subject.trim(),
       type,
@@ -48,19 +53,27 @@ export default function TaskFormSheet({
       dueDate: dueDate || undefined,
     }
 
-    if (initial) {
-      updateTask(initial.id, payload)
-    } else {
-      addTask(payload)
+    try {
+      if (initial) {
+        await updateTask.mutateAsync({ id: initial.id, input: payload })
+      } else {
+        await addTask.mutateAsync(payload)
+      }
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save this task. Try again.')
     }
-    onClose()
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!initial) return
     if (window.confirm(`Delete "${initial.title}"? This can't be undone.`)) {
-      deleteTask(initial.id)
-      onClose()
+      try {
+        await deleteTask.mutateAsync(initial.id)
+        onClose()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not delete this task. Try again.')
+      }
     }
   }
 
@@ -129,7 +142,7 @@ export default function TaskFormSheet({
               <span className="text-sm font-medium text-slate-700">Priority</span>
               <select
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                onChange={(e) => setPriority(Number(e.target.value) as TaskPriority)}
                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
               >
                 {TASK_PRIORITIES.map((p) => (
@@ -174,7 +187,8 @@ export default function TaskFormSheet({
               <button
                 type="button"
                 onClick={handleDelete}
-                className="text-sm font-medium text-red-600 hover:text-red-700"
+                disabled={deleteTask.isPending}
+                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
               >
                 Delete
               </button>
@@ -191,9 +205,10 @@ export default function TaskFormSheet({
               </button>
               <button
                 type="submit"
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                disabled={saving}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
               >
-                Save
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>

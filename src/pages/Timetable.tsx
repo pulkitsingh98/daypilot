@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useClasses, type ClassEntry, type DayOfWeek } from '../store'
+import { useClasses, type ClassEntry } from '../data/timetableBlocks'
+import type { DayOfWeek } from '../data/types'
 import WeekGrid from '../components/timetable/WeekGrid'
 import DayList from '../components/timetable/DayList'
 import ClassFormSheet from '../components/timetable/ClassFormSheet'
 
 export default function Timetable() {
-  const classes = useClasses()
+  const { data: classes = [], isLoading, error } = useClasses()
   const [editing, setEditing] = useState<ClassEntry | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [defaultDay, setDefaultDay] = useState<DayOfWeek>('mon')
@@ -44,6 +45,9 @@ export default function Timetable() {
           + Add class
         </button>
       </div>
+
+      {isLoading && <p className="text-sm text-slate-500">Loading your timetable…</p>}
+      {error && <p className="text-sm text-red-600">Could not load your timetable. Try refreshing.</p>}
 
       <WeekGrid classes={classes} onEdit={openEdit} />
       <DayList classes={classes} onEdit={openEdit} onAdd={openAdd} />

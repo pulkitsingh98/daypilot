@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { addTask, type TaskType } from '../../store'
+import { useAddTask, type TaskType } from '../../data/tasks'
 import { useAICall } from '../../services/useAICall'
 import { buildQuickAddPrompt } from '../../prompts/plannerPrompt'
 import { normalizeQuickAddResult, type QuickAddPrepSession } from '../../lib/quickAdd'
@@ -22,6 +22,8 @@ export default function QuickAdd() {
   const [text, setText] = useState('')
   const { data, loading, error, call, retry } = useAICall<Record<string, unknown>>()
   const [draft, setDraft] = useState<Draft | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const addTask = useAddTask()
 
   useEffect(() => {
     if (!data) return
@@ -69,35 +71,42 @@ export default function QuickAdd() {
     setDraft((d) => (d ? { ...d, prepSessions: d.prepSessions.filter((s) => s.key !== key) } : d))
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (!draft || !draft.title.trim()) return
     const minutes = Number(draft.estimatedMinutes)
+    setSaveError(null)
 
-    addTask({
-      title: draft.title.trim(),
-      subject: draft.subject.trim(),
-      type: draft.type,
-      priority: 'medium',
-      status: 'todo',
-      dueDate: draft.dueDate || undefined,
-      estimatedMinutes: Number.isFinite(minutes) && minutes > 0 ? Math.round(minutes) : undefined,
-    })
-
-    for (const session of draft.prepSessions) {
-      if (!session.title.trim()) continue
-      addTask({
-        title: session.title.trim(),
+    try {
+      await addTask.mutateAsync({
+        title: draft.title.trim(),
         subject: draft.subject.trim(),
         type: draft.type,
-        priority: 'medium',
-        status: 'todo',
-        dueDate: session.date || undefined,
-        estimatedMinutes: session.minutes > 0 ? session.minutes : undefined,
+        priority: 2,
+        status: 'open',
+        dueDate: draft.dueDate || undefined,
+        estimatedMinutes: Number.isFinite(minutes) && minutes > 0 ? Math.round(minutes) : undefined,
+        source: 'quick-add',
       })
-    }
 
-    setDraft(null)
-    setText('')
+      for (const session of draft.prepSessions) {
+        if (!session.title.trim()) continue
+        await addTask.mutateAsync({
+          title: session.title.trim(),
+          subject: draft.subject.trim(),
+          type: draft.type,
+          priority: 2,
+          status: 'open',
+          dueDate: session.date || undefined,
+          estimatedMinutes: session.minutes > 0 ? session.minutes : undefined,
+          source: 'quick-add',
+        })
+      }
+
+      setDraft(null)
+      setText('')
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save this task. Try again.')
+    }
   }
 
   function handleCancel() {
@@ -250,6 +259,7 @@ export default function QuickAdd() {
             )}
 
             {!draft.title.trim() && <p className="text-sm text-red-600">Title is required.</p>}
+            {saveError && <p className="text-sm text-red-600">{saveError}</p>}
 
             <div className="mt-1 flex items-center justify-end gap-2">
               <button
@@ -261,11 +271,13 @@ export default function QuickAdd() {
               </button>
               <button
                 type="button"
-                disabled={!draft.title.trim()}
-                onClick={handleConfirm}
+                disabled={!draft.title.trim() || addTask.isPending}
+                onClick={() => void handleConfirm()}
                 className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                Confirm{draft.prepSessions.length > 0 ? ` (+${draft.prepSessions.length} prep)` : ''}
+                {addTask.isPending
+                  ? 'Saving…'
+                  : `Confirm${draft.prepSessions.length > 0 ? ` (+${draft.prepSessions.length} prep)` : ''}`}
               </button>
             </div>
           </div>

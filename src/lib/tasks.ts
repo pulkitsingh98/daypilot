@@ -1,23 +1,26 @@
-import type { Task, TaskPriority, TaskStatus, TaskType } from '../store'
+import type { Task, TaskPriority, TaskStatus, TaskType } from '../data/tasks'
 
 export const TASK_STATUSES: { key: TaskStatus; label: string }[] = [
-  { key: 'todo', label: 'To Do' },
-  { key: 'in-progress', label: 'In Progress' },
+  { key: 'open', label: 'Open' },
   { key: 'done', label: 'Done' },
+  { key: 'deferred', label: 'Deferred' },
 ]
 
 export const TASK_TYPES: { key: TaskType; label: string; chipClass: string }[] = [
-  { key: 'homework', label: 'Homework', chipClass: 'bg-sky-100 text-sky-700' },
-  { key: 'reading', label: 'Reading', chipClass: 'bg-violet-100 text-violet-700' },
-  { key: 'project', label: 'Project', chipClass: 'bg-emerald-100 text-emerald-700' },
-  { key: 'exam', label: 'Exam', chipClass: 'bg-rose-100 text-rose-700' },
-  { key: 'other', label: 'Other', chipClass: 'bg-slate-100 text-slate-600' },
+  { key: 'class-prep', label: 'Class Prep', chipClass: 'bg-violet-100 text-violet-700' },
+  { key: 'quiz-exam', label: 'Quiz/Exam', chipClass: 'bg-rose-100 text-rose-700' },
+  { key: 'assignment', label: 'Assignment', chipClass: 'bg-sky-100 text-sky-700' },
+  { key: 'application', label: 'Application', chipClass: 'bg-emerald-100 text-emerald-700' },
+  { key: 'competition', label: 'Competition', chipClass: 'bg-amber-100 text-amber-700' },
+  { key: 'self-dev', label: 'Self-Dev', chipClass: 'bg-teal-100 text-teal-700' },
+  { key: 'personal', label: 'Personal', chipClass: 'bg-pink-100 text-pink-700' },
+  { key: 'errand', label: 'Errand', chipClass: 'bg-slate-100 text-slate-600' },
 ]
 
 export const TASK_PRIORITIES: { key: TaskPriority; label: string; chipClass: string }[] = [
-  { key: 'high', label: 'High', chipClass: 'bg-red-100 text-red-700' },
-  { key: 'medium', label: 'Medium', chipClass: 'bg-amber-100 text-amber-700' },
-  { key: 'low', label: 'Low', chipClass: 'bg-slate-100 text-slate-600' },
+  { key: 1, label: 'High', chipClass: 'bg-red-100 text-red-700' },
+  { key: 2, label: 'Medium', chipClass: 'bg-amber-100 text-amber-700' },
+  { key: 3, label: 'Low', chipClass: 'bg-slate-100 text-slate-600' },
 ]
 
 export function typeMeta(type: TaskType) {

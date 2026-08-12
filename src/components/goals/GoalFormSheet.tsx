@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { addGoal, deleteGoal, updateGoal, type Goal, type GoalHorizon } from '../../store'
+import { useAddGoal, useDeleteGoal, useUpdateGoal, type Goal, type GoalHorizon } from '../../data/goals'
 import { GOAL_HORIZONS } from '../../lib/goals'
 
 interface GoalFormSheetProps {
@@ -16,7 +16,12 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
   )
   const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  const addGoal = useAddGoal()
+  const updateGoal = useUpdateGoal()
+  const deleteGoal = useDeleteGoal()
+  const saving = addGoal.isPending || updateGoal.isPending
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!title.trim()) {
@@ -30,19 +35,27 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
     }
 
     const payload = { title: title.trim(), horizon, weeklyTargetMinutes: minutes }
-    if (initial) {
-      updateGoal(initial.id, payload)
-    } else {
-      addGoal(payload)
+    try {
+      if (initial) {
+        await updateGoal.mutateAsync({ id: initial.id, input: payload })
+      } else {
+        await addGoal.mutateAsync(payload)
+      }
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save this goal. Try again.')
     }
-    onClose()
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!initial) return
     if (window.confirm(`Delete "${initial.title}"? This can't be undone.`)) {
-      deleteGoal(initial.id)
-      onClose()
+      try {
+        await deleteGoal.mutateAsync(initial.id)
+        onClose()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not delete this goal. Try again.')
+      }
     }
   }
 
@@ -108,7 +121,8 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
               <button
                 type="button"
                 onClick={handleDelete}
-                className="text-sm font-medium text-red-600 hover:text-red-700"
+                disabled={deleteGoal.isPending}
+                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
               >
                 Delete
               </button>
@@ -125,9 +139,10 @@ export default function GoalFormSheet({ initial, defaultHorizon, onClose }: Goal
               </button>
               <button
                 type="submit"
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                disabled={saving}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
               >
-                Save
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import type { DailyPlan, PlanBlock, PlanDeferredItem } from '../store'
+import type { DailyPlan, PlanBlock, PlanDeferredItem } from '../data/dailyPlans'
 
 function isValidTimeString(value: unknown): value is string {
   return typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)

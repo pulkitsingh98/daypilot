@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { ClassEntry } from '../../store'
+import type { ClassEntry } from '../../data/timetableBlocks'
 import { DAYS, formatHourLabel, formatTimeLabel, toMinutes } from '../../lib/time'
 
 interface WeekGridProps {

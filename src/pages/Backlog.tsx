@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useTasks, type Task, type TaskStatus, type TaskType } from '../store'
+import { useTasks, type Task, type TaskStatus, type TaskType } from '../data/tasks'
 import { TASK_STATUSES, TASK_TYPES } from '../lib/tasks'
 import TaskCard from '../components/backlog/TaskCard'
 import TaskFormSheet from '../components/backlog/TaskFormSheet'
@@ -8,11 +8,11 @@ import ImportSheet from '../components/backlog/ImportSheet'
 type TypeFilter = TaskType | 'all'
 
 export default function Backlog() {
-  const tasks = useTasks()
+  const { data: tasks = [], isLoading, error } = useTasks()
   const [editing, setEditing] = useState<Task | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
-  const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('todo')
+  const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('open')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [subjectFilter, setSubjectFilter] = useState<string>('all')
 
@@ -27,7 +27,7 @@ export default function Backlog() {
       (subjectFilter === 'all' || task.subject === subjectFilter),
   )
 
-  function openAdd(status: TaskStatus = 'todo') {
+  function openAdd(status: TaskStatus = 'open') {
     setEditing(null)
     setDefaultStatus(status)
     setFormOpen(true)
@@ -93,6 +93,9 @@ export default function Backlog() {
           ))}
         </select>
       </div>
+
+      {isLoading && <p className="mb-4 text-sm text-slate-500">Loading your backlog…</p>}
+      {error && <p className="mb-4 text-sm text-red-600">Could not load your backlog. Try refreshing.</p>}
 
       <div className="flex flex-col gap-6">
         {TASK_STATUSES.map((statusMeta) => {

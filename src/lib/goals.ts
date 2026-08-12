@@ -1,4 +1,4 @@
-import type { GoalHorizon } from '../store'
+import type { GoalHorizon } from '../data/goals'
 
 export const GOAL_HORIZONS: { key: GoalHorizon; label: string; short: string }[] = [
   { key: '30', label: '30-day goals', short: '30-day' },

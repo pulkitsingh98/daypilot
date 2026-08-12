@@ -1,4 +1,4 @@
-import type { DayOfWeek } from '../store'
+import type { DayOfWeek } from '../data/types'
 
 export const DAYS: { key: DayOfWeek; label: string; short: string }[] = [
   { key: 'mon', label: 'Monday', short: 'Mon' },
@@ -58,6 +58,15 @@ export function dayKeyForDate(date: Date): DayOfWeek {
   return DAYS[index].key
 }
 
+/** DayOfWeek key -> the smallint (0=Mon..6=Sun) stored in timetable_blocks.day_of_week. */
+export function dayOfWeekToIndex(day: DayOfWeek): number {
+  return DAYS.findIndex((d) => d.key === day)
+}
+
+export function indexToDayOfWeek(index: number): DayOfWeek {
+  return DAYS[index]?.key ?? 'mon'
+}
+
 /** ISO 8601 week key (e.g. "2026-W33"), used to detect when a new week has started. */
 export function getWeekKey(date: Date = new Date()): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -68,4 +77,10 @@ export function getWeekKey(date: Date = new Date()): string {
   firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3)
   const weekNum = 1 + Math.round((d.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000))
   return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`
+}
+
+/** Monday of the given date's week, as "YYYY-MM-DD" (local time) — matches goal_progress.week_start_date. */
+export function getWeekStartDate(date: Date = new Date()): string {
+  const dayNum = (date.getDay() + 6) % 7 // 0 = Mon .. 6 = Sun
+  return toIsoDate(addDays(date, -dayNum))
 }

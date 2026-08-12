@@ -1,4 +1,5 @@
-import type { ClassEntry, DailyPlan } from '../../store'
+import type { ClassEntry } from '../../data/timetableBlocks'
+import type { DailyPlan } from '../../data/dailyPlans'
 import { formatTimeLabel } from '../../lib/time'
 import { isPrepScheduledForClass } from '../../lib/todayView'
 

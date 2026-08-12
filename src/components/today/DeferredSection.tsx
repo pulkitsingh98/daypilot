@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { PlanDeferredItem } from '../../store'
+import type { PlanDeferredItem } from '../../data/dailyPlans'
 
 interface DeferredSectionProps {
   items: PlanDeferredItem[]

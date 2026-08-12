@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { addClass, deleteClass, updateClass, type ClassEntry, type DayOfWeek } from '../../store'
+import { useAddClass, useDeleteClass, useUpdateClass, type ClassEntry } from '../../data/timetableBlocks'
+import type { DayOfWeek } from '../../data/types'
 import { DAYS, toMinutes } from '../../lib/time'
 
 interface ClassFormSheetProps {
@@ -24,7 +25,12 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
   const [prepWindowEnd, setPrepWindowEnd] = useState(initial?.prepRule?.windowEnd ?? '21:00')
   const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  const addClass = useAddClass()
+  const updateClass = useUpdateClass()
+  const deleteClass = useDeleteClass()
+  const saving = addClass.isPending || updateClass.isPending
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!subject.trim()) {
@@ -71,19 +77,27 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
           : undefined,
     }
 
-    if (initial) {
-      updateClass(initial.id, payload)
-    } else {
-      addClass(payload)
+    try {
+      if (initial) {
+        await updateClass.mutateAsync({ id: initial.id, input: payload })
+      } else {
+        await addClass.mutateAsync(payload)
+      }
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save this class. Try again.')
     }
-    onClose()
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!initial) return
     if (window.confirm(`Delete ${initial.subject}? This can't be undone.`)) {
-      deleteClass(initial.id)
-      onClose()
+      try {
+        await deleteClass.mutateAsync(initial.id)
+        onClose()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not delete this class. Try again.')
+      }
     }
   }
 
@@ -234,7 +248,8 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
               <button
                 type="button"
                 onClick={handleDelete}
-                className="text-sm font-medium text-red-600 hover:text-red-700"
+                disabled={deleteClass.isPending}
+                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
               >
                 Delete
               </button>
@@ -251,9 +266,10 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
               </button>
               <button
                 type="submit"
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                disabled={saving}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
               >
-                Save
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>

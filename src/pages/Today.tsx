@@ -1,6 +1,8 @@
-import { useMemo } from 'react'
-import { updateSettings, useClasses, useDailyPlan, useSettings } from '../store'
+import { useMemo, useState } from 'react'
+import { useClasses } from '../data/timetableBlocks'
+import { useDailyPlan } from '../data/dailyPlans'
 import { addDays, dayKeyForDate, toIsoDate } from '../lib/time'
+import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
 import { buildTimelineItems } from '../lib/todayView'
 import { usePlanGeneration } from '../services/usePlanGeneration'
 import QuickAdd from '../components/today/QuickAdd'
@@ -13,10 +15,10 @@ export default function Today() {
   const now = useMemo(() => new Date(), [])
   const todayKey = toIsoDate(now)
 
-  const classes = useClasses()
-  const settings = useSettings()
-  const plan = useDailyPlan(todayKey)
+  const { data: classes = [], isLoading: classesLoading, error: classesError } = useClasses()
+  const { data: plan, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
   const { loading, error, generate, retry } = usePlanGeneration()
+  const [nudgeDismissed, setNudgeDismissed] = useState(false)
 
   const todayClasses = useMemo(
     () => classes.filter((c) => c.day === dayKeyForDate(now)),
@@ -28,10 +30,12 @@ export default function Today() {
   )
   const timelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
 
-  const showNudge = !plan && !loading && settings.lastPlanNudgeDate !== todayKey
+  const showNudge =
+    !plan && !planLoading && !loading && !nudgeDismissed && getLastPlanNudgeDate() !== todayKey
 
   function markNudgeHandled() {
-    updateSettings({ lastPlanNudgeDate: todayKey })
+    setLastPlanNudgeDate(todayKey)
+    setNudgeDismissed(true)
   }
 
   async function handleGenerate(remainingOnly: boolean) {
@@ -55,7 +59,13 @@ export default function Today() {
         />
       )}
 
+      {classesLoading && <p className="mb-4 text-sm text-slate-500">Loading your timetable…</p>}
+
       <TomorrowPreview classes={tomorrowClasses} plan={plan} />
+
+      {(classesError || planError) && (
+        <p className="mb-4 text-sm text-red-600">Could not load today's data. Try refreshing.</p>
+      )}
 
       {error && (
         <div className="mb-4 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -70,7 +80,9 @@ export default function Today() {
         </div>
       )}
 
-      {!plan ? (
+      {planLoading ? (
+        <p className="text-sm text-slate-500">Loading today's plan…</p>
+      ) : !plan ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
           <p className="text-sm text-slate-500">No plan yet for today.</p>
           <button

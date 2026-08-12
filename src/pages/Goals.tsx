@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { useGoals, type Goal, type GoalHorizon } from '../store'
+import { useGoals, type Goal, type GoalHorizon } from '../data/goals'
 import { GOAL_HORIZONS } from '../lib/goals'
 import GoalCard from '../components/goals/GoalCard'
 import GoalFormSheet from '../components/goals/GoalFormSheet'
 
 export default function Goals() {
-  const goals = useGoals()
+  const { data: goals = [], isLoading, error } = useGoals()
   const [editing, setEditing] = useState<Goal | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [defaultHorizon, setDefaultHorizon] = useState<GoalHorizon>('30')
@@ -40,6 +40,9 @@ export default function Goals() {
           + Add goal
         </button>
       </div>
+
+      {isLoading && <p className="mb-4 text-sm text-slate-500">Loading your goals…</p>}
+      {error && <p className="mb-4 text-sm text-red-600">Could not load your goals. Try refreshing.</p>}
 
       <div className="flex flex-col gap-6">
         {GOAL_HORIZONS.map((horizon) => {
