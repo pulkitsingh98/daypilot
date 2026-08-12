@@ -12,6 +12,7 @@ import Timetable from './pages/Timetable'
 import Subjects from './pages/Subjects'
 import SubjectDetail from './pages/SubjectDetail'
 import Documents from './pages/Documents'
+import DebugLog from './pages/DebugLog'
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="settings/subjects" element={<Subjects />} />
           <Route path="settings/subjects/:id" element={<SubjectDetail />} />
           <Route path="settings/documents" element={<Documents />} />
+          <Route path="settings/debug" element={<DebugLog />} />
         </Route>
       </Route>
     </Routes>

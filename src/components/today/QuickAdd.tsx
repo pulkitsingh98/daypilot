@@ -50,7 +50,7 @@ export default function QuickAdd() {
     e.preventDefault()
     if (!text.trim() || loading) return
     setDraft(null)
-    void call({ system: buildQuickAddPrompt(todayIso()), user: text.trim() })
+    void call({ system: buildQuickAddPrompt(todayIso()), user: text.trim(), kind: 'quick-add' })
   }
 
   function handleRetry() {

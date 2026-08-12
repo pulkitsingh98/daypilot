@@ -50,6 +50,16 @@ export default function Settings() {
           </div>
           <span className="text-mist">›</span>
         </Link>
+        <Link
+          to="/settings/debug"
+          className="flex items-center justify-between px-4 py-3 hover:bg-haze"
+        >
+          <div>
+            <div className="text-sm font-medium text-ink">AI debug log</div>
+            <div className="text-xs text-mist">See exactly what the planner sent and got back</div>
+          </div>
+          <span className="text-mist">›</span>
+        </Link>
       </div>
 
       <AISettingsCard />

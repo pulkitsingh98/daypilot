@@ -1,7 +1,7 @@
 import type { DailyPlan } from '../data/dailyPlans'
 import { saveDailyPlan } from '../data/dailyPlans'
 import { PLANNER_SYSTEM_PROMPT } from '../prompts/plannerPrompt'
-import { buildPlanUserMessage, gatherPlanningState } from '../lib/planning'
+import { buildPlanUserMessage, getPlanningContext } from '../lib/planning'
 import { normalizeDailyPlanResult } from '../lib/dailyPlan'
 import { formatTimeOfDay } from '../lib/time'
 import { callAI, parseJsonResponse } from './ai'
@@ -20,12 +20,16 @@ export interface GeneratePlanOptions {
  */
 export async function generateDailyPlan(userId: string, options: GeneratePlanOptions = {}): Promise<DailyPlan> {
   const now = options.now ?? new Date()
-  const state = await gatherPlanningState(now, userId)
+  const state = await getPlanningContext(userId, now)
   const effectiveState = options.remainingOnly ? { ...state, wakeTime: formatTimeOfDay(now) } : state
 
   const userMessage = buildPlanUserMessage(effectiveState, { remainingOnly: options.remainingOnly })
 
-  const raw = await callAI({ system: PLANNER_SYSTEM_PROMPT, user: userMessage })
+  const raw = await callAI({
+    system: PLANNER_SYSTEM_PROMPT,
+    user: userMessage,
+    kind: options.remainingOnly ? 'replan' : 'plan',
+  })
   const parsed = parseJsonResponse<unknown>(raw)
   const plan = normalizeDailyPlanResult(parsed)
 

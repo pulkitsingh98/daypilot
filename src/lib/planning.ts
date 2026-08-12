@@ -17,7 +17,7 @@ import type { Competition, CompetitionStatus } from '../data/competitions'
 import { fetchCompetitions } from '../data/competitions'
 import type { UpcomingSession } from '../data/sessions'
 import { fetchUpcomingSessions } from '../data/sessions'
-import { ACTIVE_STATUSES as ACTIVE_COMPETITION_STATUSES } from './competitions'
+import { ACTIVE_STATUSES as ACTIVE_COMPETITION_STATUSES, getDeadlineInfo } from './competitions'
 import { fetchDailyPlan, fetchDailyPlansInRange } from '../data/dailyPlans'
 import { computeDayCompletion } from './dayCompletion'
 import { addDays, dayKeyForDate, toIsoDate } from './time'
@@ -211,6 +211,13 @@ function toPlanningSession(session: UpcomingSession): PlanningSession {
   }
 }
 
+/** Only surface competitions actually relevant to near-term planning: still active, with a deadline inside 14 days (overdue ones included, so they stay visible until resolved). */
+function isWithinPlanningWindow(competition: Competition, date: Date): boolean {
+  if (!ACTIVE_COMPETITION_STATUSES.includes(competition.status)) return false
+  const info = getDeadlineInfo(competition.deadlineDate, date)
+  return info !== null && info.daysUntil <= 14
+}
+
 function toPlanningCompetition(competition: Competition): PlanningCompetition {
   return {
     title: competition.title,
@@ -265,11 +272,11 @@ function buildSubjectProficiency(subjects: Subject[]): Record<string, number> {
   return map
 }
 
-/** Gathers everything the planner needs to reason about today, fetched fresh from Supabase. */
-export async function gatherPlanningState(now: Date, userId: string): Promise<PlanningState> {
-  const tomorrow = addDays(now, 1)
-  const yesterday = addDays(now, -1)
-  const todayIso = toIsoDate(now)
+/** Gathers everything the planner needs to reason about `date`, fetched fresh from Supabase. */
+export async function getPlanningContext(userId: string, date: Date): Promise<PlanningState> {
+  const tomorrow = addDays(date, 1)
+  const yesterday = addDays(date, -1)
+  const todayIso = toIsoDate(date)
   const tomorrowIso = toIsoDate(tomorrow)
   const yesterdayIso = toIsoDate(yesterday)
 
@@ -282,7 +289,7 @@ export async function gatherPlanningState(now: Date, userId: string): Promise<Pl
       fetchSubjects(),
       fetchTaskHistory(),
       fetchRecurringActivities(),
-      fetchUpcomingSessions(),
+      fetchUpcomingSessions(7, date),
       fetchCompetitions(),
     ])
 
@@ -313,21 +320,19 @@ export async function gatherPlanningState(now: Date, userId: string): Promise<Pl
   return {
     today: todayIso,
     tomorrow: tomorrowIso,
-    timetable: gatherTimetable(classes, now, tomorrow),
+    timetable: gatherTimetable(classes, date, tomorrow),
     recurringActivities: recurringActivities.map(toPlanningRecurringActivity),
     upcomingSessions: upcomingSessions.map(toPlanningSession),
     openTasks,
     goals: planningGoals,
-    competitions: competitions
-      .filter((c) => ACTIVE_COMPETITION_STATUSES.includes(c.status))
-      .map(toPlanningCompetition),
+    competitions: competitions.filter((c) => isWithinPlanningWindow(c, date)).map(toPlanningCompetition),
     yesterdayIncompleteBlocks: await gatherYesterdayIncompleteBlocks(yesterdayIso, tasks),
     capacityMinutes: profileTyped.dailyCapacityMinutes,
     wakeTime: profileTyped.wakeTime,
     sleepTime: profileTyped.sleepTime,
     subjectProficiency: buildSubjectProficiency(subjects),
     historySummary: summarizeTaskHistory(taskHistory),
-    recentCompletion: await computeRecentCompletion(tasks, now),
+    recentCompletion: await computeRecentCompletion(tasks, date),
   }
 }
 

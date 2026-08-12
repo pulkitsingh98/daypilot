@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { fetchProfile } from '../data/profiles'
+import { logAICall, type AICallKind } from '../lib/aiDebugLog'
 
 export interface CallAIParams {
   system: string
@@ -8,6 +9,8 @@ export interface CallAIParams {
   fileBase64?: string
   /** e.g. "image/png", "image/jpeg", "application/pdf" — required alongside fileBase64. */
   mimeType?: string
+  /** Tags this call in the AI debug log (Settings > AI debug log). Defaults to 'other'. */
+  kind?: AICallKind
 }
 
 export type AIErrorCode = 'missing-api-key' | 'network' | 'http' | 'parse' | 'unknown'
@@ -31,7 +34,7 @@ const JSON_ONLY_INSTRUCTION =
  * the single choke point so the JSON-only instruction and error handling stay
  * consistent everywhere.
  */
-export async function callAI({ system, user, fileBase64, mimeType }: CallAIParams): Promise<string> {
+export async function callAI({ system, user, fileBase64, mimeType, kind = 'other' }: CallAIParams): Promise<string> {
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -51,10 +54,18 @@ export async function callAI({ system, user, fileBase64, mimeType }: CallAIParam
 
   const systemWithJsonInstruction = `${system}${JSON_ONLY_INSTRUCTION}`
 
-  if (profile.aiProvider === 'gemini') {
-    return callGemini(apiKey, systemWithJsonInstruction, user, fileBase64, mimeType)
+  try {
+    const raw =
+      profile.aiProvider === 'gemini'
+        ? await callGemini(apiKey, systemWithJsonInstruction, user, fileBase64, mimeType)
+        : await callClaude(apiKey, systemWithJsonInstruction, user, fileBase64, mimeType)
+    logAICall({ kind, system: systemWithJsonInstruction, user, response: raw, error: null })
+    return raw
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    logAICall({ kind, system: systemWithJsonInstruction, user, response: null, error: message })
+    throw err
   }
-  return callClaude(apiKey, systemWithJsonInstruction, user, fileBase64, mimeType)
 }
 
 async function callGemini(

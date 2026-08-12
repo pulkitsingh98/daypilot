@@ -19,6 +19,7 @@ export async function extractDocumentContent(
     user: 'Extract the requested information from this document.',
     fileBase64,
     mimeType,
+    kind: 'document-extraction',
   })
   const parsed = parseJsonResponse<unknown>(raw)
   return normalizeExtractionResult(parsed, promptKind)
