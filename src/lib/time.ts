@@ -51,6 +51,11 @@ export function addDays(date: Date, days: number): Date {
   return result
 }
 
+/** First of the month `months` away from `date`'s month (negative to go back). */
+export function addMonths(date: Date, months: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1)
+}
+
 /** Maps a JS Date to the DayOfWeek key of the ClassEntry/DAYS schedule. */
 export function dayKeyForDate(date: Date): DayOfWeek {
   const jsDay = date.getDay() // 0 = Sun .. 6 = Sat

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { unwrapNullable } from './shared'
+import { unwrap, unwrapNullable } from './shared'
 
 export interface PlanBlock {
   /** "HH:MM" */
@@ -51,6 +51,32 @@ export async function fetchDailyPlan(dateIso: string): Promise<DailyPlan | null>
 
 export function useDailyPlan(dateIso: string) {
   return useQuery({ queryKey: dailyPlanQueryKey(dateIso), queryFn: () => fetchDailyPlan(dateIso) })
+}
+
+export interface DailyPlanWithDate extends DailyPlan {
+  planDate: string
+}
+
+const dailyPlansRangeQueryKey = (startIso: string, endIso: string) =>
+  ['daily_plans', 'range', startIso, endIso] as const
+
+/** All stored plans between startIso and endIso (inclusive), for the History calendar and the planner's recent-completion summary. */
+export async function fetchDailyPlansInRange(startIso: string, endIso: string): Promise<DailyPlanWithDate[]> {
+  const result = await supabase
+    .from('daily_plans')
+    .select('plan_date, blocks, deferred, note, generated_at')
+    .gte('plan_date', startIso)
+    .lte('plan_date', endIso)
+    .order('plan_date', { ascending: true })
+  const rows = unwrap<(DailyPlanRow & { plan_date: string })[]>(result)
+  return rows.map((row) => ({ planDate: row.plan_date, ...fromRow(row) }))
+}
+
+export function useDailyPlansInRange(startIso: string, endIso: string) {
+  return useQuery({
+    queryKey: dailyPlansRangeQueryKey(startIso, endIso),
+    queryFn: () => fetchDailyPlansInRange(startIso, endIso),
+  })
 }
 
 /** Used by the plan generator (a plain async function, not a hook) to persist a fresh plan. */
