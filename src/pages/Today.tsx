@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan } from '../data/dailyPlans'
+import { useTasks } from '../data/tasks'
 import { addDays, dayKeyForDate, toIsoDate } from '../lib/time'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
 import { buildTimelineItems } from '../lib/todayView'
@@ -17,6 +18,7 @@ export default function Today() {
 
   const { data: classes = [], isLoading: classesLoading, error: classesError } = useClasses()
   const { data: plan = null, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
+  const { data: tasks = [] } = useTasks()
   const { loading, error, generate, retry } = usePlanGeneration()
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
 
@@ -29,6 +31,7 @@ export default function Today() {
     [classes, now],
   )
   const timelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
+  const tasksById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
 
   const showNudge =
     !plan && !planLoading && !loading && !nudgeDismissed && getLastPlanNudgeDate() !== todayKey
@@ -110,7 +113,11 @@ export default function Today() {
 
           <div className="flex flex-col gap-2">
             {timelineItems.map((item) => (
-              <TimelineBlock key={item.key} item={item} />
+              <TimelineBlock
+                key={item.key}
+                item={item}
+                task={item.taskId ? tasksById.get(item.taskId) : undefined}
+              />
             ))}
           </div>
 

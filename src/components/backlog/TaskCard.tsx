@@ -1,5 +1,6 @@
-import { useUpdateTask, type Task } from '../../data/tasks'
+import type { Task } from '../../data/tasks'
 import { formatDueDate, isOverdue, priorityMeta, typeMeta } from '../../lib/tasks'
+import TaskDoneToggle from './TaskDoneToggle'
 
 interface TaskCardProps {
   task: Task
@@ -11,36 +12,12 @@ export default function TaskCard({ task, onEdit }: TaskCardProps) {
   const priority = priorityMeta(task.priority)
   const overdue = isOverdue(task)
   const done = task.status === 'done'
-  const updateTask = useUpdateTask()
-
-  function toggleDone() {
-    updateTask.mutate({
-      id: task.id,
-      input: {
-        title: task.title,
-        subject: task.subject,
-        type: task.type,
-        priority: task.priority,
-        status: done ? 'open' : 'done',
-        dueDate: task.dueDate,
-        estimatedMinutes: task.estimatedMinutes,
-        notes: task.notes,
-        source: task.source,
-      },
-    })
-  }
 
   return (
     <div className={`rounded-xl border border-slate-200 bg-white p-4 ${done ? 'opacity-60' : ''}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-2">
-          <input
-            type="checkbox"
-            checked={done}
-            onChange={toggleDone}
-            aria-label={done ? `Mark ${task.title} as not done` : `Mark ${task.title} as done`}
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300"
-          />
+          <TaskDoneToggle task={task} />
           <div className="min-w-0">
             <h3
               className={`truncate text-sm font-semibold ${done ? 'text-slate-400 line-through' : 'text-slate-900'}`}

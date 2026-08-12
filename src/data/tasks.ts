@@ -31,6 +31,8 @@ export interface Task {
   source: TaskSource
   /** Times this task has been pushed to a later day without being worked on. */
   snoozeCount: number
+  /** ISO timestamp of when status last became 'done', via useToggleTaskDone. Undefined if never completed. */
+  completedAt?: string
 }
 
 interface TaskRow {
@@ -44,6 +46,7 @@ interface TaskRow {
   notes: string | null
   source: string
   type: string
+  completed_at: string | null
   subjects: { name: string }[] | null
 }
 
@@ -60,11 +63,12 @@ function fromRow(row: TaskRow): Task {
     notes: row.notes ?? undefined,
     source: (row.source as TaskSource) ?? 'manual',
     snoozeCount: row.snooze_count,
+    completedAt: row.completed_at ?? undefined,
   }
 }
 
 const SELECT_COLUMNS =
-  'id, title, due_date, estimated_minutes, priority, status, snooze_count, notes, source, type, subjects(name)'
+  'id, title, due_date, estimated_minutes, priority, status, snooze_count, notes, source, type, completed_at, subjects(name)'
 
 export const TASKS_QUERY_KEY = ['tasks'] as const
 
@@ -189,6 +193,52 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: SUBJECTS_QUERY_KEY })
     },
+  })
+}
+
+/**
+ * The single source of truth for marking a task done/not-done — used by the
+ * strike-off checkbox on both Backlog and Today, so both stay in sync
+ * through the shared tasks query cache. Sets/clears completed_at, which the
+ * History calendar relies on to know which specific day a task was actually
+ * finished on (not just its current status).
+ */
+export function useToggleTaskDone() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, done }: { id: string; done: boolean }): Promise<Task> => {
+      const result = await supabase
+        .from('tasks')
+        .update({
+          status: done ? 'done' : 'open',
+          completed_at: done ? new Date().toISOString() : null,
+        })
+        .eq('id', id)
+        .select(SELECT_COLUMNS)
+        .single()
+      return fromRow(unwrap<TaskRow>(result))
+    },
+    onMutate: async ({ id, done }) => {
+      await queryClient.cancelQueries({ queryKey: TASKS_QUERY_KEY })
+      const previous = queryClient.getQueryData<Task[]>(TASKS_QUERY_KEY)
+      queryClient.setQueryData<Task[]>(TASKS_QUERY_KEY, (old = []) =>
+        old.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                status: done ? 'done' : 'open',
+                completedAt: done ? new Date().toISOString() : undefined,
+              }
+            : t,
+        ),
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(TASKS_QUERY_KEY, context.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY }),
   })
 }
 

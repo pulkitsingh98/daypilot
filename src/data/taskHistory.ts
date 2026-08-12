@@ -1,4 +1,6 @@
+import { useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import { resolveSubjectId } from './subjects'
 import { unwrap } from './shared'
 import type { TaskType } from './tasks'
@@ -56,4 +58,21 @@ export async function addTaskHistoryEntry(
     completed_date: input.completedDate,
   })
   if (error) throw new Error(error.message)
+}
+
+/**
+ * Logs how long a just-completed task actually took, from the optional
+ * "took about how long?" prompt shown after checking a task off. This is
+ * currently the only normal-usage writer of task_history — without it, the
+ * planner's "prefer historical actual durations" rule has nothing to read.
+ */
+export function useLogTaskActual() {
+  const { session } = useAuth()
+
+  return useMutation({
+    mutationFn: async (input: Omit<TaskHistoryEntry, 'id'>): Promise<void> => {
+      if (!session) throw new Error('Not signed in.')
+      await addTaskHistoryEntry(input, session.user.id)
+    },
+  })
 }

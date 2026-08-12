@@ -15,6 +15,8 @@ export interface TimelineItem {
   reason?: string
   /** For class blocks: the class's prep rule, if any. */
   prepRule?: PrepRule
+  /** For planned blocks linked to a real task — lets the timeline strike it off directly. Null for fixed classes and un-linked blocks (buffer, meals). */
+  taskId: string | null
 }
 
 /** Merges today's fixed classes with today's AI-planned blocks into one time-sorted list. */
@@ -26,6 +28,7 @@ export function buildTimelineItems(classesToday: ClassEntry[], plan: DailyPlan |
     end: entry.endTime,
     title: entry.subject,
     prepRule: entry.prepRule,
+    taskId: null,
   }))
 
   plan?.blocks.forEach((block, index) => {
@@ -37,6 +40,7 @@ export function buildTimelineItems(classesToday: ClassEntry[], plan: DailyPlan |
       title: block.title,
       subtitle: block.type,
       reason: block.reason,
+      taskId: block.taskId,
     })
   })
 
