@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useSubjects } from '../data/subjects'
 import { useClasses } from '../data/timetableBlocks'
+import { useSessionsForSubject } from '../data/sessions'
 import { useTasks, type Task } from '../data/tasks'
 import { proficiencyMeta, sortByUpcoming } from '../lib/subjects'
-import { dayLabel, formatTimeLabel } from '../lib/time'
+import { dayLabel, formatTimeLabel, toIsoDate } from '../lib/time'
 import SubjectFormSheet from '../components/subjects/SubjectFormSheet'
 import TaskCard from '../components/backlog/TaskCard'
 import TaskFormSheet from '../components/backlog/TaskFormSheet'
+import UploadDocumentButton from '../components/documents/UploadDocumentButton'
 
 export default function SubjectDetail() {
   const { id } = useParams<{ id: string }>()
@@ -20,6 +22,11 @@ export default function SubjectDetail() {
   const [taskFormOpen, setTaskFormOpen] = useState(false)
 
   const subject = subjects.find((s) => s.id === id)
+  const {
+    data: sessions = [],
+    isLoading: sessionsLoading,
+    error: sessionsError,
+  } = useSessionsForSubject(subject?.id ?? '')
 
   if (subjectsLoading) {
     return <div className="p-4 text-sm text-slate-500">Loading…</div>
@@ -45,6 +52,7 @@ export default function SubjectDetail() {
     .sort((a, b) => (a.dueDate ?? '9999-99-99').localeCompare(b.dueDate ?? '9999-99-99'))
 
   const proficiency = proficiencyMeta(subject.proficiency)
+  const todayIso = toIsoDate(new Date())
 
   function openEditTask(task: Task) {
     setEditingTask(task)
@@ -89,7 +97,7 @@ export default function SubjectDetail() {
       </div>
 
       <section className="mt-6">
-        <h2 className="text-sm font-semibold text-slate-900">Upcoming sessions</h2>
+        <h2 className="text-sm font-semibold text-slate-900">Weekly classes</h2>
         {upcomingClasses.length === 0 ? (
           <p className="mt-2 text-sm text-slate-400">No classes scheduled for this subject.</p>
         ) : (
@@ -107,6 +115,63 @@ export default function SubjectDetail() {
                 )}
               </li>
             ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-6">
+        <h2 className="text-sm font-semibold text-slate-900">Sessions</h2>
+        {sessionsLoading && <p className="mt-2 text-sm text-slate-500">Loading…</p>}
+        {sessionsError && (
+          <p className="mt-2 text-sm text-red-600">Could not load sessions. Try refreshing.</p>
+        )}
+
+        {!sessionsLoading && sessions.length === 0 && (
+          <div className="mt-2 rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center">
+            <p className="text-sm text-slate-500">
+              No sessions yet — upload a session list or syllabus and DayPilot will read the
+              topics and reading material for you.
+            </p>
+            <div className="mt-3">
+              <UploadDocumentButton
+                label="Upload session list"
+                helperText="A session list or syllabus with dates, topics, or readings."
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              />
+            </div>
+          </div>
+        )}
+
+        {sessions.length > 0 && (
+          <ul className="mt-2 flex flex-col gap-2">
+            {sessions.map((s) => {
+              const isPast = s.scheduledDate < todayIso
+              return (
+                <li
+                  key={s.id}
+                  className={`rounded-xl border border-slate-200 bg-white p-3 text-sm ${isPast ? 'opacity-60' : ''}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate font-medium text-slate-900">
+                      {s.sessionNumber ? `#${s.sessionNumber} — ` : ''}
+                      {s.title}
+                    </span>
+                    <span className="shrink-0 text-xs text-slate-500">
+                      {new Date(`${s.scheduledDate}T00:00:00`).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  {s.topics.length > 0 && (
+                    <p className="mt-1 text-xs text-slate-500">Topics: {s.topics.join(', ')}</p>
+                  )}
+                  {s.readingMaterial && (
+                    <p className="mt-1 text-xs text-slate-500">Read: {s.readingMaterial}</p>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>

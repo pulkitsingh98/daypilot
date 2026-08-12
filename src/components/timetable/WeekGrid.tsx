@@ -89,7 +89,7 @@ export default function WeekGrid({ classes, onEdit }: WeekGridProps) {
                     className="absolute left-1 right-1 overflow-hidden rounded-md bg-indigo-600 px-2 py-1 text-left text-xs text-white shadow-sm hover:bg-indigo-700"
                     style={{ top, height }}
                   >
-                    <div className="truncate font-semibold">{entry.subject}</div>
+                    <div className="truncate font-semibold">{entry.subject.trim() || '(untitled class)'}</div>
                     <div className="truncate text-indigo-100">
                       {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
                     </div>

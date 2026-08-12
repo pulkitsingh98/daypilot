@@ -26,7 +26,7 @@ export function buildTimelineItems(classesToday: ClassEntry[], plan: DailyPlan |
     kind: 'class',
     start: entry.startTime,
     end: entry.endTime,
-    title: entry.subject,
+    title: entry.subject.trim() || '(untitled class)',
     prepRule: entry.prepRule,
     taskId: null,
   }))

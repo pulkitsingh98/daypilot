@@ -5,6 +5,7 @@ import type { DayOfWeek } from '../data/types'
 import WeekGrid from '../components/timetable/WeekGrid'
 import DayList from '../components/timetable/DayList'
 import ClassFormSheet from '../components/timetable/ClassFormSheet'
+import UploadDocumentButton from '../components/documents/UploadDocumentButton'
 
 export default function Timetable() {
   const { data: classes = [], isLoading, error } = useClasses()
@@ -49,8 +50,34 @@ export default function Timetable() {
       {isLoading && <p className="text-sm text-slate-500">Loading your timetable…</p>}
       {error && <p className="text-sm text-red-600">Could not load your timetable. Try refreshing.</p>}
 
-      <WeekGrid classes={classes} onEdit={openEdit} />
-      <DayList classes={classes} onEdit={openEdit} onAdd={openAdd} />
+      {!isLoading && classes.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
+          <p className="text-sm font-medium text-slate-700">No classes yet</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Upload a photo or PDF of your timetable and DayPilot builds it for you — once per
+            term, not something you'll redo daily.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            <UploadDocumentButton
+              label="Upload timetable"
+              helperText="A photo or PDF of your class schedule."
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            />
+            <button
+              type="button"
+              onClick={() => openAdd()}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            >
+              Add a class manually
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <WeekGrid classes={classes} onEdit={openEdit} />
+          <DayList classes={classes} onEdit={openEdit} onAdd={openAdd} />
+        </>
+      )}
 
       {formOpen && (
         <ClassFormSheet

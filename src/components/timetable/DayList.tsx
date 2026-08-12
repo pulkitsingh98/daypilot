@@ -42,7 +42,7 @@ export default function DayList({ classes, onEdit, onAdd }: DayListProps) {
                     >
                       <div className="min-w-0">
                         <div className="truncate text-sm font-medium text-slate-900">
-                          {entry.subject}
+                          {entry.subject.trim() || '(untitled class)'}
                         </div>
                         <div className="text-xs text-slate-500">
                           {formatTimeLabel(entry.startTime)} – {formatTimeLabel(entry.endTime)}

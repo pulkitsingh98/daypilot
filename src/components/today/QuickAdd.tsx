@@ -5,6 +5,7 @@ import { buildQuickAddPrompt } from '../../prompts/plannerPrompt'
 import { normalizeQuickAddResult, type QuickAddPrepSession } from '../../lib/quickAdd'
 import { TASK_TYPES, todayIso } from '../../lib/tasks'
 import SubjectPicker from '../subjects/SubjectPicker'
+import UploadDocumentButton from '../documents/UploadDocumentButton'
 
 interface DraftPrepSession extends QuickAddPrepSession {
   key: string
@@ -132,6 +133,11 @@ export default function QuickAdd() {
         >
           {loading ? 'Thinking…' : 'Add'}
         </button>
+        <UploadDocumentButton
+          label="📄 Upload"
+          helperText="A timetable, syllabus, or session list — DayPilot reads it and turns it into classes, sessions, or tasks."
+          className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+        />
       </form>
 
       {error && !loading && (

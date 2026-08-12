@@ -1,77 +1,12 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  downloadDocumentBase64,
-  useDocuments,
-  useSaveExtraction,
-  useUpdateDocKind,
-  type AppDocument,
-  type DocKind,
-} from '../data/documents'
-import { inferStoredExtractionKind, normalizeExtractionResult, type ExtractionResult } from '../lib/documentExtraction'
-import { extractDocumentContent } from '../services/documentExtraction'
-import type { ExtractionPromptKind } from '../prompts/plannerPrompt'
+import { useDocuments } from '../data/documents'
 import DocumentUploader from '../components/documents/DocumentUploader'
 import DocumentCard from '../components/documents/DocumentCard'
-import DocKindPicker from '../components/documents/DocKindPicker'
-import ExtractionReviewSheet from '../components/documents/ExtractionReviewSheet'
-
-interface ReviewState {
-  document: AppDocument
-  extraction: ExtractionResult
-}
+import { useDocumentUploadFlow } from '../components/documents/useDocumentUploadFlow'
 
 export default function Documents() {
   const { data: documents = [], isLoading, error } = useDocuments()
-  const [pendingKindDoc, setPendingKindDoc] = useState<AppDocument | null>(null)
-  const [extractingDocId, setExtractingDocId] = useState<string | null>(null)
-  const [extractionError, setExtractionError] = useState<string | null>(null)
-  const [reviewState, setReviewState] = useState<ReviewState | null>(null)
-
-  const saveExtraction = useSaveExtraction()
-  const updateDocKind = useUpdateDocKind()
-
-  async function runExtraction(doc: AppDocument, promptKind: ExtractionPromptKind) {
-    setExtractionError(null)
-    setExtractingDocId(doc.id)
-    try {
-      const fileBase64 = await downloadDocumentBase64(doc.storagePath)
-      const mimeType = doc.fileType ?? 'application/octet-stream'
-      const result = await extractDocumentContent(promptKind, fileBase64, mimeType)
-      await saveExtraction.mutateAsync({ id: doc.id, result })
-      setReviewState({ document: { ...doc, extractedJson: result, status: 'extracted' }, extraction: result })
-    } catch (err) {
-      setExtractionError(err instanceof Error ? err.message : 'Could not read this document. Try again.')
-    } finally {
-      setExtractingDocId(null)
-    }
-  }
-
-  function handleUploaded(doc: AppDocument) {
-    setPendingKindDoc(doc)
-  }
-
-  function handleClassify(doc: AppDocument) {
-    setPendingKindDoc(doc)
-  }
-
-  async function handleKindSelected(choice: { docKind: DocKind | null; promptKind: ExtractionPromptKind }) {
-    const doc = pendingKindDoc
-    setPendingKindDoc(null)
-    if (!doc) return
-
-    let effectiveDoc = doc
-    if (choice.docKind && choice.docKind !== doc.docKind) {
-      await updateDocKind.mutateAsync({ id: doc.id, docKind: choice.docKind })
-      effectiveDoc = { ...doc, docKind: choice.docKind }
-    }
-    await runExtraction(effectiveDoc, choice.promptKind)
-  }
-
-  function handleReview(doc: AppDocument) {
-    const kind = inferStoredExtractionKind(doc.extractedJson)
-    setReviewState({ document: doc, extraction: normalizeExtractionResult(doc.extractedJson, kind) })
-  }
+  const flow = useDocumentUploadFlow()
 
   return (
     <div className="p-4">
@@ -85,12 +20,12 @@ export default function Documents() {
       </p>
 
       <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-        <DocumentUploader docKind="other" onUploaded={handleUploaded} />
+        <DocumentUploader docKind="other" onUploaded={flow.handleUploaded} />
       </div>
 
-      {extractionError && (
+      {flow.extractionError && (
         <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {extractionError}
+          {flow.extractionError}
         </p>
       )}
 
@@ -108,29 +43,14 @@ export default function Documents() {
           <DocumentCard
             key={doc.id}
             appDocument={doc}
-            isExtracting={extractingDocId === doc.id}
-            onReview={handleReview}
-            onClassify={handleClassify}
+            isExtracting={flow.extractingDocId === doc.id}
+            onReview={flow.handleReview}
+            onClassify={flow.handleClassify}
           />
         ))}
       </div>
 
-      {pendingKindDoc && (
-        <DocKindPicker
-          fileName={pendingKindDoc.fileName}
-          onSelect={(choice) => void handleKindSelected(choice)}
-          onCancel={() => setPendingKindDoc(null)}
-        />
-      )}
-
-      {reviewState && (
-        <ExtractionReviewSheet
-          key={reviewState.document.id}
-          appDocument={reviewState.document}
-          extraction={reviewState.extraction}
-          onClose={() => setReviewState(null)}
-        />
-      )}
+      {flow.overlays}
     </div>
   )
 }

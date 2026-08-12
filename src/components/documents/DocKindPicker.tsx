@@ -15,7 +15,12 @@ interface Choice {
 }
 
 const CHOICES: Choice[] = [
-  { label: 'Timetable', description: 'A weekly class schedule', docKind: 'timetable', promptKind: 'timetable' },
+  {
+    label: 'Timetable',
+    description: 'A weekly class schedule (days/times only — for specific dated sessions, use Session list or Syllabus instead)',
+    docKind: 'timetable',
+    promptKind: 'timetable',
+  },
   {
     label: 'Session list',
     description: 'Numbered sessions with topics or readings',

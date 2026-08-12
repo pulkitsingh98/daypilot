@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { resolveSubjectId } from './subjects'
@@ -70,6 +70,27 @@ export async function fetchUpcomingSessions(daysAhead = 14, now: Date = new Date
   return unwrap<SessionRow[]>(result).map(fromRow)
 }
 
+export const sessionsForSubjectQueryKey = (subjectId: string) => ['sessions', 'by-subject', subjectId] as const
+
+/** All sessions for a subject (past and future), for its detail page — a genuine reference view, not just planner input. */
+export async function fetchSessionsForSubject(subjectId: string): Promise<UpcomingSession[]> {
+  const result = await supabase
+    .from('sessions')
+    .select(SELECT_COLUMNS)
+    .eq('subject_id', subjectId)
+    .order('scheduled_date', { ascending: true })
+
+  return unwrap<SessionRow[]>(result).map(fromRow)
+}
+
+export function useSessionsForSubject(subjectId: string) {
+  return useQuery({
+    queryKey: sessionsForSubjectQueryKey(subjectId),
+    queryFn: () => fetchSessionsForSubject(subjectId),
+    enabled: !!subjectId,
+  })
+}
+
 export interface SessionInput {
   subject: string
   sessionNumber: number | null
@@ -87,6 +108,7 @@ export interface SessionInput {
  * duplicates. */
 export function useImportSessions() {
   const { session } = useAuth()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({
@@ -111,6 +133,9 @@ export function useImportSessions() {
         })
         if (error) throw new Error(error.message)
       }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
     },
   })
 }
