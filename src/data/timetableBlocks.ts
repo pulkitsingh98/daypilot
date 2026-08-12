@@ -179,3 +179,18 @@ export function useDeleteClass() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: TIMETABLE_QUERY_KEY }),
   })
 }
+
+/** Deletes every class on this user's timetable — Settings' "Clear timetable", for wiping stale data the planner would otherwise keep reasoning about. */
+export function useClearTimetable() {
+  const { session } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (): Promise<void> => {
+      if (!session) throw new Error('Not signed in.')
+      const { error } = await supabase.from('timetable_blocks').delete().eq('user_id', session.user.id)
+      if (error) throw new Error(error.message)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: TIMETABLE_QUERY_KEY }),
+  })
+}

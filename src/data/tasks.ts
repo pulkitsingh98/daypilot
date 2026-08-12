@@ -263,6 +263,21 @@ export function useDeleteTask() {
   })
 }
 
+/** Deletes every task on this user's backlog — Settings' "Clear to-do list", for wiping stale data the planner would otherwise keep reasoning about. */
+export function useClearTasks() {
+  const { session } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (): Promise<void> => {
+      if (!session) throw new Error('Not signed in.')
+      const { error } = await supabase.from('tasks').delete().eq('user_id', session.user.id)
+      if (error) throw new Error(error.message)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY }),
+  })
+}
+
 /** Bulk-add from the paste-import flow. Nothing is written until this is called.
  * Rows are inserted sequentially (not in parallel) so repeated subject names
  * within one batch resolve to the same subject row instead of racing to create

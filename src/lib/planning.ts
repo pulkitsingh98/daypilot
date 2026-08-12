@@ -231,7 +231,7 @@ function toPlanningCompetition(competition: Competition): PlanningCompetition {
 }
 
 /** Walks the last 7 days (yesterday back to 7 days ago) to see how much actually got done. */
-async function computeRecentCompletion(tasks: Task[], now: Date): Promise<PlanningCompletionSummary> {
+export async function computeRecentCompletion(tasks: Task[], now: Date): Promise<PlanningCompletionSummary> {
   const tasksById = new Map(tasks.map((t) => [t.id, t]))
   const startIso = toIsoDate(addDays(now, -7))
   const endIso = toIsoDate(addDays(now, -1))

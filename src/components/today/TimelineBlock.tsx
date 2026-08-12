@@ -9,12 +9,15 @@ interface TimelineBlockProps {
   item: TimelineItem
   /** The task this block is linked to, if any — lets it be struck off directly from the timeline. */
   task?: Task
+  /** Whether this item is struck off — from the task's status, or from the day's completedItemKeys when there's no task. */
+  done: boolean
+  /** Toggles completion for items with no linked task (classes, buffer/meal blocks). Ignored when `task` is set — TaskDoneToggle handles those. */
+  onToggleDone: () => void
 }
 
-export default function TimelineBlock({ item, task }: TimelineBlockProps) {
+export default function TimelineBlock({ item, task, done, onToggleDone }: TimelineBlockProps) {
   const [expanded, setExpanded] = useState(false)
   const isClass = item.kind === 'class'
-  const done = task?.status === 'done'
 
   return (
     <div className="relative">
@@ -37,7 +40,18 @@ export default function TimelineBlock({ item, task }: TimelineBlockProps) {
         }`}
       >
         <div className="flex items-start gap-2">
-          {task && <TaskDoneToggle task={task} className="mt-0.5" />}
+          {task ? (
+            <TaskDoneToggle task={task} className="mt-0.5" />
+          ) : (
+            <input
+              type="checkbox"
+              checked={done}
+              onChange={onToggleDone}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={done ? `Mark ${item.title} as not done` : `Mark ${item.title} as done`}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-mist-line"
+            />
+          )}
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
@@ -56,7 +70,8 @@ export default function TimelineBlock({ item, task }: TimelineBlockProps) {
                     </span>
                   )}
                   <span
-                    className={`truncate text-sm font-semibold ${done ? 'text-mist line-through' : 'text-ink'}`}
+                    data-done={done}
+                    className={`strike-target truncate text-sm font-semibold ${done ? 'text-mist' : 'text-ink'}`}
                   >
                     {item.title}
                   </span>

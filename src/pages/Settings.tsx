@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useProfile, useUpdateProfile, type AIProvider } from '../data/profiles'
+import { useClasses, useClearTimetable } from '../data/timetableBlocks'
+import { useClearTasks, useTasks } from '../data/tasks'
 import {
   clearLegacyLocalData,
   hasLegacyLocalData,
@@ -65,6 +67,8 @@ export default function Settings() {
       <AISettingsCard />
 
       <ImportLocalDataCard />
+
+      <DangerZoneCard />
     </div>
   )
 }
@@ -276,6 +280,77 @@ function ImportLocalDataCard() {
           </button>
         </>
       )}
+    </div>
+  )
+}
+
+function DangerZoneCard() {
+  const { data: classes = [] } = useClasses()
+  const { data: tasks = [] } = useTasks()
+  const clearTimetable = useClearTimetable()
+  const clearTasks = useClearTasks()
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleClearTimetable() {
+    if (
+      !window.confirm(
+        `Delete your entire timetable? This removes all ${classes.length} class${classes.length === 1 ? '' : 'es'} from your account and can't be undone.`,
+      )
+    ) {
+      return
+    }
+    setError(null)
+    try {
+      await clearTimetable.mutateAsync()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not clear your timetable. Try again.')
+    }
+  }
+
+  async function handleClearTasks() {
+    if (
+      !window.confirm(
+        `Delete your entire to-do list? This removes all ${tasks.length} task${tasks.length === 1 ? '' : 's'} — open, done, and deferred — from your account and can't be undone.`,
+      )
+    ) {
+      return
+    }
+    setError(null)
+    try {
+      await clearTasks.mutateAsync()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not clear your to-do list. Try again.')
+    }
+  }
+
+  return (
+    <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+      <h2 className="text-sm font-semibold text-ink">Danger zone</h2>
+      <p className="mt-1 text-xs text-ink-soft">
+        Permanently removes data from your account (not just this browser) — useful if stale
+        classes or tasks are throwing off what the planner sees.
+      </p>
+
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={clearTimetable.isPending || classes.length === 0}
+          onClick={() => void handleClearTimetable()}
+          className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {clearTimetable.isPending ? 'Clearing…' : 'Clear timetable'}
+        </button>
+        <button
+          type="button"
+          disabled={clearTasks.isPending || tasks.length === 0}
+          onClick={() => void handleClearTasks()}
+          className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {clearTasks.isPending ? 'Clearing…' : 'Clear to-do list'}
+        </button>
+      </div>
     </div>
   )
 }

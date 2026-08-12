@@ -1,5 +1,6 @@
 import type { ClassEntry } from '../data/timetableBlocks'
 import type { DailyPlan } from '../data/dailyPlans'
+import type { Task } from '../data/tasks'
 import type { PrepRule } from '../data/types'
 import { toMinutes } from './time'
 
@@ -45,6 +46,20 @@ export function buildTimelineItems(classesToday: ClassEntry[], plan: DailyPlan |
   })
 
   return items.sort((a, b) => toMinutes(a.start) - toMinutes(b.start))
+}
+
+/**
+ * Whether a timeline item is struck off — task-linked items resolve through
+ * the task's own status (the single source of truth there); everything else
+ * (classes, un-linked blocks) resolves through the day's completedItemKeys.
+ */
+export function isTimelineItemDone(
+  item: TimelineItem,
+  tasksById: Map<string, Task>,
+  completedItemKeys: string[],
+): boolean {
+  if (item.taskId) return tasksById.get(item.taskId)?.status === 'done'
+  return completedItemKeys.includes(item.key)
 }
 
 /**

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { unwrap, unwrapNullable } from './shared'
 
@@ -24,6 +24,8 @@ export interface DailyPlan {
   note: string
   /** ISO timestamp of when this plan was generated. */
   generatedAt: string
+  /** TimelineItem.key values struck off directly on the timeline for items with no linked task (classes, buffer/meal blocks). Task-linked items use tasks.status instead. */
+  completedItemKeys: string[]
 }
 
 interface DailyPlanRow {
@@ -31,10 +33,17 @@ interface DailyPlanRow {
   deferred: PlanDeferredItem[]
   note: string
   generated_at: string
+  completed_item_keys: string[] | null
 }
 
 function fromRow(row: DailyPlanRow): DailyPlan {
-  return { blocks: row.blocks, deferred: row.deferred, note: row.note, generatedAt: row.generated_at }
+  return {
+    blocks: row.blocks,
+    deferred: row.deferred,
+    note: row.note,
+    generatedAt: row.generated_at,
+    completedItemKeys: row.completed_item_keys ?? [],
+  }
 }
 
 export const dailyPlanQueryKey = (dateIso: string) => ['daily_plans', dateIso] as const
@@ -42,7 +51,7 @@ export const dailyPlanQueryKey = (dateIso: string) => ['daily_plans', dateIso] a
 export async function fetchDailyPlan(dateIso: string): Promise<DailyPlan | null> {
   const result = await supabase
     .from('daily_plans')
-    .select('blocks, deferred, note, generated_at')
+    .select('blocks, deferred, note, generated_at, completed_item_keys')
     .eq('plan_date', dateIso)
     .maybeSingle()
   const row = unwrapNullable<DailyPlanRow>(result)
@@ -64,7 +73,7 @@ const dailyPlansRangeQueryKey = (startIso: string, endIso: string) =>
 export async function fetchDailyPlansInRange(startIso: string, endIso: string): Promise<DailyPlanWithDate[]> {
   const result = await supabase
     .from('daily_plans')
-    .select('plan_date, blocks, deferred, note, generated_at')
+    .select('plan_date, blocks, deferred, note, generated_at, completed_item_keys')
     .gte('plan_date', startIso)
     .lte('plan_date', endIso)
     .order('plan_date', { ascending: true })
@@ -79,7 +88,13 @@ export function useDailyPlansInRange(startIso: string, endIso: string) {
   })
 }
 
-/** Used by the plan generator (a plain async function, not a hook) to persist a fresh plan. */
+/**
+ * Used by the plan generator (a plain async function, not a hook) to persist
+ * a fresh plan. Deliberately omits completed_item_keys from the payload — on
+ * conflict, Postgres only overwrites the columns listed here, so replanning
+ * (which regenerates blocks entirely) doesn't wipe out completions the user
+ * already struck off earlier in the day.
+ */
 export async function saveDailyPlan(dateIso: string, plan: DailyPlan, userId: string): Promise<void> {
   const { error } = await supabase
     .from('daily_plans')
@@ -95,4 +110,47 @@ export async function saveDailyPlan(dateIso: string, plan: DailyPlan, userId: st
       { onConflict: 'user_id,plan_date' },
     )
   if (error) throw new Error(error.message)
+}
+
+/**
+ * Strikes a timeline item off (or back on) directly on the day's plan row —
+ * for classes and un-linked blocks, which have no task row to carry a status.
+ * Task-linked items keep using useToggleTaskDone instead; this never touches
+ * completedItemKeys for those, so there's exactly one source of truth per item.
+ */
+export function useToggleTimelineItemDone(dateIso: string) {
+  const queryClient = useQueryClient()
+  const queryKey = dailyPlanQueryKey(dateIso)
+
+  return useMutation({
+    mutationFn: async ({ key, done }: { key: string; done: boolean }): Promise<void> => {
+      const current = await fetchDailyPlan(dateIso)
+      const existing = current?.completedItemKeys ?? []
+      const nextKeys = done ? Array.from(new Set([...existing, key])) : existing.filter((k) => k !== key)
+      const { error } = await supabase
+        .from('daily_plans')
+        .update({ completed_item_keys: nextKeys })
+        .eq('plan_date', dateIso)
+      if (error) throw new Error(error.message)
+    },
+    onMutate: async ({ key, done }) => {
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData<DailyPlan | null>(queryKey)
+      queryClient.setQueryData<DailyPlan | null>(queryKey, (old) =>
+        old
+          ? {
+              ...old,
+              completedItemKeys: done
+                ? Array.from(new Set([...old.completedItemKeys, key]))
+                : old.completedItemKeys.filter((k) => k !== key),
+            }
+          : old,
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous !== undefined) queryClient.setQueryData(queryKey, context.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  })
 }

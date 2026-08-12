@@ -34,3 +34,32 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
+
+/* Draw-on strikethrough for anything marked done on the Today timeline —
+   a line that sweeps across instead of just appearing, so checking an item
+   off reads as an action rather than a state flip. */
+.strike-target {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+.strike-target::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1.5px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease-out;
+}
+.strike-target[data-done="true"]::after {
+  transform: scaleX(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .strike-target::after {
+    transition: none;
+  }
+}

@@ -1,7 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import { navItems } from '../nav'
+import { useTodayStreak } from '../lib/useTodayStreak'
+import StreakSummary from './StreakSummary'
 
 export default function Sidebar() {
+  const streak = useTodayStreak()
+
   return (
     <aside className="hidden md:flex md:w-56 md:flex-col md:border-r md:border-mist-line md:bg-paper-raised md:px-3 md:py-6">
       <div className="mb-6 px-3 font-display text-lg font-semibold text-dusk-deep">DayPilot</div>
@@ -24,6 +28,9 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      <div className="mt-auto px-1 pt-6">
+        <StreakSummary {...streak} />
+      </div>
     </aside>
   )
 }

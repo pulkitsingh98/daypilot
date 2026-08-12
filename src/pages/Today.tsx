@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
-import { useDailyPlan } from '../data/dailyPlans'
+import { useDailyPlan, useToggleTimelineItemDone } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
 import { useSubjects } from '../data/subjects'
 import { addDays, dayKeyForDate, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
 import { dismissOnboardingBanner, isOnboardingBannerDismissed } from '../lib/onboardingBanner'
-import { buildTimelineItems } from '../lib/todayView'
+import { buildTimelineItems, isTimelineItemDone, type TimelineItem } from '../lib/todayView'
+import { useTodayStreak } from '../lib/useTodayStreak'
+import StreakSummary from '../components/StreakSummary'
 import { usePlanGeneration } from '../services/usePlanGeneration'
 import QuickAdd from '../components/today/QuickAdd'
 import MorningNudge from '../components/today/MorningNudge'
@@ -25,6 +27,8 @@ export default function Today() {
   const { data: tasks = [] } = useTasks()
   const { data: subjects = [], isLoading: subjectsLoading } = useSubjects()
   const { loading, error, generate, retry } = usePlanGeneration()
+  const toggleTimelineItemDone = useToggleTimelineItemDone(todayKey)
+  const streak = useTodayStreak()
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   const [bannerDismissed, setBannerDismissed] = useState(() => isOnboardingBannerDismissed())
 
@@ -59,22 +63,44 @@ export default function Today() {
     markNudgeHandled()
   }
 
-  // Slots a NowMarker into the sorted timeline at the point matching the
-  // current time — a real row in the sequence, not a proportionally
+  const completedKeys = plan?.completedItemKeys ?? []
+
+  function renderTimelineBlock(item: TimelineItem) {
+    const task = item.taskId ? tasksById.get(item.taskId) : undefined
+    return (
+      <TimelineBlock
+        item={item}
+        task={task}
+        done={isTimelineItemDone(item, tasksById, completedKeys)}
+        onToggleDone={() =>
+          toggleTimelineItemDone.mutate({
+            key: item.key,
+            done: !isTimelineItemDone(item, tasksById, completedKeys),
+          })
+        }
+      />
+    )
+  }
+
+  // Completed items sink out of the active timeline into their own section
+  // below, struck through — visible as a record of what's done rather than
+  // cluttering the still-to-do list above.
+  const activeItems = timelineItems.filter((item) => !isTimelineItemDone(item, tasksById, completedKeys))
+  const completedItems = timelineItems.filter((item) => isTimelineItemDone(item, tasksById, completedKeys))
+
+  // Slots a NowMarker into the sorted active timeline at the point matching
+  // the current time — a real row in the sequence, not a proportionally
   // positioned overlay, so it stays correct regardless of block heights.
   const nowMinutes = now.getHours() * 60 + now.getMinutes()
   const nowLabel = formatTimeLabel(formatTimeOfDay(now))
   const timelineRows: Array<{ key: string; node: React.ReactNode }> = []
   let nowInserted = false
-  timelineItems.forEach((item) => {
+  activeItems.forEach((item) => {
     if (!nowInserted && toMinutes(item.start) > nowMinutes) {
       timelineRows.push({ key: 'now-marker', node: <NowMarker label={nowLabel} /> })
       nowInserted = true
     }
-    timelineRows.push({
-      key: item.key,
-      node: <TimelineBlock item={item} task={item.taskId ? tasksById.get(item.taskId) : undefined} />,
-    })
+    timelineRows.push({ key: item.key, node: renderTimelineBlock(item) })
   })
   if (!nowInserted) timelineRows.push({ key: 'now-marker', node: <NowMarker label={nowLabel} /> })
 
@@ -167,16 +193,38 @@ export default function Today() {
             </button>
           </div>
 
-          <div className="relative flex flex-col gap-3 pl-[26px]">
-            <div className="absolute bottom-2 left-[7px] top-2 w-0.5 bg-mist-line" />
-            {timelineRows.map((row) => (
-              <div key={row.key}>{row.node}</div>
-            ))}
-          </div>
+          {activeItems.length === 0 && completedItems.length > 0 ? (
+            <p className="rounded-xl border border-dashed border-mist-line bg-paper-raised p-6 text-center text-sm text-mist">
+              Everything on today's timeline is done. Nice work.
+            </p>
+          ) : (
+            <div className="relative flex flex-col gap-3 pl-[26px]">
+              <div className="absolute bottom-2 left-[7px] top-2 w-0.5 bg-mist-line" />
+              {timelineRows.map((row) => (
+                <div key={row.key}>{row.node}</div>
+              ))}
+            </div>
+          )}
+
+          {completedItems.length > 0 && (
+            <div className="relative mt-4 flex flex-col gap-3 pl-[26px]">
+              <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-mist">
+                Completed today ({completedItems.length})
+              </p>
+              <div className="absolute bottom-2 left-[7px] top-6 w-0.5 bg-mist-line" />
+              {completedItems.map((item) => (
+                <div key={item.key}>{renderTimelineBlock(item)}</div>
+              ))}
+            </div>
+          )}
 
           <DeferredSection items={plan.deferred} />
         </>
       )}
+
+      <div className="mt-4">
+        <StreakSummary {...streak} />
+      </div>
     </div>
   )
 }
