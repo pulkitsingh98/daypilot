@@ -14,7 +14,7 @@ export function statusMeta(status: CompetitionStatus) {
 }
 
 /** Statuses where a deadline still matters — submitted/closed items don't need a countdown. */
-const ACTIVE_STATUSES: CompetitionStatus[] = ['interested', 'registered', 'in-progress']
+export const ACTIVE_STATUSES: CompetitionStatus[] = ['interested', 'registered', 'in-progress']
 
 export interface DeadlineInfo {
   daysUntil: number

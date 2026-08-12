@@ -13,6 +13,11 @@ import type { TaskHistoryEntry } from '../data/taskHistory'
 import { fetchTaskHistory } from '../data/taskHistory'
 import type { ActivityCategory, RecurringActivity } from '../data/recurringActivities'
 import { fetchRecurringActivities } from '../data/recurringActivities'
+import type { Competition, CompetitionStatus } from '../data/competitions'
+import { fetchCompetitions } from '../data/competitions'
+import type { UpcomingSession } from '../data/sessions'
+import { fetchUpcomingSessions } from '../data/sessions'
+import { ACTIVE_STATUSES as ACTIVE_COMPETITION_STATUSES } from './competitions'
 import { fetchDailyPlan } from '../data/dailyPlans'
 import { addDays, dayKeyForDate, toIsoDate } from './time'
 
@@ -48,6 +53,24 @@ export interface PlanningRecurringActivity {
   isFlexible: boolean
 }
 
+export interface PlanningSession {
+  subject: string
+  title: string
+  topics: string[]
+  scheduledDate: string
+  readingMaterial: string | null
+}
+
+export interface PlanningCompetition {
+  title: string
+  organiser: string | null
+  stage: string | null
+  deadlineDate: string | null
+  deadlineTime: string | null
+  effortEstimateMinutes: number | null
+  status: CompetitionStatus
+}
+
 export interface PlanningGoal {
   id: string
   title: string
@@ -79,8 +102,10 @@ export interface PlanningState {
   tomorrow: string
   timetable: PlanningTimetableBlock[]
   recurringActivities: PlanningRecurringActivity[]
+  upcomingSessions: PlanningSession[]
   openTasks: PlanningTask[]
   goals: PlanningGoal[]
+  competitions: PlanningCompetition[]
   yesterdayIncompleteBlocks: PlanningIncompleteBlock[]
   capacityMinutes: number
   wakeTime: string
@@ -164,6 +189,28 @@ function toPlanningRecurringActivity(activity: RecurringActivity): PlanningRecur
   }
 }
 
+function toPlanningSession(session: UpcomingSession): PlanningSession {
+  return {
+    subject: session.subject,
+    title: session.title,
+    topics: session.topics,
+    scheduledDate: session.scheduledDate,
+    readingMaterial: session.readingMaterial,
+  }
+}
+
+function toPlanningCompetition(competition: Competition): PlanningCompetition {
+  return {
+    title: competition.title,
+    organiser: competition.organiser,
+    stage: competition.stage,
+    deadlineDate: competition.deadlineDate,
+    deadlineTime: competition.deadlineTime,
+    effortEstimateMinutes: competition.effortEstimateMinutes,
+    status: competition.status,
+  }
+}
+
 function buildSubjectProficiency(subjects: Subject[]): Record<string, number> {
   const map: Record<string, number> = {}
   for (const subject of subjects) {
@@ -180,15 +227,18 @@ export async function gatherPlanningState(now: Date, userId: string): Promise<Pl
   const tomorrowIso = toIsoDate(tomorrow)
   const yesterdayIso = toIsoDate(yesterday)
 
-  const [classes, tasks, goals, profile, subjects, taskHistory, recurringActivities] = await Promise.all([
-    fetchTimetableBlocks(),
-    fetchTasks(),
-    fetchGoals(),
-    fetchProfile(userId),
-    fetchSubjects(),
-    fetchTaskHistory(),
-    fetchRecurringActivities(),
-  ])
+  const [classes, tasks, goals, profile, subjects, taskHistory, recurringActivities, upcomingSessions, competitions] =
+    await Promise.all([
+      fetchTimetableBlocks(),
+      fetchTasks(),
+      fetchGoals(),
+      fetchProfile(userId),
+      fetchSubjects(),
+      fetchTaskHistory(),
+      fetchRecurringActivities(),
+      fetchUpcomingSessions(),
+      fetchCompetitions(),
+    ])
 
   const openTasks: PlanningTask[] = tasks
     .filter((task) => task.status !== 'done')
@@ -219,8 +269,12 @@ export async function gatherPlanningState(now: Date, userId: string): Promise<Pl
     tomorrow: tomorrowIso,
     timetable: gatherTimetable(classes, now, tomorrow),
     recurringActivities: recurringActivities.map(toPlanningRecurringActivity),
+    upcomingSessions: upcomingSessions.map(toPlanningSession),
     openTasks,
     goals: planningGoals,
+    competitions: competitions
+      .filter((c) => ACTIVE_COMPETITION_STATUSES.includes(c.status))
+      .map(toPlanningCompetition),
     yesterdayIncompleteBlocks: await gatherYesterdayIncompleteBlocks(yesterdayIso, tasks),
     capacityMinutes: profileTyped.dailyCapacityMinutes,
     wakeTime: profileTyped.wakeTime,
