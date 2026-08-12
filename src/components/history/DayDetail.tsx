@@ -1,6 +1,7 @@
 import type { ClassEntry } from '../../data/timetableBlocks'
 import type { DailyPlan } from '../../data/dailyPlans'
 import type { Task } from '../../data/tasks'
+import { occurrenceKey, type ClassOccurrenceMap } from '../../data/classOccurrences'
 import { buildTimelineItems } from '../../lib/todayView'
 import { wasTimelineItemCompletedOn, computeDayCompletion } from '../../lib/dayCompletion'
 import { formatTimeLabel } from '../../lib/time'
@@ -10,12 +11,20 @@ interface DayDetailProps {
   classesForDay: ClassEntry[]
   plan: DailyPlan | undefined
   tasksById: Map<string, Task>
+  classOccurrences: ClassOccurrenceMap
 }
 
-export default function DayDetail({ dateIso, classesForDay, plan, tasksById }: DayDetailProps) {
+const STATUS_BADGE: Record<'done' | 'postponed' | 'cancelled' | 'not-completed', string> = {
+  done: 'bg-emerald-100 text-emerald-700',
+  postponed: 'bg-amber-100 text-amber-700',
+  cancelled: 'bg-mist-line text-mist',
+  'not-completed': 'bg-haze text-mist',
+}
+
+export default function DayDetail({ dateIso, classesForDay, plan, tasksById, classOccurrences }: DayDetailProps) {
   const items = buildTimelineItems(classesForDay, plan ?? null)
   const completedItemKeys = plan?.completedItemKeys ?? []
-  const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay)
+  const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay, classOccurrences)
 
   const dateLabel = new Date(`${dateIso}T00:00:00`).toLocaleDateString(undefined, {
     weekday: 'long',
@@ -41,7 +50,14 @@ export default function DayDetail({ dateIso, classesForDay, plan, tasksById }: D
       {items.length > 0 && (
         <ul className="mt-3 flex flex-col gap-1.5">
           {items.map((item) => {
-            const done = wasTimelineItemCompletedOn(item, tasksById, completedItemKeys, dateIso)
+            const occurrenceStatus = item.classId ? classOccurrences.get(occurrenceKey(item.classId, dateIso)) : undefined
+            const done = wasTimelineItemCompletedOn(item, tasksById, completedItemKeys, classOccurrences, dateIso)
+            const badgeKey: keyof typeof STATUS_BADGE =
+              occurrenceStatus === 'postponed' || occurrenceStatus === 'cancelled'
+                ? occurrenceStatus
+                : done
+                  ? 'done'
+                  : 'not-completed'
 
             return (
               <li key={item.key} className="flex items-start justify-between gap-2 text-sm">
@@ -59,12 +75,14 @@ export default function DayDetail({ dateIso, classesForDay, plan, tasksById }: D
                       Fixed
                     </span>
                   )}
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      done ? 'bg-emerald-100 text-emerald-700' : 'bg-haze text-mist'
-                    }`}
-                  >
-                    {done ? 'Done' : 'Not completed'}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_BADGE[badgeKey]}`}>
+                    {badgeKey === 'not-completed'
+                      ? 'Not completed'
+                      : badgeKey === 'done'
+                        ? 'Done'
+                        : badgeKey === 'postponed'
+                          ? 'Postponed'
+                          : 'Cancelled'}
                   </span>
                 </div>
               </li>

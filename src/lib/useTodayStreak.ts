@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
-import { buildTimelineItems, isTimelineItemDone } from './todayView'
+import { useClassOccurrenceStatuses } from '../data/classOccurrences'
+import { buildTimelineItems, getTimelineItemStatus } from './todayView'
+import { isExcludedFromCompletion } from './dayCompletion'
 import { computeRecentCompletion } from './planning'
 import { dayKeyForDate, toIsoDate } from './time'
 
@@ -29,17 +31,27 @@ export function useTodayStreak(): TodayStreak {
   const { data: classes = [], isLoading: classesLoading } = useClasses()
   const { data: plan = null, isLoading: planLoading } = useDailyPlan(todayIso)
   const { data: tasks = [], isLoading: tasksLoading } = useTasks()
+  const { data: classOccurrences = new Map(), isLoading: occurrencesLoading } = useClassOccurrenceStatuses(
+    todayIso,
+    todayIso,
+  )
 
   const todayClasses = useMemo(
     () => classes.filter((c) => c.day === dayKeyForDate(now)),
     [classes, now],
   )
-  const timelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
+  const allTimelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
+  const timelineItems = useMemo(
+    () => allTimelineItems.filter((item) => !isExcludedFromCompletion(item, classOccurrences, todayIso)),
+    [allTimelineItems, classOccurrences, todayIso],
+  )
   const tasksById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
   const completedKeys = plan?.completedItemKeys ?? []
 
   const todayTotal = timelineItems.length
-  const todayDone = timelineItems.filter((item) => isTimelineItemDone(item, tasksById, completedKeys)).length
+  const todayDone = timelineItems.filter(
+    (item) => getTimelineItemStatus(item, tasksById, completedKeys, classOccurrences, todayIso) === 'done',
+  ).length
 
   const { data: streakDays = 0, isLoading: streakLoading } = useQuery({
     queryKey: ['today-streak', todayIso, tasks.length, classes.length],
@@ -51,6 +63,6 @@ export function useTodayStreak(): TodayStreak {
     todayDone,
     todayTotal,
     streakDays,
-    loading: classesLoading || planLoading || tasksLoading || streakLoading,
+    loading: classesLoading || planLoading || tasksLoading || occurrencesLoading || streakLoading,
   }
 }

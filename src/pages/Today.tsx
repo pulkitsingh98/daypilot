@@ -2,16 +2,19 @@ import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan, useToggleTimelineItemDone } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
+import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
 import { addDays, dayKeyForDate, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
+import { getLastEveningNudgeDate, setLastEveningNudgeDate } from '../lib/eveningNudge'
 import { dismissOnboardingBanner, isOnboardingBannerDismissed } from '../lib/onboardingBanner'
 import { useOnboardingSteps } from '../lib/useOnboardingSteps'
-import { buildTimelineItems, isTimelineItemDone, type TimelineItem } from '../lib/todayView'
+import { buildTimelineItems, getTimelineItemStatus, type ItemStatus, type TimelineItem } from '../lib/todayView'
 import { useTodayStreak } from '../lib/useTodayStreak'
 import StreakSummary from '../components/StreakSummary'
 import { usePlanGeneration } from '../services/usePlanGeneration'
 import QuickAdd from '../components/today/QuickAdd'
 import MorningNudge from '../components/today/MorningNudge'
+import EveningNudge from '../components/today/EveningNudge'
 import TomorrowPreview from '../components/today/TomorrowPreview'
 import TimelineBlock from '../components/today/TimelineBlock'
 import NowMarker from '../components/today/NowMarker'
@@ -21,15 +24,20 @@ import OnboardingChecklist from '../components/today/OnboardingChecklist'
 export default function Today() {
   const now = useMemo(() => new Date(), [])
   const todayKey = toIsoDate(now)
+  const tomorrowKey = toIsoDate(addDays(now, 1))
 
   const { data: classes = [], isLoading: classesLoading, error: classesError } = useClasses()
   const { data: plan = null, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
+  const { data: tomorrowPlan = null, isLoading: tomorrowPlanLoading } = useDailyPlan(tomorrowKey)
   const { data: tasks = [] } = useTasks()
   const { loading, error, generate, retry } = usePlanGeneration()
   const toggleTimelineItemDone = useToggleTimelineItemDone(todayKey)
+  const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(todayKey, todayKey)
+  const setClassOccurrenceStatus = useSetClassOccurrenceStatus()
   const streak = useTodayStreak()
   const onboarding = useOnboardingSteps()
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
+  const [eveningNudgeDismissed, setEveningNudgeDismissed] = useState(false)
   const [bannerDismissed, setBannerDismissed] = useState(() => isOnboardingBannerDismissed())
 
   const todayClasses = useMemo(
@@ -45,11 +53,25 @@ export default function Today() {
 
   const showNudge =
     !plan && !planLoading && !loading && !nudgeDismissed && getLastPlanNudgeDate() !== todayKey
+  // From 6 PM on, once — classes start in the morning, so the useful moment
+  // to plan tomorrow (and get its reading done) is tonight, not tomorrow.
+  const showEveningNudge =
+    now.getHours() >= 18 &&
+    !tomorrowPlan &&
+    !tomorrowPlanLoading &&
+    !loading &&
+    !eveningNudgeDismissed &&
+    getLastEveningNudgeDate() !== todayKey
   const showOnboardingBanner = !onboarding.loading && !onboarding.allDone && !bannerDismissed
 
   function markNudgeHandled() {
     setLastPlanNudgeDate(todayKey)
     setNudgeDismissed(true)
+  }
+
+  function markEveningNudgeHandled() {
+    setLastEveningNudgeDate(todayKey)
+    setEveningNudgeDismissed(true)
   }
 
   function dismissBanner() {
@@ -62,7 +84,16 @@ export default function Today() {
     markNudgeHandled()
   }
 
+  async function handleGenerateTomorrow() {
+    await generate({ now: addDays(now, 1), remainingOnly: false })
+    markEveningNudgeHandled()
+  }
+
   const completedKeys = plan?.completedItemKeys ?? []
+
+  function itemStatus(item: TimelineItem): ItemStatus {
+    return getTimelineItemStatus(item, tasksById, completedKeys, classOccurrences, todayKey)
+  }
 
   function renderTimelineBlock(item: TimelineItem) {
     const task = item.taskId ? tasksById.get(item.taskId) : undefined
@@ -70,22 +101,23 @@ export default function Today() {
       <TimelineBlock
         item={item}
         task={task}
-        done={isTimelineItemDone(item, tasksById, completedKeys)}
-        onToggleDone={() =>
-          toggleTimelineItemDone.mutate({
-            key: item.key,
-            done: !isTimelineItemDone(item, tasksById, completedKeys),
-          })
-        }
+        status={itemStatus(item)}
+        onSetStatus={(status) => {
+          if (item.classId) {
+            setClassOccurrenceStatus.mutate({ timetableBlockId: item.classId, dateIso: todayKey, status })
+          } else {
+            toggleTimelineItemDone.mutate({ key: item.key, done: status === 'done' })
+          }
+        }}
       />
     )
   }
 
-  // Completed items sink out of the active timeline into their own section
-  // below, struck through — visible as a record of what's done rather than
-  // cluttering the still-to-do list above.
-  const activeItems = timelineItems.filter((item) => !isTimelineItemDone(item, tasksById, completedKeys))
-  const completedItems = timelineItems.filter((item) => isTimelineItemDone(item, tasksById, completedKeys))
+  // Resolved items (done, postponed, or cancelled) sink out of the active
+  // timeline into their own section below — visible as a record of what
+  // happened rather than cluttering the still-to-do list above.
+  const activeItems = timelineItems.filter((item) => itemStatus(item) === 'pending')
+  const completedItems = timelineItems.filter((item) => itemStatus(item) !== 'pending')
 
   // Slots a NowMarker into the sorted active timeline at the point matching
   // the current time — a real row in the sequence, not a proportionally
@@ -122,6 +154,14 @@ export default function Today() {
           loading={loading}
           onGenerate={() => void handleGenerate(false)}
           onDismiss={markNudgeHandled}
+        />
+      )}
+
+      {showEveningNudge && (
+        <EveningNudge
+          loading={loading}
+          onGenerate={() => void handleGenerateTomorrow()}
+          onDismiss={markEveningNudgeHandled}
         />
       )}
 

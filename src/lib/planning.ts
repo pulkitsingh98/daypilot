@@ -20,6 +20,7 @@ import { fetchUpcomingSessions } from '../data/sessions'
 import { ACTIVE_STATUSES as ACTIVE_COMPETITION_STATUSES, getDeadlineInfo } from './competitions'
 import { fetchDailyPlan, fetchDailyPlansInRange } from '../data/dailyPlans'
 import { computeDayCompletion } from './dayCompletion'
+import { fetchClassOccurrenceStatuses } from '../data/classOccurrences'
 import { addDays, dayKeyForDate, toIsoDate } from './time'
 
 export interface PlanningTimetableBlock {
@@ -244,7 +245,10 @@ export async function computeRecentCompletion(
   const tasksById = new Map(tasks.map((t) => [t.id, t]))
   const startIso = toIsoDate(addDays(now, -7))
   const endIso = toIsoDate(addDays(now, -1))
-  const plans = await fetchDailyPlansInRange(startIso, endIso)
+  const [plans, classOccurrences] = await Promise.all([
+    fetchDailyPlansInRange(startIso, endIso),
+    fetchClassOccurrenceStatuses(startIso, endIso),
+  ])
   const plansByDate = new Map(plans.map((p) => [p.planDate, p]))
 
   const ratios: number[] = []
@@ -256,7 +260,7 @@ export async function computeRecentCompletion(
     const dayDate = addDays(now, -i)
     const plan = plansByDate.get(dateIso)
     const classesForDay = classes.filter((c) => c.day === dayKeyForDate(dayDate))
-    const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay)
+    const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay, classOccurrences)
     const fullyDone = completion.total > 0 && completion.done === completion.total
 
     if (completion.total > 0) ratios.push(completion.done / completion.total)

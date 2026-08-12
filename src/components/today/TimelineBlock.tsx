@@ -1,23 +1,24 @@
 import { useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
-import type { TimelineItem } from '../../lib/todayView'
+import type { ItemStatus, TimelineItem } from '../../lib/todayView'
 import { formatTimeLabel } from '../../lib/time'
 import type { Task } from '../../data/tasks'
 import TaskDoneToggle from '../backlog/TaskDoneToggle'
+import ClassStatusControl, { CLASS_STATUS_META } from '../ClassStatusControl'
 
 interface TimelineBlockProps {
   item: TimelineItem
   /** The task this block is linked to, if any — lets it be struck off directly from the timeline. */
   task?: Task
-  /** Whether this item is struck off — from the task's status, or from the day's completedItemKeys when there's no task. */
-  done: boolean
-  /** Toggles completion for items with no linked task (classes, buffer/meal blocks). Ignored when `task` is set — TaskDoneToggle handles those. */
-  onToggleDone: () => void
+  status: ItemStatus
+  /** Sets status for items with no linked task (classes, buffer/meal blocks). null resets to pending. Ignored when `task` is set — TaskDoneToggle handles those. */
+  onSetStatus: (status: Exclude<ItemStatus, 'pending'> | null) => void
 }
 
-export default function TimelineBlock({ item, task, done, onToggleDone }: TimelineBlockProps) {
+export default function TimelineBlock({ item, task, status, onSetStatus }: TimelineBlockProps) {
   const [expanded, setExpanded] = useState(false)
   const isClass = item.kind === 'class'
+  const done = status === 'done'
 
   return (
     <div className="relative">
@@ -42,11 +43,13 @@ export default function TimelineBlock({ item, task, done, onToggleDone }: Timeli
         <div className="flex items-start gap-2">
           {task ? (
             <TaskDoneToggle task={task} className="mt-0.5" />
+          ) : isClass ? (
+            <ClassStatusControl status={status} onSetStatus={onSetStatus} />
           ) : (
             <input
               type="checkbox"
               checked={done}
-              onChange={onToggleDone}
+              onChange={() => onSetStatus(done ? null : 'done')}
               onClick={(e) => e.stopPropagation()}
               aria-label={done ? `Mark ${item.title} as not done` : `Mark ${item.title} as done`}
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-mist-line"
@@ -59,7 +62,7 @@ export default function TimelineBlock({ item, task, done, onToggleDone }: Timeli
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {isClass ? (
                     <span className="shrink-0 rounded-full bg-dusk px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-paper-raised">
                       Fixed
@@ -67,6 +70,13 @@ export default function TimelineBlock({ item, task, done, onToggleDone }: Timeli
                   ) : (
                     <span className="shrink-0 rounded-full bg-haze px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-dusk">
                       {item.subtitle || 'Planned'}
+                    </span>
+                  )}
+                  {(status === 'postponed' || status === 'cancelled') && (
+                    <span
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-paper-raised ${CLASS_STATUS_META[status].dot}`}
+                    >
+                      {CLASS_STATUS_META[status].label}
                     </span>
                   )}
                   <span

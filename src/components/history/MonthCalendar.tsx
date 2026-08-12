@@ -1,6 +1,7 @@
 import type { ClassEntry } from '../../data/timetableBlocks'
 import type { DailyPlan } from '../../data/dailyPlans'
 import type { Task } from '../../data/tasks'
+import type { ClassOccurrenceMap } from '../../data/classOccurrences'
 import { computeDayCompletion, type DayCompletion } from '../../lib/dayCompletion'
 import { DAYS, dayKeyForDate, toIsoDate } from '../../lib/time'
 
@@ -13,6 +14,7 @@ interface MonthCalendarProps {
   plansByDate: Map<string, DailyPlan>
   tasksById: Map<string, Task>
   classes: ClassEntry[]
+  classOccurrences: ClassOccurrenceMap
   todayIso: string
 }
 
@@ -33,6 +35,7 @@ export default function MonthCalendar({
   plansByDate,
   tasksById,
   classes,
+  classOccurrences,
   todayIso,
 }: MonthCalendarProps) {
   const year = viewedMonth.getFullYear()
@@ -82,7 +85,7 @@ export default function MonthCalendar({
           const dateIso = toIsoDate(cellDate)
           const plan = plansByDate.get(dateIso)
           const classesForDay = classes.filter((c) => c.day === dayKeyForDate(cellDate))
-          const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay)
+          const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay, classOccurrences)
           const isSelected = dateIso === selectedDateIso
           const isToday = dateIso === todayIso
 

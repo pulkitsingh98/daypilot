@@ -1,31 +1,40 @@
 import { useMemo, useState } from 'react'
+import { FileSpreadsheet } from 'lucide-react'
 import { useClasses, type ClassEntry } from '../data/timetableBlocks'
 import { useUpcomingSessions } from '../data/sessions'
+import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
 import type { DayOfWeek } from '../data/types'
-import { addDays, dayKeyForDate, formatTimeLabel, toIsoDate, toMinutes } from '../lib/time'
+import { buildUpcomingOccurrences, type ClassOccurrence } from '../lib/sessionRollover'
+import { formatTimeLabel, toIsoDate } from '../lib/time'
+import ClassStatusControl from '../components/ClassStatusControl'
 import WeekGrid from '../components/timetable/WeekGrid'
 import DayList from '../components/timetable/DayList'
 import ClassFormSheet from '../components/timetable/ClassFormSheet'
+import ExcelSessionImportSheet from '../components/timetable/ExcelSessionImportSheet'
 import UploadDocumentButton from '../components/documents/UploadDocumentButton'
 
 const UPCOMING_DAYS = 14
 
-interface UpcomingClass {
-  entry: ClassEntry
-  sessionTitle: string | null
-}
-
 interface UpcomingDay {
   dateIso: string
   label: string
-  classes: UpcomingClass[]
+  occurrences: ClassOccurrence[]
 }
 
 export default function Timetable() {
   const { data: classes = [], isLoading, error } = useClasses()
   const { data: sessions = [] } = useUpcomingSessions(UPCOMING_DAYS)
+  const now = useMemo(() => new Date(), [])
+  const rangeEndIso = useMemo(() => {
+    const end = new Date(now)
+    end.setDate(end.getDate() + UPCOMING_DAYS)
+    return toIsoDate(end)
+  }, [now])
+  const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(toIsoDate(now), rangeEndIso)
+  const setClassOccurrenceStatus = useSetClassOccurrenceStatus()
   const [editing, setEditing] = useState<ClassEntry | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [excelImportOpen, setExcelImportOpen] = useState(false)
   const [defaultDay, setDefaultDay] = useState<DayOfWeek>('mon')
 
   function openAdd(day: DayOfWeek = 'mon') {
@@ -44,36 +53,28 @@ export default function Timetable() {
   }
 
   const upcomingDays = useMemo(() => {
-    const sessionByKey = new Map(sessions.map((s) => [`${s.subject}::${s.scheduledDate}`, s]))
-    const today = new Date()
-    const days: UpcomingDay[] = []
-
-    for (let i = 0; i < UPCOMING_DAYS; i++) {
-      const date = addDays(today, i)
-      const dateIso = toIsoDate(date)
-      const dayKey = dayKeyForDate(date)
-      const dayClasses = classes
-        .filter((c) => c.day === dayKey)
-        .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
-        .map((entry) => {
-          const session = sessionByKey.get(`${entry.subject}::${dateIso}`)
-          const sessionTitle = session
-            ? `Session${session.sessionNumber ? ` ${session.sessionNumber}` : ''}: ${session.title}`
-            : null
-          return { entry, sessionTitle }
-        })
-
-      if (dayClasses.length > 0) {
-        days.push({
-          dateIso,
-          label: date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
-          classes: dayClasses,
-        })
-      }
+    const occurrences = buildUpcomingOccurrences(classes, sessions, classOccurrences, now, UPCOMING_DAYS)
+    const byDate = new Map<string, ClassOccurrence[]>()
+    for (const occ of occurrences) {
+      const list = byDate.get(occ.dateIso) ?? []
+      list.push(occ)
+      byDate.set(occ.dateIso, list)
     }
 
-    return days
-  }, [classes, sessions])
+    const days: UpcomingDay[] = []
+    for (const [dateIso, dayOccurrences] of byDate) {
+      days.push({
+        dateIso,
+        label: new Date(`${dateIso}T00:00:00`).toLocaleDateString(undefined, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        }),
+        occurrences: dayOccurrences,
+      })
+    }
+    return days.sort((a, b) => a.dateIso.localeCompare(b.dateIso))
+  }, [classes, sessions, classOccurrences, now])
 
   return (
     <div className="p-4">
@@ -82,13 +83,23 @@ export default function Timetable() {
           <h1 className="font-display text-2xl font-semibold text-ink">Timetable</h1>
           <p className="mt-1 text-sm text-mist">Your classes, day by day.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => openAdd()}
-          className="shrink-0 rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
-        >
-          + Add class
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={() => setExcelImportOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-mist-line px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
+          >
+            <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+            Upload sheet
+          </button>
+          <button
+            type="button"
+            onClick={() => openAdd()}
+            className="rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
+          >
+            + Add class
+          </button>
+        </div>
       </div>
 
       {isLoading && <p className="text-sm text-mist">Loading your timetable…</p>}
@@ -98,14 +109,22 @@ export default function Timetable() {
         <div className="rounded-xl border border-dashed border-mist-line bg-paper-raised p-6 text-center">
           <p className="text-sm font-medium text-ink-soft">No classes yet</p>
           <p className="mt-1 text-sm text-mist">
-            Upload a photo or PDF of your timetable and DayPilot builds it for you — once per
-            term, not something you'll redo daily.
+            For best accuracy, run your timetable and syllabus through an AI first and upload the
+            Excel it gives you back — or upload a photo or PDF directly, once per term.
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setExcelImportOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
+            >
+              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+              Upload sheet (recommended)
+            </button>
             <UploadDocumentButton
-              label="Upload timetable"
+              label="Upload photo or PDF"
               helperText="A photo or PDF of your class schedule."
-              className="rounded-lg bg-dusk px-4 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep"
+              className="rounded-lg border border-mist-line px-4 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
             />
             <button
               type="button"
@@ -120,6 +139,10 @@ export default function Timetable() {
         <>
           <section>
             <h2 className="text-sm font-semibold text-ink">Upcoming</h2>
+            <p className="mt-0.5 text-xs text-mist">
+              Mark a class postponed or cancelled and its reading rolls forward to the next time it
+              actually happens.
+            </p>
             {upcomingDays.length === 0 ? (
               <p className="mt-2 text-sm text-mist">No classes in the next {UPCOMING_DAYS} days.</p>
             ) : (
@@ -127,12 +150,25 @@ export default function Timetable() {
                 {upcomingDays.map((day) => (
                   <div key={day.dateIso} className="rounded-xl border border-mist-line bg-paper-raised p-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-mist">{day.label}</p>
-                    <ul className="mt-1.5 flex flex-col gap-1.5">
-                      {day.classes.map(({ entry, sessionTitle }) => (
-                        <li key={entry.id} className="flex items-start justify-between gap-2 text-sm">
-                          <div className="min-w-0">
-                            <span className="text-ink">{entry.subject || '(untitled class)'}</span>
-                            {sessionTitle && <p className="text-xs text-mist">{sessionTitle}</p>}
+                    <ul className="mt-1.5 flex flex-col gap-2">
+                      {day.occurrences.map(({ entry, dateIso, status, session }) => (
+                        <li key={entry.id} className="flex items-start gap-2 text-sm">
+                          <ClassStatusControl
+                            status={status ?? 'pending'}
+                            onSetStatus={(next) =>
+                              setClassOccurrenceStatus.mutate({ timetableBlockId: entry.id, dateIso, status: next })
+                            }
+                          />
+                          <div className="min-w-0 flex-1">
+                            <span className={status === 'cancelled' ? 'text-mist' : 'text-ink'}>
+                              {entry.subject || '(untitled class)'}
+                            </span>
+                            {session && (
+                              <p className="text-xs text-mist">
+                                Session{session.sessionNumber ? ` ${session.sessionNumber}` : ''}: {session.title}
+                                {session.readingMaterial ? ` — read: ${session.readingMaterial}` : ''}
+                              </p>
+                            )}
                           </div>
                           <span className="shrink-0 text-xs text-mist">
                             {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
@@ -165,6 +201,8 @@ export default function Timetable() {
           onClose={closeForm}
         />
       )}
+
+      {excelImportOpen && <ExcelSessionImportSheet onClose={() => setExcelImportOpen(false)} />}
     </div>
   )
 }

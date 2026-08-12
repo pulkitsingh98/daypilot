@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlansInRange, type DailyPlan } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
+import { useClassOccurrenceStatuses } from '../data/classOccurrences'
 import { addMonths, dayKeyForDate, toIsoDate } from '../lib/time'
 import MonthCalendar from '../components/history/MonthCalendar'
 import DayDetail from '../components/history/DayDetail'
@@ -23,6 +24,7 @@ export default function History() {
     isLoading: plansLoading,
     error: plansError,
   } = useDailyPlansInRange(monthStartIso, monthEndIso)
+  const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(monthStartIso, monthEndIso)
 
   const tasksById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
   const plansByDate = useMemo(() => {
@@ -63,6 +65,7 @@ export default function History() {
           plansByDate={plansByDate}
           tasksById={tasksById}
           classes={classes}
+          classOccurrences={classOccurrences}
           todayIso={todayIso}
         />
       </div>
@@ -72,6 +75,7 @@ export default function History() {
         classesForDay={classesForSelectedDay}
         plan={plansByDate.get(selectedDateIso)}
         tasksById={tasksById}
+        classOccurrences={classOccurrences}
       />
     </div>
   )
