@@ -38,3 +38,41 @@ Return JSON matching exactly this shape:
   "suggestedPrepSessions": an array of 0 to 3 objects { "date": "YYYY-MM-DD", "minutes": number, "title": string }, each a suggested prep or study session before the due date, spaced sensibly across the days leading up to it. Only suggest sessions when they would genuinely help — an exam, presentation, or big project usually benefits; a short one-off reading usually does not need any. If the student names a total prep time budget, split it across the sessions you suggest.
 }`
 }
+
+export type ExtractionPromptKind = 'timetable' | 'sessions' | 'mixed'
+
+const SHARED_DATE_INSTRUCTION =
+  'If a date is ambiguous, relative, or missing a year, set the field to null and mark confidence "low" rather than guessing — explain your best guess in "note" instead. Never invent a date, time, or subject that is not actually shown in the document.'
+
+/**
+ * Prompt for reading an uploaded document photo or PDF, tailored to what the
+ * user told us it is (or "mixed" for poster/notice/other/unsure). Self-
+ * contained — has its own JSON contract, distinct from PLANNER_SYSTEM_PROMPT.
+ * Nothing this returns is written to the database directly; the app always
+ * shows it in an editable review first.
+ */
+export function buildDocumentExtractionPrompt(kind: ExtractionPromptKind, todayIso: string): string {
+  const intro = `You are the document-reading assistant inside DayPilot, a student daily planner app. A student has uploaded a photo or PDF of a real document. Today's date is ${todayIso} (YYYY-MM-DD).`
+
+  if (kind === 'timetable') {
+    return `${intro}
+
+Extract every recurring class. Return ONLY JSON: {"kind":"timetable","items":[{"subject":string,"code":string|null,"dayOfWeek":0-6,"startTime":"HH:MM","endTime":"HH:MM","location":string|null,"confidence":"high"|"low","note":string|null}]}
+
+dayOfWeek is 0 for Monday through 6 for Sunday. code is the course code if one is shown (e.g. "CHEM 301"), otherwise null. location is the room/building if shown, otherwise null. ${SHARED_DATE_INSTRUCTION} If nothing recurring is found, return {"kind":"timetable","items":[]}.`
+  }
+
+  if (kind === 'sessions') {
+    return `${intro}
+
+Extract every session with its number, title, topics, date if present, and any reading or case material named. Return ONLY JSON: {"kind":"sessions","items":[{"subject":string|null,"sessionNumber":number|null,"title":string,"topics":string[],"date":"YYYY-MM-DD"|null,"readingMaterial":string|null,"confidence":"high"|"low","note":string|null}]}
+
+topics is an array of short topic strings (empty array if none listed). readingMaterial is what to read or prepare, taken verbatim from the document where possible, otherwise null. ${SHARED_DATE_INSTRUCTION} If no sessions are found, return {"kind":"sessions","items":[]}.`
+  }
+
+  return `${intro}
+
+Extract every deadline, event, exam, competition, or task. Return ONLY JSON: {"kind":"mixed","items":[{"title":string,"type":"class-prep"|"quiz-exam"|"assignment"|"application"|"competition"|"self-dev"|"personal"|"errand","subject":string|null,"date":"YYYY-MM-DD"|null,"time":"HH:MM"|null,"notes":string|null,"confidence":"high"|"low"}]}
+
+Pick the type that best fits each item — quiz-exam for tests, competition for competitions/hackathons, application for application deadlines, assignment for homework/projects due, class-prep for required reading before a class, personal/errand/self-dev for anything else. ${SHARED_DATE_INSTRUCTION} If nothing is found, return {"kind":"mixed","items":[]}.`
+}

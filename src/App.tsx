@@ -11,6 +11,7 @@ import Settings from './pages/Settings'
 import Timetable from './pages/Timetable'
 import Subjects from './pages/Subjects'
 import SubjectDetail from './pages/SubjectDetail'
+import Documents from './pages/Documents'
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="settings/timetable" element={<Timetable />} />
           <Route path="settings/subjects" element={<Subjects />} />
           <Route path="settings/subjects/:id" element={<SubjectDetail />} />
+          <Route path="settings/documents" element={<Documents />} />
         </Route>
       </Route>
     </Routes>

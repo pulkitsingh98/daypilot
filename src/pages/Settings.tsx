@@ -40,6 +40,16 @@ export default function Settings() {
           </div>
           <span className="text-slate-400">›</span>
         </Link>
+        <Link
+          to="/settings/documents"
+          className="flex items-center justify-between px-4 py-3 hover:bg-slate-50"
+        >
+          <div>
+            <div className="text-sm font-medium text-slate-900">Documents</div>
+            <div className="text-xs text-slate-500">Upload syllabi, timetables, and posters</div>
+          </div>
+          <span className="text-slate-400">›</span>
+        </Link>
       </div>
 
       <AISettingsCard />

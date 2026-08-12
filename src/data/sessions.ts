@@ -1,4 +1,7 @@
+import { useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { resolveSubjectId } from './subjects'
 import { unwrap } from './shared'
 import { toIsoDate } from '../lib/time'
 
@@ -65,4 +68,49 @@ export async function fetchUpcomingSessions(daysAhead = 14, now: Date = new Date
     .order('scheduled_date', { ascending: true })
 
   return unwrap<SessionRow[]>(result).map(fromRow)
+}
+
+export interface SessionInput {
+  subject: string
+  sessionNumber: number | null
+  title: string
+  topics: string[]
+  /** "YYYY-MM-DD" — required, unlike ExtractedSession's, since scheduled_date is NOT NULL in the DB. The review sheet enforces this before a row is importable. */
+  scheduledDate: string
+  readingMaterial: string | null
+}
+
+/** Bulk-create from the document-extraction review flow. Rows are inserted
+ * sequentially (not in parallel) for the same reason as useImportTasks —
+ * subjects has no unique constraint on (user_id, name), so parallel
+ * get-or-create calls for a repeated subject name would race and create
+ * duplicates. */
+export function useImportSessions() {
+  const { session } = useAuth()
+
+  return useMutation({
+    mutationFn: async ({
+      inputs,
+      sourceDocumentId,
+    }: {
+      inputs: SessionInput[]
+      sourceDocumentId?: string
+    }): Promise<void> => {
+      if (!session) throw new Error('Not signed in.')
+      for (const input of inputs) {
+        const subjectId = await resolveSubjectId(input.subject, session.user.id)
+        const { error } = await supabase.from('sessions').insert({
+          user_id: session.user.id,
+          subject_id: subjectId,
+          session_number: input.sessionNumber,
+          title: input.title.trim(),
+          topics: input.topics,
+          scheduled_date: input.scheduledDate,
+          reading_material: input.readingMaterial,
+          source_document_id: sourceDocumentId ?? null,
+        })
+        if (error) throw new Error(error.message)
+      }
+    },
+  })
 }

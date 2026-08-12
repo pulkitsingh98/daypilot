@@ -17,6 +17,7 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
   const [day, setDay] = useState<DayOfWeek>(initial?.day ?? defaultDay)
   const [startTime, setStartTime] = useState(initial?.startTime ?? '09:00')
   const [endTime, setEndTime] = useState(initial?.endTime ?? '10:00')
+  const [location, setLocation] = useState(initial?.location ?? '')
   const [prepChoice, setPrepChoice] = useState<PrepChoice>(
     initial ? (initial.prepRule ? 'yes' : 'no') : null,
   )
@@ -67,6 +68,7 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
       day,
       startTime,
       endTime,
+      location: location.trim() || undefined,
       prepRule:
         prepChoice === 'yes'
           ? {
@@ -160,6 +162,17 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
               />
             </label>
           </div>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-slate-700">Location (optional)</span>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. Room 204"
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            />
+          </label>
 
           <div className="rounded-xl bg-slate-50 p-3">
             <p className="text-sm font-medium text-slate-700">

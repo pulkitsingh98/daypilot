@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import type { DayOfWeek, PrepRule } from './types'
 import { dayOfWeekToIndex, indexToDayOfWeek } from '../lib/time'
-import { resolveSubjectId, SUBJECTS_QUERY_KEY } from './subjects'
+import { resolveSubjectId, resolveSubjectIdTracked, SUBJECTS_QUERY_KEY } from './subjects'
 import { unwrap } from './shared'
 
 /** Same shape as the old localStorage ClassEntry, so Timetable components barely change. */
@@ -13,6 +13,7 @@ export interface ClassEntry {
   day: DayOfWeek
   startTime: string
   endTime: string
+  location?: string
   prepRule?: PrepRule
 }
 
@@ -35,8 +36,15 @@ function fromRow(row: TimetableBlockRow): ClassEntry {
     day: indexToDayOfWeek(row.day_of_week),
     startTime: row.start_time.slice(0, 5),
     endTime: row.end_time.slice(0, 5),
+    location: row.location ?? undefined,
     prepRule: row.prep_rule ?? undefined,
   }
+}
+
+/** Fills in a subject's course code from extraction, but only if it doesn't already have one — never overwrites a code the user set intentionally. */
+async function backfillSubjectCode(subjectId: string | null, code: string | null | undefined): Promise<void> {
+  if (!subjectId || !code) return
+  await supabase.from('subjects').update({ code }).eq('id', subjectId).is('code', null)
 }
 
 const SELECT_COLUMNS = 'id, day_of_week, start_time, end_time, location, prep_rule, subjects(name)'
@@ -52,7 +60,8 @@ export function useClasses() {
   return useQuery({ queryKey: TIMETABLE_QUERY_KEY, queryFn: fetchTimetableBlocks })
 }
 
-export type ClassInput = Omit<ClassEntry, 'id'>
+/** code is write-only here — it backfills the resolved subject's course code, it isn't stored on the class itself. */
+export type ClassInput = Omit<ClassEntry, 'id'> & { code?: string | null }
 
 export function useAddClass() {
   const { session } = useAuth()
@@ -62,6 +71,7 @@ export function useAddClass() {
     mutationFn: async (input: ClassInput): Promise<ClassEntry> => {
       if (!session) throw new Error('Not signed in.')
       const subjectId = await resolveSubjectId(input.subject, session.user.id)
+      await backfillSubjectCode(subjectId, input.code)
       const result = await supabase
         .from('timetable_blocks')
         .insert({
@@ -70,6 +80,7 @@ export function useAddClass() {
           day_of_week: dayOfWeekToIndex(input.day),
           start_time: input.startTime,
           end_time: input.endTime,
+          location: input.location ?? null,
           prep_rule: input.prepRule ?? null,
         })
         .select(SELECT_COLUMNS)
@@ -91,6 +102,7 @@ export function useUpdateClass() {
     mutationFn: async ({ id, input }: { id: string; input: ClassInput }): Promise<ClassEntry> => {
       if (!session) throw new Error('Not signed in.')
       const subjectId = await resolveSubjectId(input.subject, session.user.id)
+      await backfillSubjectCode(subjectId, input.code)
       const result = await supabase
         .from('timetable_blocks')
         .update({
@@ -98,12 +110,56 @@ export function useUpdateClass() {
           day_of_week: dayOfWeekToIndex(input.day),
           start_time: input.startTime,
           end_time: input.endTime,
+          location: input.location ?? null,
           prep_rule: input.prepRule ?? null,
         })
         .eq('id', id)
         .select(SELECT_COLUMNS)
         .single()
       return fromRow(unwrap<TimetableBlockRow>(result))
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: TIMETABLE_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: SUBJECTS_QUERY_KEY })
+    },
+  })
+}
+
+export interface NewSubjectRef {
+  id: string
+  name: string
+}
+
+/** Bulk-create from the document-extraction review flow. Sequential inserts
+ * for the same subject-race reason as useImportTasks/useImportSessions.
+ * Returns any subjects that didn't already exist, so the confirm flow can
+ * prompt for a proficiency rating on each one. */
+export function useImportClasses() {
+  const { session } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (inputs: ClassInput[]): Promise<{ newSubjects: NewSubjectRef[] }> => {
+      if (!session) throw new Error('Not signed in.')
+      const newSubjects: NewSubjectRef[] = []
+
+      for (const input of inputs) {
+        const resolved = await resolveSubjectIdTracked(input.subject, session.user.id)
+        if (resolved?.isNew) newSubjects.push({ id: resolved.id, name: input.subject.trim() })
+        await backfillSubjectCode(resolved?.id ?? null, input.code)
+        const { error } = await supabase.from('timetable_blocks').insert({
+          user_id: session.user.id,
+          subject_id: resolved?.id ?? null,
+          day_of_week: dayOfWeekToIndex(input.day),
+          start_time: input.startTime,
+          end_time: input.endTime,
+          location: input.location ?? null,
+          prep_rule: input.prepRule ?? null,
+        })
+        if (error) throw new Error(error.message)
+      }
+
+      return { newSubjects }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: TIMETABLE_QUERY_KEY })

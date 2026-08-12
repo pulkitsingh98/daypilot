@@ -79,6 +79,34 @@ export async function resolveSubjectId(name: string, userId: string): Promise<st
   return unwrap(created).id
 }
 
+export interface ResolvedSubject {
+  id: string
+  isNew: boolean
+}
+
+/**
+ * Same lookup-or-create as resolveSubjectId, but reports whether the
+ * subject was just created — used by the timetable-extraction import to
+ * know which subjects need a proficiency prompt afterward. Kept separate
+ * from resolveSubjectId rather than changing its return shape, since that
+ * function has several existing callers that don't need this.
+ */
+export async function resolveSubjectIdTracked(name: string, userId: string): Promise<ResolvedSubject | null> {
+  const trimmed = name.trim()
+  if (!trimmed) return null
+
+  const existing = await supabase.from('subjects').select('id').ilike('name', trimmed).maybeSingle()
+  const found = unwrapNullable(existing)
+  if (found) return { id: found.id, isNew: false }
+
+  const created = await supabase
+    .from('subjects')
+    .insert({ user_id: userId, name: trimmed })
+    .select('id')
+    .single()
+  return { id: unwrap(created).id, isNew: true }
+}
+
 export function useAddSubject() {
   const { session } = useAuth()
   const queryClient = useQueryClient()
