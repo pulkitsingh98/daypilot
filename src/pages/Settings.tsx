@@ -299,7 +299,7 @@ function DangerZoneCard() {
   async function handleClearTimetable() {
     if (
       !window.confirm(
-        `Delete your entire timetable? This removes all ${classes.length} class${classes.length === 1 ? '' : 'es'} from your account and can't be undone.`,
+        `Delete your entire timetable? This removes all ${classes.length} class${classes.length === 1 ? '' : 'es'}, their sessions and reading list, and any postponed/cancelled marks from your account, and can't be undone.`,
       )
     ) {
       return

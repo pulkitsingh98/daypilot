@@ -178,7 +178,15 @@ export function useDeleteClass() {
   })
 }
 
-/** Deletes every class on this user's timetable — Settings' "Clear timetable", for wiping stale data the planner would otherwise keep reasoning about. */
+/**
+ * Deletes every class, session (reading list), and class-occurrence status
+ * on this user's timetable — Settings' "Clear timetable", for wiping stale
+ * data the planner would otherwise keep reasoning about. Clears all three
+ * tables together: leaving sessions behind while classes get recreated by a
+ * re-import is exactly what produced doubled-up entries on the Timetable
+ * page before this fix — every session from the prior import stayed in the
+ * database and a fresh import just added a second copy on top.
+ */
 export function useClearTimetable() {
   const { session } = useAuth()
   const queryClient = useQueryClient()
@@ -186,9 +194,20 @@ export function useClearTimetable() {
   return useMutation({
     mutationFn: async (): Promise<void> => {
       if (!session) throw new Error('Not signed in.')
-      const { error } = await supabase.from('timetable_blocks').delete().eq('user_id', session.user.id)
-      if (error) throw new Error(error.message)
+      const userId = session.user.id
+      const [blocksResult, sessionsResult, occurrencesResult] = await Promise.all([
+        supabase.from('timetable_blocks').delete().eq('user_id', userId),
+        supabase.from('sessions').delete().eq('user_id', userId),
+        supabase.from('class_occurrences').delete().eq('user_id', userId),
+      ])
+      if (blocksResult.error) throw new Error(blocksResult.error.message)
+      if (sessionsResult.error) throw new Error(sessionsResult.error.message)
+      if (occurrencesResult.error) throw new Error(occurrencesResult.error.message)
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: TIMETABLE_QUERY_KEY }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: TIMETABLE_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      queryClient.invalidateQueries({ queryKey: ['class_occurrences'] })
+    },
   })
 }
