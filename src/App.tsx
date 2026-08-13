@@ -13,6 +13,7 @@ import Subjects from './pages/Subjects'
 import SubjectDetail from './pages/SubjectDetail'
 import Documents from './pages/Documents'
 import DebugLog from './pages/DebugLog'
+import GettingStarted from './pages/GettingStarted'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="my-life" element={<MyLife />} />
           <Route path="history" element={<History />} />
           <Route path="timetable" element={<Timetable />} />
+          <Route path="getting-started" element={<GettingStarted />} />
           <Route path="settings" element={<Settings />} />
           <Route path="settings/subjects" element={<Subjects />} />
           <Route path="settings/subjects/:id" element={<SubjectDetail />} />

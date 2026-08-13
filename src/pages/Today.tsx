@@ -6,8 +6,6 @@ import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data
 import { addDays, dayKeyForDate, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
 import { getLastEveningNudgeDate, setLastEveningNudgeDate } from '../lib/eveningNudge'
-import { dismissOnboardingBanner, isOnboardingBannerDismissed } from '../lib/onboardingBanner'
-import { useOnboardingSteps } from '../lib/useOnboardingSteps'
 import { buildTimelineItems, getTimelineItemStatus, type ItemStatus, type TimelineItem } from '../lib/todayView'
 import { useTodayStreak } from '../lib/useTodayStreak'
 import StreakSummary from '../components/StreakSummary'
@@ -19,7 +17,7 @@ import TomorrowPreview from '../components/today/TomorrowPreview'
 import TimelineBlock from '../components/today/TimelineBlock'
 import NowMarker from '../components/today/NowMarker'
 import DeferredSection from '../components/today/DeferredSection'
-import OnboardingChecklist from '../components/today/OnboardingChecklist'
+import ClearTodoListCard from '../components/today/ClearTodoListCard'
 import LiveClock from '../components/LiveClock'
 
 export default function Today() {
@@ -36,10 +34,8 @@ export default function Today() {
   const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(todayKey, todayKey)
   const setClassOccurrenceStatus = useSetClassOccurrenceStatus()
   const streak = useTodayStreak()
-  const onboarding = useOnboardingSteps()
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   const [eveningNudgeDismissed, setEveningNudgeDismissed] = useState(false)
-  const [bannerDismissed, setBannerDismissed] = useState(() => isOnboardingBannerDismissed())
 
   const todayClasses = useMemo(
     () => classes.filter((c) => c.day === dayKeyForDate(now)),
@@ -63,7 +59,6 @@ export default function Today() {
     !loading &&
     !eveningNudgeDismissed &&
     getLastEveningNudgeDate() !== todayKey
-  const showOnboardingBanner = !onboarding.loading && !onboarding.allDone && !bannerDismissed
 
   function markNudgeHandled() {
     setLastPlanNudgeDate(todayKey)
@@ -73,11 +68,6 @@ export default function Today() {
   function markEveningNudgeHandled() {
     setLastEveningNudgeDate(todayKey)
     setEveningNudgeDismissed(true)
-  }
-
-  function dismissBanner() {
-    dismissOnboardingBanner()
-    setBannerDismissed(true)
   }
 
   async function handleGenerate(remainingOnly: boolean) {
@@ -142,12 +132,6 @@ export default function Today() {
         <h1 className="font-display text-2xl font-semibold text-ink">Today</h1>
         <LiveClock />
       </div>
-
-      {showOnboardingBanner && (
-        <div className="mt-4 md:hidden">
-          <OnboardingChecklist onDismiss={dismissBanner} />
-        </div>
-      )}
 
       <div className="mt-4">
         <QuickAdd />
@@ -249,6 +233,10 @@ export default function Today() {
 
       <div className="mt-4">
         <StreakSummary {...streak} />
+      </div>
+
+      <div className="mt-4">
+        <ClearTodoListCard />
       </div>
     </div>
   )
