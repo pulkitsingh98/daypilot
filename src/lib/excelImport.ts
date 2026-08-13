@@ -1,13 +1,23 @@
 /**
- * One row parsed from the session-sheet template: one sheet per subject
- * (the sheet name), one row per actual class occurrence. This is a
- * deterministic parse of a file the user's own AI already produced from
- * their syllabus — no AI call happens here, which is the whole point: the
- * hard interpretation work happened once, externally, in a tool the user
- * trusts, and this only has to read a predictable table.
+ * One row parsed from the session-sheet template: one sheet per subject,
+ * one row per actual class occurrence. This is a deterministic parse of a
+ * file the user's own AI already produced from their syllabus — no AI call
+ * happens here, which is the whole point: the hard interpretation work
+ * happened once, externally, in a tool the user trusts, and this only has
+ * to read a predictable table.
+ *
+ * Subject is resolved from three possible sources, in order of trust: an
+ * explicit "Subject" column on the row, a match against the optional
+ * "Subjects" registry sheet (by short name or full name), or the sheet
+ * name itself as a last resort. Relying on sheet name alone was the
+ * original design and turned out fragile — if whatever tool generated the
+ * workbook didn't name sheets cleanly, every row from that sheet silently
+ * got an empty subject. A blank subject is now always a validation error
+ * on the row, never a silent "(untitled class)".
  */
 export interface ParsedSessionRow {
   subject: string
+  sheetName: string
   sheetRow: number
   date: string | null
   startTime: string | null
@@ -18,25 +28,48 @@ export interface ParsedSessionRow {
   error: string | null
 }
 
+export interface SubjectRegistryEntry {
+  fullName: string
+  shortName: string
+  section: string
+}
+
+export interface ParsedWorkbook {
+  subjects: SubjectRegistryEntry[]
+  rows: ParsedSessionRow[]
+}
+
+const SUBJECTS_SHEET_NAME = 'subjects'
+
 function normalizeHeader(header: string): string {
   return header.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
-const HEADER_ALIASES: Record<string, string[]> = {
+const HEADER_ALIASES = {
+  subject: ['subject', 'coursename', 'course', 'subjectname'],
   date: ['date'],
   startTime: ['starttime', 'start'],
   endTime: ['endtime', 'end'],
   sessionNumber: ['session', 'sessionnumber', 'sessionno'],
   topic: ['topic', 'topics'],
   readingRequired: ['readingrequired', 'reading', 'readingmaterial', 'preread', 'prereads'],
-}
+} satisfies Record<string, string[]>
 
-function buildHeaderMap(rawHeaders: string[]): Partial<Record<keyof typeof HEADER_ALIASES, string>> {
-  const map: Partial<Record<keyof typeof HEADER_ALIASES, string>> = {}
+const SUBJECTS_SHEET_HEADER_ALIASES = {
+  fullName: ['fullname', 'subject', 'subjectname', 'course', 'coursename'],
+  shortName: ['shortname', 'short', 'code', 'abbreviation'],
+  section: ['section', 'batch', 'group'],
+} satisfies Record<string, string[]>
+
+function buildHeaderMap<T extends Record<string, string[]>>(
+  rawHeaders: string[],
+  aliases: T,
+): Partial<Record<keyof T, string>> {
+  const map: Partial<Record<keyof T, string>> = {}
   const normalized = rawHeaders.map((h) => ({ raw: h, norm: normalizeHeader(h) }))
-  for (const [field, aliases] of Object.entries(HEADER_ALIASES)) {
-    const match = normalized.find((h) => aliases.includes(h.norm))
-    if (match) map[field as keyof typeof HEADER_ALIASES] = match.raw
+  for (const field of Object.keys(aliases) as (keyof T)[]) {
+    const match = normalized.find((h) => aliases[field].includes(h.norm))
+    if (match) map[field] = match.raw
   }
   return map
 }
@@ -75,28 +108,67 @@ export function normalizeDateString(raw: unknown): string | null {
   return null
 }
 
+function parseSubjectsSheet(rows: Record<string, unknown>[]): SubjectRegistryEntry[] {
+  if (rows.length === 0) return []
+  const headerMap = buildHeaderMap(Object.keys(rows[0]), SUBJECTS_SHEET_HEADER_ALIASES)
+
+  return rows
+    .map((raw): SubjectRegistryEntry => {
+      const get = (field: keyof typeof SUBJECTS_SHEET_HEADER_ALIASES) => {
+        const header = headerMap[field]
+        return header ? String(raw[header] ?? '').trim() : ''
+      }
+      return { fullName: get('fullName'), shortName: get('shortName'), section: get('section') }
+    })
+    .filter((s) => s.fullName.length > 0)
+}
+
 /** xlsx is only needed on this one screen, so it's dynamically imported — same reasoning as heic2any in fileConversion.ts. */
-export async function parseExcelWorkbook(file: File): Promise<ParsedSessionRow[]> {
+export async function parseExcelWorkbook(file: File): Promise<ParsedWorkbook> {
   const XLSX = await import('xlsx')
   const buffer = await file.arrayBuffer()
   const workbook = XLSX.read(buffer, { type: 'array', cellDates: true })
+
+  let subjects: SubjectRegistryEntry[] = []
+  const dataSheetNames = workbook.SheetNames.filter((name) => {
+    if (normalizeHeader(name) === SUBJECTS_SHEET_NAME) {
+      const sheet = workbook.Sheets[name]
+      subjects = parseSubjectsSheet(XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' }))
+      return false
+    }
+    return true
+  })
+
+  // Matches an explicit Subject cell (or, failing that, the sheet name)
+  // against the registry by short name first, then full name — so "OB" on
+  // a row resolves to "Organizational Behavior" if that's what's registered.
+  function resolveSubjectName(candidate: string): string {
+    const trimmed = candidate.trim()
+    if (!trimmed) return ''
+    const byShort = subjects.find((s) => s.shortName.toLowerCase() === trimmed.toLowerCase())
+    if (byShort) return byShort.fullName
+    const byFull = subjects.find((s) => s.fullName.toLowerCase() === trimmed.toLowerCase())
+    if (byFull) return byFull.fullName
+    return trimmed
+  }
+
   const rows: ParsedSessionRow[] = []
 
-  for (const sheetName of workbook.SheetNames) {
-    const subject = sheetName.trim()
-    if (!subject) continue
-
+  for (const sheetName of dataSheetNames) {
     const sheet = workbook.Sheets[sheetName]
     const table = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
     if (table.length === 0) continue
 
-    const headerMap = buildHeaderMap(Object.keys(table[0]))
+    const headerMap = buildHeaderMap(Object.keys(table[0]), HEADER_ALIASES)
 
     table.forEach((raw, index) => {
       const get = (field: keyof typeof HEADER_ALIASES) => {
         const header = headerMap[field]
         return header ? raw[header] : undefined
       }
+
+      const subjectCell = String(get('subject') ?? '').trim()
+      const subject = resolveSubjectName(subjectCell || sheetName)
 
       const date = normalizeDateString(get('date'))
       const startTime = normalizeTimeString(get('startTime'))
@@ -110,12 +182,14 @@ export async function parseExcelWorkbook(file: File): Promise<ParsedSessionRow[]
       const readingRequired = String(get('readingRequired') ?? '').trim()
 
       let error: string | null = null
-      if (!date) error = 'Missing or unreadable date (expected YYYY-MM-DD)'
+      if (!subject) error = 'Missing subject — add a Subject column, list it on a Subjects sheet, or name this sheet after it'
+      else if (!date) error = 'Missing or unreadable date (expected YYYY-MM-DD)'
       else if (!startTime) error = 'Missing or unreadable start time'
       else if (!endTime) error = 'Missing or unreadable end time'
 
       rows.push({
         subject,
+        sheetName,
         sheetRow: index + 2, // +1 for header row, +1 for 1-indexing
         date,
         startTime,
@@ -128,5 +202,5 @@ export async function parseExcelWorkbook(file: File): Promise<ParsedSessionRow[]
     })
   }
 
-  return rows
+  return { subjects, rows }
 }

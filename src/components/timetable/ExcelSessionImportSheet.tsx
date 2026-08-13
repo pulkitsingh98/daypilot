@@ -7,12 +7,16 @@ interface ExcelSessionImportSheetProps {
   onClose: () => void
 }
 
-const PROMPT_TEXT = `I have a class timetable and session/reading schedule for my course(s). Read the attached document(s) and produce an Excel workbook with ONE SHEET PER SUBJECT — name each sheet exactly after the subject (e.g. "Chemistry", "Marketing").
+const PROMPT_TEXT = `I have a class timetable and session/reading schedule for my course(s). Read the attached document(s) and produce an Excel workbook in exactly this format.
 
-Each sheet must have exactly these column headers in row 1:
-Date | Start Time | End Time | Session # | Topic | Reading Required
+SHEET 1 — name it "Subjects". Columns: Full Name | Short Name | Section
+One row per course, e.g. "Organizational Behavior | OB | Section A". This is the master list — get it right, everything else refers back to it.
+
+REMAINING SHEETS — one per subject, named after that subject's Full Name from the Subjects sheet. Columns:
+Subject | Date | Start Time | End Time | Session # | Topic | Reading Required
 
 Rules:
+- Subject: repeat the exact Full Name from the Subjects sheet on every row — don't leave this blank, and don't abbreviate it here even though the sheet name already says it. This column is what actually gets read, so it must never be empty.
 - Date: one row per actual class date, in YYYY-MM-DD format — the specific calendar date each session happens, not a day-of-week or a range.
 - Start Time / End Time: 24-hour "HH:MM" format (e.g. 14:00, not 2:00 PM).
 - Session #: the session number if known (1, 2, 3...), or leave blank.
@@ -21,7 +25,7 @@ Rules:
 
 If you don't have exact calendar dates for every session, use the class's known weekly meeting day(s) and time(s) starting from [the date your term/semester starts] and spread the sessions across them in order, skipping any holidays I've told you about.
 
-Output only the Excel file (or a data table I can paste straight into Excel) matching this exact format, one sheet per subject.`
+Before producing the file, list out the Subjects sheet rows first and confirm them with me if anything about a course's name is ambiguous. Output only the Excel file (or a data table I can paste straight into Excel) matching this exact format.`
 
 export default function ExcelSessionImportSheet({ onClose }: ExcelSessionImportSheetProps) {
   const [copied, setCopied] = useState(false)
@@ -46,12 +50,12 @@ export default function ExcelSessionImportSheet({ onClose }: ExcelSessionImportS
     setFileName(file.name)
     try {
       const parsed = await parseExcelWorkbook(file)
-      if (parsed.length === 0) {
+      if (parsed.rows.length === 0) {
         setParseError("Couldn't find any rows — check the file has one sheet per subject with the expected columns.")
         setRows(null)
         return
       }
-      setRows(parsed)
+      setRows(parsed.rows)
     } catch (err) {
       setParseError(err instanceof Error ? err.message : 'Could not read this file. Make sure it\'s a .xlsx file.')
       setRows(null)
@@ -176,7 +180,7 @@ export default function ExcelSessionImportSheet({ onClose }: ExcelSessionImportS
                   <div className="mt-2 max-h-32 overflow-y-auto rounded-lg border border-amber-200 bg-amber-50 p-2">
                     {errorRows.map((r, i) => (
                       <p key={i} className="text-xs text-amber-800">
-                        {r.subject}, row {r.sheetRow}: {r.error}
+                        {r.sheetName}, row {r.sheetRow}: {r.error}
                       </p>
                     ))}
                   </div>

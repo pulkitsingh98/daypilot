@@ -10,7 +10,7 @@ Rules, in strict priority order:
 7. Self-development goals (LinkedIn, courses, projects, interview prep) fill remaining capacity toward their weekly targets. If a goal has received zero minutes this week and it is Thursday or later, escalate its priority and say why in the reason.
 8. NEVER exceed the user's stated daily capacity. If everything does not fit, explicitly defer the lowest-priority items with a one-line reason each. Do not cram. Include at least one 20-30 minute buffer block per 4 hours of planned work, and meal or rest blocks at normal meal times inside the window. Use recentCompletion as a reality check: if averageCompletionRate over the last 7 days is below 0.6, or currentStreakDays is 0, be more conservative than usual — lead with the 1-2 items that matter most rather than packing the day, since a lighter day that actually gets finished beats an ambitious one that doesn't.
 9. Any task with snoozeCount of 3 or more must be surfaced directly: suggest breaking it into a smaller 20-minute starter version and schedule that starter version instead.
-10. Use subjectProficiency directly when sizing and spacing prep: for a subject rated 1 or 2, add 40% to the time estimate and split it into more, earlier sessions rather than one big block. For a subject rated 4 or 5, trim the estimate and consolidate into fewer, later sessions. Where history exists for the same task type and subject, prefer the user's historical actual durations over their own estimate or this proficiency adjustment.
+10. Size session-reading prep with this formula: minutes = 30 × (6 − subjectProficiency), where subjectProficiency is the subject's 1-5 rating. That gives 30 min at proficiency 5, 60 at 4, 90 at 3, 120 at 2, and 150 at 1 — a weak subject (1-2) gets up to 5x the strong-subject baseline. Split anything over 60 minutes into multiple sessions spread across the days before the class rather than one long block, scheduling the earliest ones sooner for low-proficiency subjects. For non-reading-prep tasks (assignments, projects, general study), use subjectProficiency more loosely in the same direction: add up to 40% to the time estimate and front-load sessions for a subject rated 1 or 2; trim the estimate and consolidate into fewer, later sessions for a subject rated 4 or 5. Where history exists for the same task type and subject, prefer the user's historical actual durations over either the formula or their own estimate.
 11. Every block must include a one-sentence human reason, for example: 'Your OB case discussion is tomorrow at 10 AM, so reading it tonight means you walk in prepared.'
 
 Output ONLY this JSON object:
@@ -42,7 +42,10 @@ Return JSON matching exactly this shape:
 export type ExtractionPromptKind = 'timetable' | 'sessions' | 'mixed'
 
 const SHARED_DATE_INSTRUCTION =
-  'If a date is ambiguous, relative, or missing a year, set the field to null and mark confidence "low" rather than guessing — explain your best guess in "note" instead. Never invent a date, time, or subject that is not actually shown in the document.'
+  'If a date is ambiguous, relative, or missing a year, set the field to null and mark confidence "low" rather than guessing — explain your best guess in "note" instead. Never invent a date or time that is not actually shown in the document.'
+
+const SHARED_SUBJECT_INSTRUCTION =
+  'The "subject" field is the most important field in this whole extraction — every downstream feature (grouping classes, matching reading prep to the right course, sizing study time) keys off it, so it must never be a placeholder like "Untitled", "Class", "TBD", or an empty string when a subject genuinely appears anywhere in the document. Look beyond the row itself: a header, a page title, a column of course names, a legend, or a repeated label above a block of sessions can all name the subject even if it is not repeated on every single row. Use the FULL course name exactly as written (e.g. "Organizational Behavior", not "OB") unless only an abbreviation or code is ever shown, in which case use that. If, after checking the whole document, no subject can be honestly attached to an item, set "subject" to null (never a guess or a placeholder), and set that item\'s confidence to "low" with a note explaining what is missing.'
 
 /**
  * Prompt for reading an uploaded document photo or PDF, tailored to what the
@@ -57,9 +60,9 @@ export function buildDocumentExtractionPrompt(kind: ExtractionPromptKind, todayI
   if (kind === 'timetable') {
     return `${intro}
 
-Extract every recurring class. Return ONLY JSON: {"kind":"timetable","items":[{"subject":string,"code":string|null,"dayOfWeek":0-6,"startTime":"HH:MM","endTime":"HH:MM","location":string|null,"confidence":"high"|"low","note":string|null}]}
+Extract every recurring class. Return ONLY JSON: {"kind":"timetable","items":[{"subject":string|null,"code":string|null,"dayOfWeek":0-6,"startTime":"HH:MM","endTime":"HH:MM","location":string|null,"confidence":"high"|"low","note":string|null}]}
 
-dayOfWeek is 0 for Monday through 6 for Sunday. code is the course code if one is shown (e.g. "CHEM 301"), otherwise null. location is the room/building if shown, otherwise null. ${SHARED_DATE_INSTRUCTION} If nothing recurring is found, return {"kind":"timetable","items":[]}.`
+dayOfWeek is 0 for Monday through 6 for Sunday. code is the course code if one is shown (e.g. "CHEM 301"), otherwise null. location is the room/building if shown, otherwise null. ${SHARED_SUBJECT_INSTRUCTION} ${SHARED_DATE_INSTRUCTION} If nothing recurring is found, return {"kind":"timetable","items":[]}.`
   }
 
   if (kind === 'sessions') {
@@ -67,12 +70,12 @@ dayOfWeek is 0 for Monday through 6 for Sunday. code is the course code if one i
 
 Extract every session with its number, title, topics, date if present, and any reading or case material named. Return ONLY JSON: {"kind":"sessions","items":[{"subject":string|null,"sessionNumber":number|null,"title":string,"topics":string[],"date":"YYYY-MM-DD"|null,"readingMaterial":string|null,"confidence":"high"|"low","note":string|null}]}
 
-topics is an array of short topic strings (empty array if none listed). readingMaterial is what to read or prepare, taken verbatim from the document where possible, otherwise null. ${SHARED_DATE_INSTRUCTION} If no sessions are found, return {"kind":"sessions","items":[]}.`
+topics is an array of short topic strings (empty array if none listed). readingMaterial is what to read or prepare, taken verbatim from the document where possible, otherwise null. ${SHARED_SUBJECT_INSTRUCTION} ${SHARED_DATE_INSTRUCTION} If no sessions are found, return {"kind":"sessions","items":[]}.`
   }
 
   return `${intro}
 
 Extract every deadline, event, exam, competition, or task. Return ONLY JSON: {"kind":"mixed","items":[{"title":string,"type":"class-prep"|"quiz-exam"|"assignment"|"application"|"competition"|"self-dev"|"personal"|"errand","subject":string|null,"date":"YYYY-MM-DD"|null,"time":"HH:MM"|null,"notes":string|null,"confidence":"high"|"low"}]}
 
-Pick the type that best fits each item — quiz-exam for tests, competition for competitions/hackathons, application for application deadlines, assignment for homework/projects due, class-prep for required reading before a class, personal/errand/self-dev for anything else. ${SHARED_DATE_INSTRUCTION} If nothing is found, return {"kind":"mixed","items":[]}.`
+Pick the type that best fits each item — quiz-exam for tests, competition for competitions/hackathons, application for application deadlines, assignment for homework/projects due, class-prep for required reading before a class, personal/errand/self-dev for anything else. ${SHARED_SUBJECT_INSTRUCTION} ${SHARED_DATE_INSTRUCTION} If nothing is found, return {"kind":"mixed","items":[]}.`
 }

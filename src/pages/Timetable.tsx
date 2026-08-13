@@ -7,8 +7,6 @@ import type { DayOfWeek } from '../data/types'
 import { buildUpcomingOccurrences, type ClassOccurrence } from '../lib/sessionRollover'
 import { formatTimeLabel, toIsoDate } from '../lib/time'
 import ClassStatusControl from '../components/ClassStatusControl'
-import WeekGrid from '../components/timetable/WeekGrid'
-import DayList from '../components/timetable/DayList'
 import ClassFormSheet from '../components/timetable/ClassFormSheet'
 import ExcelSessionImportSheet from '../components/timetable/ExcelSessionImportSheet'
 import UploadDocumentButton from '../components/documents/UploadDocumentButton'
@@ -159,7 +157,11 @@ export default function Timetable() {
                               setClassOccurrenceStatus.mutate({ timetableBlockId: entry.id, dateIso, status: next })
                             }
                           />
-                          <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(entry)}
+                            className="min-w-0 flex-1 rounded text-left hover:opacity-70"
+                          >
                             <span className={status === 'cancelled' ? 'text-mist' : 'text-ink'}>
                               {entry.subject || '(untitled class)'}
                             </span>
@@ -169,7 +171,7 @@ export default function Timetable() {
                                 {session.readingMaterial ? ` — read: ${session.readingMaterial}` : ''}
                               </p>
                             )}
-                          </div>
+                          </button>
                           <span className="shrink-0 text-xs text-mist">
                             {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
                           </span>
@@ -180,15 +182,6 @@ export default function Timetable() {
                 ))}
               </div>
             )}
-          </section>
-
-          <section className="mt-6">
-            <h2 className="text-sm font-semibold text-ink">Weekly schedule</h2>
-            <p className="mt-0.5 text-sm text-mist">Tap a class to edit it.</p>
-            <div className="mt-2">
-              <WeekGrid classes={classes} onEdit={openEdit} />
-              <DayList classes={classes} onEdit={openEdit} onAdd={openAdd} />
-            </div>
           </section>
         </>
       )}

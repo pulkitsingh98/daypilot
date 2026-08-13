@@ -18,9 +18,13 @@ export interface ExcelImportSummary {
  * than asked for separately — plus one sessions row per occurrence, dated
  * and carrying its own reading requirement. Sequential inserts, same
  * subject-race reason as useImportTasks/useImportSessions/useImportClasses.
+ * Every row's subject was already resolved (column, registry, or sheet
+ * name) and validated non-blank by parseExcelWorkbook — a row with no
+ * resolvable subject carries an error and is filtered out here, never
+ * silently imported as untitled.
  */
 export async function importExcelSessions(rows: ParsedSessionRow[], userId: string): Promise<ExcelImportSummary> {
-  const validRows = rows.filter((r) => !r.error && r.date && r.startTime && r.endTime)
+  const validRows = rows.filter((r) => !r.error && r.subject && r.date && r.startTime && r.endTime)
 
   const subjectIdByName = new Map<string, string>()
   async function getSubjectId(name: string): Promise<string> {
