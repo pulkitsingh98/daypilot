@@ -1,5 +1,6 @@
 import type { ClassEntry } from '../data/timetableBlocks'
 import type { UpcomingSession } from '../data/sessions'
+import type { DayOfWeek } from '../data/types'
 import { occurrenceKey, type ClassOccurrenceMap, type ClassOccurrenceStatus } from '../data/classOccurrences'
 import { addDays, dayKeyForDate, toIsoDate, toMinutes } from './time'
 
@@ -12,14 +13,46 @@ export interface ClassOccurrence {
   session: UpcomingSession | null
 }
 
+function groupClassesBySubjectAndDay(classes: ClassEntry[]): Map<string, Map<DayOfWeek, ClassEntry[]>> {
+  const bySubject = new Map<string, Map<DayOfWeek, ClassEntry[]>>()
+  for (const c of classes) {
+    let byDay = bySubject.get(c.subject)
+    if (!byDay) {
+      byDay = new Map()
+      bySubject.set(c.subject, byDay)
+    }
+    const list = byDay.get(c.day) ?? []
+    list.push(c)
+    byDay.set(c.day, list)
+  }
+  for (const byDay of bySubject.values()) {
+    for (const list of byDay.values()) list.sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
+  }
+  return bySubject
+}
+
 /**
- * Builds the day-by-day occurrence list for `daysAhead` days starting at
- * `from`. Each subject's sessions (already sorted earliest-first) are paired
- * against that subject's own occurrences IN ORDER, one session per
- * occurrence — except a postponed or cancelled occurrence consumes no
- * session at all, so the same reading rolls forward onto whichever date the
- * class next actually happens, instead of staying pinned to the session's
- * own scheduled_date once a class gets bumped.
+ * Builds the occurrence list for `daysAhead` days starting at `from`.
+ *
+ * A subject with real per-date sessions (the normal case for an Excel or
+ * document import) gets one occurrence per session, pinned to that
+ * session's own scheduled_date — never reconstructed by projecting a
+ * weekly day/time pattern forward, which is what used to put occurrences
+ * on the wrong date (or invent extra ones on weeks the class never
+ * actually met) whenever a course's real meeting times didn't repeat on a
+ * fixed weekly cadence. The matching timetable_block for display (start
+ * time, location) is picked by exact start-time match on that weekday when
+ * the session has one (the normal case), since a subject can reuse the same
+ * handful of time slots across several different real dates — position
+ * alone can't tell those apart. Only when a session has no recorded time
+ * (e.g. a bare reading list from a photo/PDF) does it fall back to matching
+ * by position among that weekday's blocks. Marking an occurrence postponed
+ * or cancelled defers its session to the subject's next real occurrence in
+ * the window, same rollover behavior as before.
+ *
+ * A subject with no session data at all (a manually added class, or a bare
+ * timetable extraction with no reading list) still gets the classic weekly
+ * projection, since that's the only information available for it.
  */
 export function buildUpcomingOccurrences(
   classes: ClassEntry[],
@@ -28,6 +61,8 @@ export function buildUpcomingOccurrences(
   from: Date,
   daysAhead: number,
 ): ClassOccurrence[] {
+  const classesBySubjectDay = groupClassesBySubjectAndDay(classes)
+
   const sessionsBySubject = new Map<string, UpcomingSession[]>()
   for (const s of sessions) {
     const list = sessionsBySubject.get(s.subject) ?? []
@@ -37,32 +72,56 @@ export function buildUpcomingOccurrences(
   for (const list of sessionsBySubject.values()) {
     list.sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate))
   }
-  const sessionIndexBySubject = new Map<string, number>()
 
   const occurrences: ClassOccurrence[] = []
 
-  for (let i = 0; i < daysAhead; i++) {
-    const date = addDays(from, i)
-    const dateIso = toIsoDate(date)
-    const dayKey = dayKeyForDate(date)
-    const dayClasses = classes
-      .filter((c) => c.day === dayKey)
-      .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
+  for (const [subject, subjectSessions] of sessionsBySubject) {
+    const entryForSlot: (ClassEntry | null)[] = []
+    let i = 0
+    while (i < subjectSessions.length) {
+      const dateIso = subjectSessions[i].scheduledDate
+      let j = i
+      while (j < subjectSessions.length && subjectSessions[j].scheduledDate === dateIso) j++
+      const dayKey = dayKeyForDate(new Date(`${dateIso}T00:00:00`))
+      const candidates = classesBySubjectDay.get(subject)?.get(dayKey) ?? []
+      for (let k = i; k < j; k++) {
+        const wantedStart = subjectSessions[k].startTime
+        const byTime = wantedStart ? candidates.find((c) => c.startTime === wantedStart) : undefined
+        entryForSlot.push(byTime ?? candidates[k - i] ?? candidates[candidates.length - 1] ?? null)
+      }
+      i = j
+    }
 
-    for (const entry of dayClasses) {
+    const queue = subjectSessions.slice()
+    for (let p = 0; p < subjectSessions.length; p++) {
+      const entry = entryForSlot[p]
+      if (!entry) continue
+      const dateIso = subjectSessions[p].scheduledDate
       const status = occurrenceStatuses.get(occurrenceKey(entry.id, dateIso)) ?? null
       let session: UpcomingSession | null = null
-
       if (status !== 'postponed' && status !== 'cancelled') {
-        const subjectSessions = sessionsBySubject.get(entry.subject) ?? []
-        const idx = sessionIndexBySubject.get(entry.subject) ?? 0
-        session = subjectSessions[idx] ?? null
-        sessionIndexBySubject.set(entry.subject, idx + 1)
+        session = queue.shift() ?? null
       }
-
       occurrences.push({ entry, dateIso, status, session })
     }
   }
 
+  for (let d = 0; d < daysAhead; d++) {
+    const date = addDays(from, d)
+    const dateIso = toIsoDate(date)
+    const dayKey = dayKeyForDate(date)
+    const dayClasses = classes
+      .filter((c) => c.day === dayKey && !sessionsBySubject.has(c.subject))
+      .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
+
+    for (const entry of dayClasses) {
+      const status = occurrenceStatuses.get(occurrenceKey(entry.id, dateIso)) ?? null
+      occurrences.push({ entry, dateIso, status, session: null })
+    }
+  }
+
+  occurrences.sort(
+    (a, b) => a.dateIso.localeCompare(b.dateIso) || toMinutes(a.entry.startTime) - toMinutes(b.entry.startTime),
+  )
   return occurrences
 }

@@ -78,6 +78,8 @@ export async function importExcelSessions(rows: ParsedSessionRow[], userId: stri
       topics: r.topic ? [r.topic] : [],
       scheduled_date: r.date,
       reading_material: r.readingRequired || null,
+      start_time: r.startTime,
+      end_time: r.endTime,
     })
     if (error) throw new Error(error.message)
     sessionsCreated++

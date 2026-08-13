@@ -14,6 +14,9 @@ export interface UpcomingSession {
   title: string
   topics: string[]
   scheduledDate: string
+  /** "HH:MM", when known — null for sessions imported without a time (e.g. a plain photo/PDF reading list). */
+  startTime: string | null
+  endTime: string | null
   readingMaterial: string | null
   status: SessionStatus
 }
@@ -24,6 +27,8 @@ interface SessionRow {
   title: string
   topics: string[] | null
   scheduled_date: string
+  start_time: string | null
+  end_time: string | null
   reading_material: string | null
   status: string
   subjects: { name: string }[] | { name: string } | null
@@ -37,13 +42,15 @@ function fromRow(row: SessionRow): UpcomingSession {
     title: row.title,
     topics: row.topics ?? [],
     scheduledDate: row.scheduled_date,
+    startTime: row.start_time?.slice(0, 5) ?? null,
+    endTime: row.end_time?.slice(0, 5) ?? null,
     readingMaterial: row.reading_material,
     status: row.status as SessionStatus,
   }
 }
 
 const SELECT_COLUMNS =
-  'id, session_number, title, topics, scheduled_date, reading_material, status, subjects(name)'
+  'id, session_number, title, topics, scheduled_date, start_time, end_time, reading_material, status, subjects(name)'
 
 /** Returns sessions in the next `daysAhead` days that haven't already happened — planner input, and the Timetable page's session-matching for upcoming classes. */
 export async function fetchUpcomingSessions(daysAhead = 14, now: Date = new Date()): Promise<UpcomingSession[]> {
