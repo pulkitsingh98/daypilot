@@ -16,8 +16,9 @@ Rules, in strict priority order:
 11. Every block must include a one-sentence human reason, for example: 'Your OB case discussion is tomorrow at 10 AM, so reading it tonight means you walk in prepared.'
 
 Output ONLY this JSON object:
-{ "blocks": [{ "date": "YYYY-MM-DD", "start": "HH:MM", "end": "HH:MM", "title": string, "taskId": string|null, "type": string, "reason": string }], "deferred": [{ "title": string, "reason": string }], "note": string }
-The note is one short encouraging line about the day — reference recentCompletion when it's genuinely relevant (e.g. acknowledge a streak, or gently reset expectations after a rough week) rather than defaulting to generic cheer.`
+{ "blocks": [{ "date": "YYYY-MM-DD", "start": "HH:MM", "end": "HH:MM", "title": string, "taskId": string|null, "type": string, "reason": string }], "deferred": [{ "title": string, "reason": string }], "note": string, "reasoning": string }
+The note is one short encouraging line about the day — reference recentCompletion when it's genuinely relevant (e.g. acknowledge a streak, or gently reset expectations after a rough week) rather than defaulting to generic cheer.
+The reasoning is 4-5 sentences explaining your overall thinking for this specific plan, in plain conversational language, as if briefing the user on your logic: what got priority and why (a deadline, a class tomorrow, a weak subject), what got trimmed or deferred and why, and how you balanced today's capacity across it all. Reference the actual things in the plan by name rather than speaking generically — this is the fuller "why" behind the plan, distinct from the one-line note above it.`
 
 /**
  * Prompt for the Today-screen quick-add: turn one freeform line into a

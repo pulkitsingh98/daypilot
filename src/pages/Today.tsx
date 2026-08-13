@@ -273,6 +273,13 @@ export default function Today() {
           )}
 
           <DeferredSection items={plan.deferred} />
+
+          {plan.reasoning && (
+            <div className="mt-4 rounded-xl border border-mist-line bg-paper-raised p-4">
+              <h2 className="text-sm font-semibold text-ink">Why this plan</h2>
+              <p className="mt-1.5 text-sm text-ink-soft">{plan.reasoning}</p>
+            </div>
+          )}
         </>
       )}
 

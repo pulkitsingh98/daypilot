@@ -31,6 +31,8 @@ export interface DailyPlan {
   blocks: PlanBlock[]
   deferred: PlanDeferredItem[]
   note: string
+  /** A few sentences on the AI's overall thinking for this plan — what got priority and why, what got trimmed and why. Empty for plans generated before this existed. */
+  reasoning: string
   /** ISO timestamp of when this plan was generated. */
   generatedAt: string
   /** ISO timestamp of the far edge of this plan's window — null for plans generated before rolling windows existed. */
@@ -43,6 +45,7 @@ interface DailyPlanRow {
   blocks: PlanBlock[]
   deferred: PlanDeferredItem[]
   note: string
+  reasoning: string | null
   generated_at: string
   plan_until: string | null
   completed_item_keys: string[] | null
@@ -53,6 +56,7 @@ function fromRow(row: DailyPlanRow): DailyPlan {
     blocks: row.blocks,
     deferred: row.deferred,
     note: row.note,
+    reasoning: row.reasoning ?? '',
     generatedAt: row.generated_at,
     planUntil: row.plan_until,
     completedItemKeys: row.completed_item_keys ?? [],
@@ -64,7 +68,7 @@ export const dailyPlanQueryKey = (dateIso: string) => ['daily_plans', dateIso] a
 export async function fetchDailyPlan(dateIso: string): Promise<DailyPlan | null> {
   const result = await supabase
     .from('daily_plans')
-    .select('blocks, deferred, note, generated_at, plan_until, completed_item_keys')
+    .select('blocks, deferred, note, reasoning, generated_at, plan_until, completed_item_keys')
     .eq('plan_date', dateIso)
     .maybeSingle()
   const row = unwrapNullable<DailyPlanRow>(result)
@@ -86,7 +90,7 @@ const dailyPlansRangeQueryKey = (startIso: string, endIso: string) =>
 export async function fetchDailyPlansInRange(startIso: string, endIso: string): Promise<DailyPlanWithDate[]> {
   const result = await supabase
     .from('daily_plans')
-    .select('plan_date, blocks, deferred, note, generated_at, plan_until, completed_item_keys')
+    .select('plan_date, blocks, deferred, note, reasoning, generated_at, plan_until, completed_item_keys')
     .gte('plan_date', startIso)
     .lte('plan_date', endIso)
     .order('plan_date', { ascending: true })
@@ -118,6 +122,7 @@ export async function saveDailyPlan(dateIso: string, plan: DailyPlan, userId: st
         blocks: plan.blocks,
         deferred: plan.deferred,
         note: plan.note,
+        reasoning: plan.reasoning,
         generated_at: plan.generatedAt,
         plan_until: plan.planUntil,
       },

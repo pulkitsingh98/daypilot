@@ -48,6 +48,15 @@ export function normalizeDailyPlanResult(raw: unknown, defaultDateIso: string): 
     .filter((d) => d.title.trim().length > 0)
 
   const note = coerceString(obj.note)
+  const reasoning = coerceString(obj.reasoning)
 
-  return { blocks, deferred, note, generatedAt: new Date().toISOString(), planUntil: null, completedItemKeys: [] }
+  return {
+    blocks,
+    deferred,
+    note,
+    reasoning,
+    generatedAt: new Date().toISOString(),
+    planUntil: null,
+    completedItemKeys: [],
+  }
 }

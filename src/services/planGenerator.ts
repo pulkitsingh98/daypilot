@@ -65,6 +65,7 @@ export async function generateDailyPlan(userId: string, options: GeneratePlanOpt
         blocks: tomorrowBlocks,
         deferred: [],
         note: SPILLOVER_NOTE,
+        reasoning: plan.reasoning,
         generatedAt: plan.generatedAt,
         planUntil,
         completedItemKeys: [],
