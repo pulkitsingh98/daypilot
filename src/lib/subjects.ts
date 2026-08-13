@@ -1,6 +1,4 @@
 import type { ProficiencyLevel } from '../data/subjects'
-import type { ClassEntry } from '../data/timetableBlocks'
-import { DAYS, dayKeyForDate, toMinutes } from './time'
 
 export const PROFICIENCY_LEVELS: {
   key: ProficiencyLevel
@@ -17,17 +15,4 @@ export const PROFICIENCY_LEVELS: {
 export function proficiencyMeta(level: ProficiencyLevel | null) {
   if (level === null) return null
   return PROFICIENCY_LEVELS.find((p) => p.key === level) ?? null
-}
-
-/** Orders a subject's recurring classes starting from today's day-of-week and wrapping through the week. */
-export function sortByUpcoming(classes: ClassEntry[], now: Date): ClassEntry[] {
-  const todayIndex = DAYS.findIndex((d) => d.key === dayKeyForDate(now))
-  const dayOffset = (day: ClassEntry['day']) => {
-    const index = DAYS.findIndex((d) => d.key === day)
-    return (index - todayIndex + 7) % 7
-  }
-  return [...classes].sort((a, b) => {
-    const offsetDiff = dayOffset(a.day) - dayOffset(b.day)
-    return offsetDiff !== 0 ? offsetDiff : toMinutes(a.startTime) - toMinutes(b.startTime)
-  })
 }

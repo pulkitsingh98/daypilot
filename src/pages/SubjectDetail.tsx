@@ -2,11 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSubjects } from '../data/subjects'
-import { useClasses } from '../data/timetableBlocks'
 import { useSessionsForSubject } from '../data/sessions'
 import { useTasks, type Task } from '../data/tasks'
-import { proficiencyMeta, sortByUpcoming } from '../lib/subjects'
-import { dayLabel, formatTimeLabel, toIsoDate } from '../lib/time'
+import { proficiencyMeta } from '../lib/subjects'
+import { toIsoDate } from '../lib/time'
 import SubjectFormSheet from '../components/subjects/SubjectFormSheet'
 import TaskCard from '../components/backlog/TaskCard'
 import TaskFormSheet from '../components/backlog/TaskFormSheet'
@@ -16,7 +15,6 @@ export default function SubjectDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: subjects = [], isLoading: subjectsLoading } = useSubjects()
-  const { data: classes = [] } = useClasses()
   const { data: tasks = [] } = useTasks()
   const [editingSubject, setEditingSubject] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -44,10 +42,6 @@ export default function SubjectDetail() {
     )
   }
 
-  const upcomingClasses = sortByUpcoming(
-    classes.filter((c) => c.subject === subject.name),
-    new Date(),
-  )
   const openTasks = tasks
     .filter((t) => t.subject === subject.name && t.status !== 'done')
     .sort((a, b) => (a.dueDate ?? '9999-99-99').localeCompare(b.dueDate ?? '9999-99-99'))
@@ -96,29 +90,6 @@ export default function SubjectDetail() {
           </span>
         )}
       </div>
-
-      <section className="mt-6">
-        <h2 className="text-sm font-semibold text-ink">Weekly classes</h2>
-        {upcomingClasses.length === 0 ? (
-          <p className="mt-2 text-sm text-mist">No classes scheduled for this subject.</p>
-        ) : (
-          <ul className="mt-2 flex flex-col gap-2">
-            {upcomingClasses.map((entry) => (
-              <li key={entry.id} className="rounded-xl border border-mist-line bg-paper-raised p-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-ink">{dayLabel(entry.day)}</span>
-                  <span className="text-mist">
-                    {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
-                  </span>
-                </div>
-                {entry.prepRule && (
-                  <p className="mt-1 text-xs text-mist">Prep: {entry.prepRule.description}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
       <section className="mt-6">
         <h2 className="text-sm font-semibold text-ink">Sessions</h2>
