@@ -87,7 +87,10 @@ async function callGemini(
   fileBase64?: string,
   mimeType?: string,
 ): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`
+  // gemini-2.5-flash was retired for new API keys (shuts down entirely
+  // Oct 2026) — gemini-3.6-flash is the current GA, production-ready
+  // equivalent on the same generateContent endpoint shape.
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(apiKey)}`
 
   const parts: Array<Record<string, unknown>> = [{ text: user }]
   if (fileBase64 && mimeType) {
