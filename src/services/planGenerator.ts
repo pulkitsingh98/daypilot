@@ -65,7 +65,22 @@ export async function generateDailyPlan(userId: string, options: GeneratePlanOpt
     else todayBlocks.push(block)
   }
 
-  const todayPlan: DailyPlan = { ...plan, blocks: todayBlocks, planUntil }
+  // deferred isn't itself date-tagged — it's one global "didn't make the
+  // cut" list for the whole generation. Normally that belongs with today's
+  // plan. But when today ends up with zero blocks (planFrom rolled past
+  // midnight, so the entire window landed on tomorrow), leaving deferred
+  // behind on an otherwise-empty today's row is exactly what defeated the
+  // "fall through to tomorrow's plan" handling on the Today page: it only
+  // falls through when today is *completely* empty. Move deferred wherever
+  // the actual scheduled work ended up.
+  const todayIsEmpty = todayBlocks.length === 0 && tomorrowBlocks.length > 0
+
+  const todayPlan: DailyPlan = {
+    ...plan,
+    blocks: todayBlocks,
+    deferred: todayIsEmpty ? [] : plan.deferred,
+    planUntil,
+  }
   await saveDailyPlan(state.today, todayPlan, userId)
 
   if (tomorrowBlocks.length > 0) {
@@ -73,7 +88,7 @@ export async function generateDailyPlan(userId: string, options: GeneratePlanOpt
     if (!existingTomorrow) {
       const tomorrowPlan: DailyPlan = {
         blocks: tomorrowBlocks,
-        deferred: [],
+        deferred: todayIsEmpty ? plan.deferred : [],
         note: SPILLOVER_NOTE,
         reasoning: plan.reasoning,
         generatedAt: plan.generatedAt,
