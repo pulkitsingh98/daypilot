@@ -50,7 +50,7 @@ export async function generateDailyPlan(userId: string, options: GeneratePlanOpt
   })
   const parsed = parseJsonResponse<unknown>(raw)
   const plan = normalizeDailyPlanResult(parsed, state.today)
-  const planUntil = `${state.planUntil.date}T${state.planUntil.time}:00`
+  const planUntil = state.planUntil.iso
 
   const todayBlocks = plan.blocks.filter((b) => b.date === state.today)
   const tomorrowBlocks = plan.blocks.filter((b) => b.date === state.tomorrow)

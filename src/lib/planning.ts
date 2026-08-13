@@ -23,7 +23,7 @@ import { computeDayCompletion } from './dayCompletion'
 import type { ClassOccurrenceMap } from '../data/classOccurrences'
 import { fetchClassOccurrenceStatuses } from '../data/classOccurrences'
 import { buildUpcomingOccurrences } from './sessionRollover'
-import { addDays, addHours, dayKeyForDate, formatTimeOfDay, toIsoDate } from './time'
+import { addDays, addHours, dayKeyForDate, formatTimeOfDay, localDateTime, toIsoDate } from './time'
 
 export interface PlanningTimetableBlock {
   /** Whether this class falls on today's or tomorrow's schedule. */
@@ -93,6 +93,32 @@ export interface PlanningIncompleteBlock {
   reason: string
 }
 
+export interface PlanningExistingBlock {
+  date: string
+  start: string
+  end: string
+  title: string
+  taskId: string | null
+  type: string
+}
+
+export interface PlanningExistingDeferred {
+  title: string
+  reason: string
+}
+
+/**
+ * The plan already sitting in daily_plans for the window being generated —
+ * i.e. what a "regenerate"/"replan" call is actually replacing. Cross-check
+ * a block's taskId against openTasks: if it's no longer there, that task
+ * was completed or removed since this plan was made.
+ */
+export interface PlanningExistingPlan {
+  generatedAt: string
+  blocks: PlanningExistingBlock[]
+  deferred: PlanningExistingDeferred[]
+}
+
 export interface PlanningHistorySummary {
   type: TaskType
   subject: string
@@ -112,8 +138,19 @@ export interface PlanningCompletionSummary {
 }
 
 export interface PlanningDateTime {
+  /** "YYYY-MM-DD", local calendar date — for display and for the AI's prose instructions. */
   date: string
+  /** "HH:MM", local wall-clock time — same. */
   time: string
+  /**
+   * The same instant as an unambiguous ISO string (with UTC offset), for
+   * anything that needs to round-trip through storage. `date`/`time` alone
+   * are local-timezone wall-clock values with no offset marker — writing
+   * them straight into a timestamptz column lets Postgres reinterpret them
+   * in the database's own session timezone, silently shifting the stored
+   * instant by however far that timezone sits from the user's.
+   */
+  iso: string
 }
 
 export interface PlanningState {
@@ -130,6 +167,8 @@ export interface PlanningState {
   goals: PlanningGoal[]
   competitions: PlanningCompetition[]
   yesterdayIncompleteBlocks: PlanningIncompleteBlock[]
+  /** The plan already stored for this exact window, if any — null on a genuinely first generation. */
+  existingPlan: PlanningExistingPlan | null
   capacityMinutes: number
   wakeTime: string
   sleepTime: string
@@ -307,6 +346,22 @@ function buildSubjectProficiency(subjects: Subject[]): Record<string, number> {
   return map
 }
 
+function toPlanningExistingPlan(plan: Awaited<ReturnType<typeof fetchDailyPlan>>): PlanningExistingPlan | null {
+  if (!plan || plan.blocks.length === 0) return null
+  return {
+    generatedAt: plan.generatedAt,
+    blocks: plan.blocks.map((b) => ({
+      date: b.date ?? '',
+      start: b.start,
+      end: b.end,
+      title: b.title,
+      taskId: b.taskId,
+      type: b.type,
+    })),
+    deferred: plan.deferred,
+  }
+}
+
 export interface PlanningContextOptions {
   /**
    * Plans a full target day (its own wakeTime–sleepTime) instead of a
@@ -341,6 +396,7 @@ export async function getPlanningContext(
     upcomingSessions,
     competitions,
     classOccurrences,
+    existingTodayPlan,
   ] = await Promise.all([
     fetchTimetableBlocks(),
     fetchTasks(),
@@ -352,6 +408,7 @@ export async function getPlanningContext(
     fetchUpcomingSessions(7, date),
     fetchCompetitions(),
     fetchClassOccurrenceStatuses(todayIso, tomorrowIso),
+    fetchDailyPlan(todayIso),
   ])
 
   const openTasks: PlanningTask[] = tasks
@@ -378,12 +435,20 @@ export async function getPlanningContext(
 
   const profileTyped: Profile = profile
 
-  const planFrom: PlanningDateTime = options?.planAheadFullDay
-    ? { date: todayIso, time: profileTyped.wakeTime }
-    : { date: toIsoDate(addHours(date, 1)), time: formatTimeOfDay(addHours(date, 1)) }
-  const planUntil: PlanningDateTime = options?.planAheadFullDay
-    ? { date: todayIso, time: profileTyped.sleepTime }
-    : { date: toIsoDate(addHours(date, 25)), time: formatTimeOfDay(addHours(date, 25)) }
+  const planFromDate = options?.planAheadFullDay ? localDateTime(todayIso, profileTyped.wakeTime) : addHours(date, 1)
+  const planUntilDate = options?.planAheadFullDay
+    ? localDateTime(todayIso, profileTyped.sleepTime)
+    : addHours(date, 25)
+  const planFrom: PlanningDateTime = {
+    date: toIsoDate(planFromDate),
+    time: formatTimeOfDay(planFromDate),
+    iso: planFromDate.toISOString(),
+  }
+  const planUntil: PlanningDateTime = {
+    date: toIsoDate(planUntilDate),
+    time: formatTimeOfDay(planUntilDate),
+    iso: planUntilDate.toISOString(),
+  }
 
   return {
     today: todayIso,
@@ -397,6 +462,7 @@ export async function getPlanningContext(
     goals: planningGoals,
     competitions: competitions.filter((c) => isWithinPlanningWindow(c, date)).map(toPlanningCompetition),
     yesterdayIncompleteBlocks: await gatherYesterdayIncompleteBlocks(yesterdayIso, tasks),
+    existingPlan: toPlanningExistingPlan(existingTodayPlan),
     capacityMinutes: profileTyped.dailyCapacityMinutes,
     wakeTime: profileTyped.wakeTime,
     sleepTime: profileTyped.sleepTime,
@@ -418,8 +484,11 @@ export function buildPlanUserMessage(
   const userNoteBlock = userNoteText
     ? `\n\nThe user left this note about today's plan — treat it as a direct instruction and reshape the plan to address it: "${userNoteText}"`
     : ''
+  const existingPlanNote = state.existingPlan
+    ? `\n\nexistingPlan is set below (${state.existingPlan.blocks.length} block${state.existingPlan.blocks.length === 1 ? '' : 's'} from the last generation) — this is a regeneration, not a fresh plan. Keep it stable per the system prompt's rule on this.`
+    : ''
 
-  return `Generate the plan.${remainingOnlyNote}${userNoteBlock}
+  return `Generate the plan.${remainingOnlyNote}${userNoteBlock}${existingPlanNote}
 
 Plan window: start no earlier than ${state.planFrom.date} ${state.planFrom.time} and end no later than ${state.planUntil.date} ${state.planUntil.time}. If this window crosses midnight, tag every block and deferred item with its own "date" so it's unambiguous which calendar day it belongs to, and apply the ${state.capacityMinutes}-minute flexible-work capacity separately to each calendar day's portion of the window — never sum the two days together. Typical wake/sleep hours (${state.wakeTime}–${state.sleepTime}) are still useful context for meal times and avoiding unnaturally early or late blocks, but they are not the boundary — the plan window above is.
 

@@ -45,6 +45,13 @@ export function formatTimeOfDay(date: Date): string {
   return `${h}:${m}`
 }
 
+/** Builds a Date from a "YYYY-MM-DD" date and "HH:MM" time, both interpreted in the browser's local timezone. */
+export function localDateTime(dateIso: string, time: string): Date {
+  const [y, m, d] = dateIso.split('-').map(Number)
+  const [h, min] = time.split(':').map(Number)
+  return new Date(y, m - 1, d, h, min)
+}
+
 export function addDays(date: Date, days: number): Date {
   const result = new Date(date)
   result.setDate(result.getDate() + days)

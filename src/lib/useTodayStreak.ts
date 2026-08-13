@@ -3,11 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
+import { useUpcomingSessions } from '../data/sessions'
 import { useClassOccurrenceStatuses } from '../data/classOccurrences'
+import { buildUpcomingOccurrences } from './sessionRollover'
 import { buildTimelineItems, getTimelineItemStatus } from './todayView'
 import { isExcludedFromCompletion } from './dayCompletion'
 import { computeRecentCompletion } from './planning'
-import { dayKeyForDate, toIsoDate } from './time'
+import { toIsoDate } from './time'
 
 export interface TodayStreak {
   todayDone: number
@@ -29,6 +31,7 @@ export function useTodayStreak(): TodayStreak {
   const todayIso = toIsoDate(now)
 
   const { data: classes = [], isLoading: classesLoading } = useClasses()
+  const { data: sessions = [] } = useUpcomingSessions()
   const { data: plan = null, isLoading: planLoading } = useDailyPlan(todayIso)
   const { data: tasks = [], isLoading: tasksLoading } = useTasks()
   const { data: classOccurrences = new Map(), isLoading: occurrencesLoading } = useClassOccurrenceStatuses(
@@ -36,9 +39,16 @@ export function useTodayStreak(): TodayStreak {
     todayIso,
   )
 
+  // Real per-date occurrences for today, not a raw weekday filter — see
+  // buildUpcomingOccurrences. Must match Today.tsx's own todayClasses
+  // exactly, or this counter and the visible timeline disagree on how many
+  // classes are actually happening today.
   const todayClasses = useMemo(
-    () => classes.filter((c) => c.day === dayKeyForDate(now)),
-    [classes, now],
+    () =>
+      buildUpcomingOccurrences(classes, sessions, classOccurrences, now, 1)
+        .filter((o) => o.dateIso === todayIso)
+        .map((o) => o.entry),
+    [classes, sessions, classOccurrences, now, todayIso],
   )
   const allTimelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
   const timelineItems = useMemo(
