@@ -20,6 +20,20 @@ import DeferredSection from '../components/today/DeferredSection'
 import ClearTodoListCard from '../components/today/ClearTodoListCard'
 import LiveClock from '../components/LiveClock'
 
+/** "Planned today at 5:03 PM · 2h ago" — lets the user see at a glance how stale the plan on screen is. */
+function describeGeneratedAt(generatedAt: string, now: Date): string {
+  const generated = new Date(generatedAt)
+  const timeLabel = generated.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  const minutesAgo = Math.max(0, Math.round((now.getTime() - generated.getTime()) / 60_000))
+
+  let relative: string
+  if (minutesAgo < 1) relative = 'just now'
+  else if (minutesAgo < 60) relative = `${minutesAgo}m ago`
+  else relative = `${Math.round(minutesAgo / 60)}h ago`
+
+  return `Planned today at ${timeLabel} · ${relative}`
+}
+
 export default function Today() {
   const now = useMemo(() => new Date(), [])
   const todayKey = toIsoDate(now)
@@ -132,6 +146,7 @@ export default function Today() {
         <h1 className="font-display text-2xl font-semibold text-ink">Today</h1>
         <LiveClock />
       </div>
+      {plan && <p className="mt-0.5 text-xs text-mist">{describeGeneratedAt(plan.generatedAt, now)}</p>}
 
       <div className="mt-4">
         <QuickAdd />

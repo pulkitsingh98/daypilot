@@ -34,6 +34,8 @@ export interface Task {
   snoozeCount: number
   /** ISO timestamp of when status last became 'done', via useToggleTaskDone. Undefined if never completed. */
   completedAt?: string
+  /** ISO timestamp of when the task was created — the start point for the Backlog timeline view. */
+  createdAt: string
 }
 
 interface TaskRow {
@@ -48,6 +50,7 @@ interface TaskRow {
   source: string
   type: string
   completed_at: string | null
+  created_at: string
   subjects: { name: string }[] | null
 }
 
@@ -65,11 +68,12 @@ function fromRow(row: TaskRow): Task {
     source: (row.source as TaskSource) ?? 'manual',
     snoozeCount: row.snooze_count,
     completedAt: row.completed_at ?? undefined,
+    createdAt: row.created_at,
   }
 }
 
 const SELECT_COLUMNS =
-  'id, title, due_date, estimated_minutes, priority, status, snooze_count, notes, source, type, completed_at, subjects(name)'
+  'id, title, due_date, estimated_minutes, priority, status, snooze_count, notes, source, type, completed_at, created_at, subjects(name)'
 
 export const TASKS_QUERY_KEY = ['tasks'] as const
 
@@ -107,6 +111,9 @@ function toOptimisticTask(input: TaskInput, id: string): Task {
     notes: input.notes,
     source: input.source ?? 'manual',
     snoozeCount: 0,
+    // Only correct for the create case; an edit's optimistic entry briefly
+    // shows "now" here too, self-corrected once onSettled refetches the row.
+    createdAt: new Date().toISOString(),
   }
 }
 

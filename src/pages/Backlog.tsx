@@ -4,8 +4,10 @@ import { TASK_STATUSES, TASK_TYPES } from '../lib/tasks'
 import TaskCard from '../components/backlog/TaskCard'
 import TaskFormSheet from '../components/backlog/TaskFormSheet'
 import ImportSheet from '../components/backlog/ImportSheet'
+import TaskTimelineView from '../components/backlog/TaskTimelineView'
 
 type TypeFilter = TaskType | 'all'
+type View = 'list' | 'timeline'
 
 export default function Backlog() {
   const { data: tasks = [], isLoading, error } = useTasks()
@@ -15,6 +17,7 @@ export default function Backlog() {
   const [defaultStatus, setDefaultStatus] = useState<TaskStatus>('open')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [subjectFilter, setSubjectFilter] = useState<string>('all')
+  const [view, setView] = useState<View>('list')
 
   const subjects = useMemo(() => {
     const set = new Set(tasks.map((t) => t.subject).filter((s) => s.trim().length > 0))
@@ -94,41 +97,60 @@ export default function Backlog() {
         </select>
       </div>
 
+      <div className="mb-4 inline-flex rounded-lg border border-mist-line p-0.5">
+        {(['list', 'timeline'] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setView(v)}
+            className={`rounded-md px-3 py-1 text-sm font-medium capitalize transition-colors ${
+              view === v ? 'bg-dusk text-paper-raised' : 'text-ink-soft hover:bg-haze'
+            }`}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+
       {isLoading && <p className="mb-4 text-sm text-mist">Loading your backlog…</p>}
       {error && <p className="mb-4 text-sm text-red-600">Could not load your backlog. Try refreshing.</p>}
 
-      <div className="flex flex-col gap-6">
-        {TASK_STATUSES.map((statusMeta) => {
-          const statusTasks = filteredTasks.filter((task) => task.status === statusMeta.key)
-          return (
-            <section key={statusMeta.key}>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-ink">
-                  {statusMeta.label}{' '}
-                  <span className="font-normal text-mist">({statusTasks.length})</span>
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => openAdd(statusMeta.key)}
-                  className="text-xs font-medium text-dusk hover:text-dusk-deep"
-                >
-                  + Add
-                </button>
-              </div>
-
-              {statusTasks.length === 0 ? (
-                <p className="text-sm text-mist">No tasks</p>
-              ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {statusTasks.map((task) => (
-                    <TaskCard key={task.id} task={task} onEdit={openEdit} />
-                  ))}
+      {view === 'timeline' ? (
+        <TaskTimelineView tasks={filteredTasks} now={new Date()} />
+      ) : (
+        <div className="flex flex-col gap-6">
+          {TASK_STATUSES.map((statusMeta) => {
+            const statusTasks = filteredTasks.filter((task) => task.status === statusMeta.key)
+            return (
+              <section key={statusMeta.key}>
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-ink">
+                    {statusMeta.label}{' '}
+                    <span className="font-normal text-mist">({statusTasks.length})</span>
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => openAdd(statusMeta.key)}
+                    className="text-xs font-medium text-dusk hover:text-dusk-deep"
+                  >
+                    + Add
+                  </button>
                 </div>
-              )}
-            </section>
-          )
-        })}
-      </div>
+
+                {statusTasks.length === 0 ? (
+                  <p className="text-sm text-mist">No tasks</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {statusTasks.map((task) => (
+                      <TaskCard key={task.id} task={task} onEdit={openEdit} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )
+          })}
+        </div>
+      )}
 
       {formOpen && (
         <TaskFormSheet
