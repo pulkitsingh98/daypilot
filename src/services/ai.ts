@@ -112,7 +112,7 @@ async function callGemini(
   })
 
   if (!response.ok) {
-    throw new AIError(`Gemini request failed: ${await extractErrorMessage(response)}`, 'http')
+    throw new AIError(friendlyErrorMessage('Gemini', response.status, await extractErrorMessage(response)), 'http')
   }
 
   const data = await response.json()
@@ -166,7 +166,7 @@ async function callClaude(
   })
 
   if (!response.ok) {
-    throw new AIError(`Claude request failed: ${await extractErrorMessage(response)}`, 'http')
+    throw new AIError(friendlyErrorMessage('Claude', response.status, await extractErrorMessage(response)), 'http')
   }
 
   const data = await response.json()
@@ -187,6 +187,7 @@ async function callClaude(
  * clear message instead of a confusing provider error.
  */
 async function callOpenAICompatible(
+  providerLabel: string,
   url: string,
   model: string,
   useJsonMode: boolean,
@@ -224,7 +225,7 @@ async function callOpenAICompatible(
   })
 
   if (!response.ok) {
-    throw new AIError(`Request failed: ${await extractErrorMessage(response)}`, 'http')
+    throw new AIError(friendlyErrorMessage(providerLabel, response.status, await extractErrorMessage(response)), 'http')
   }
 
   const data = await response.json()
@@ -243,6 +244,7 @@ async function callOpenAI(
   mimeType?: string,
 ): Promise<string> {
   return callOpenAICompatible(
+    'OpenAI',
     'https://api.openai.com/v1/chat/completions',
     'gpt-4o-mini',
     true,
@@ -266,6 +268,7 @@ async function callPerplexity(
   // — if this endpoint ever changes shape, docs.perplexity.ai is the place
   // to check first.
   return callOpenAICompatible(
+    'Perplexity',
     'https://api.perplexity.ai/chat/completions',
     'sonar',
     false,
@@ -292,6 +295,22 @@ async function extractErrorMessage(response: Response): Promise<string> {
   } catch {
     return `HTTP ${response.status}`
   }
+}
+
+/**
+ * A 429 from any provider gets the same free-tier-friendly rewrite instead
+ * of the raw provider error — which for Gemini in particular is a dense
+ * wall of quota-limit boilerplate that buries the one thing the user
+ * actually needs to know (wait, then retry). Pulls the provider's own
+ * suggested wait time out of the message text when it's there.
+ */
+function friendlyErrorMessage(providerLabel: string, status: number, rawMessage: string): string {
+  if (status === 429) {
+    const retryMatch = rawMessage.match(/retry in (\d+(?:\.\d+)?)\s*s/i)
+    const waitLabel = retryMatch ? `about ${Math.ceil(Number(retryMatch[1]))} seconds` : 'a minute or so'
+    return `${providerLabel}'s rate limit is temporarily maxed out (common on a free-tier key if you've been generating a lot). Wait ${waitLabel} and hit Retry — nothing needs fixing.`
+  }
+  return `${providerLabel} request failed: ${rawMessage}`
 }
 
 /**
