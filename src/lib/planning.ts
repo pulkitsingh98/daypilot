@@ -394,6 +394,7 @@ export async function getPlanningContext(
     taskHistory,
     recurringActivities,
     upcomingSessions,
+    allSessions,
     competitions,
     classOccurrences,
     existingTodayPlan,
@@ -406,6 +407,15 @@ export async function getPlanningContext(
     fetchTaskHistory(),
     fetchRecurringActivities(),
     fetchUpcomingSessions(7, date),
+    // Unbounded — separate from the AI-facing 7-day list above. Whether a
+    // subject "has session data" gates which occurrence logic
+    // gatherTimetable uses for it (see buildUpcomingOccurrences); a subject
+    // whose real sessions all fall outside 7 days (common near the start of
+    // a long block-schedule term) would otherwise look session-less to the
+    // planner and fall back to weekly-recurring projection, disagreeing
+    // with the Timetable page — which already fetches sessions unbounded —
+    // about whether that class is actually meeting tomorrow.
+    fetchUpcomingSessions(undefined, date),
     fetchCompetitions(),
     fetchClassOccurrenceStatuses(todayIso, tomorrowIso),
     fetchDailyPlan(todayIso),
@@ -455,7 +465,7 @@ export async function getPlanningContext(
     tomorrow: tomorrowIso,
     planFrom,
     planUntil,
-    timetable: gatherTimetable(classes, upcomingSessions, classOccurrences, date, tomorrow),
+    timetable: gatherTimetable(classes, allSessions, classOccurrences, date, tomorrow),
     recurringActivities: recurringActivities.map(toPlanningRecurringActivity),
     upcomingSessions: upcomingSessions.map(toPlanningSession),
     openTasks,
