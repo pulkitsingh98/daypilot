@@ -61,25 +61,38 @@ export default function Today() {
   const { data: tomorrowPlan = null, isLoading: tomorrowPlanLoading } = useDailyPlan(tomorrowKey)
   const { data: tasks = [] } = useTasks()
   const { loading, error, generate, retry } = usePlanGeneration()
-  const toggleTimelineItemDone = useToggleTimelineItemDone(todayKey)
-  const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(todayKey, todayKey)
+  const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(todayKey, tomorrowKey)
   const setClassOccurrenceStatus = useSetClassOccurrenceStatus()
   const streak = useTodayStreak()
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   const [eveningNudgeDismissed, setEveningNudgeDismissed] = useState(false)
 
-  // Real per-date occurrences for today, not a raw weekday filter — see
-  // buildUpcomingOccurrences for why a block-schedule term calendar can't be
-  // reduced to "which classes fall on today's weekday" without pulling in
-  // slots that aren't actually meeting today.
-  const todayClasses = useMemo(
+  // A rolling 24-hour window generated late at night can start past
+  // midnight (now + 1h already lands tomorrow), so every block ends up
+  // dated tomorrow and today's own plan is saved with nothing in it — even
+  // though its note/reasoning describe real, just-scheduled work. Rather
+  // than show that empty shell, fall through to tomorrow's plan whenever
+  // today's is genuinely empty and tomorrow's has the content instead.
+  const showingTomorrow = !!plan && plan.blocks.length === 0 && plan.deferred.length === 0 && !!tomorrowPlan && (tomorrowPlan.blocks.length > 0 || tomorrowPlan.deferred.length > 0)
+  const effectivePlan = showingTomorrow ? tomorrowPlan : plan
+  const effectiveDateIso = showingTomorrow ? tomorrowKey : todayKey
+  const toggleTimelineItemDone = useToggleTimelineItemDone(effectiveDateIso)
+
+  // Real per-date occurrences for whichever date is actually being shown,
+  // not a raw weekday filter — see buildUpcomingOccurrences for why a
+  // block-schedule term calendar can't be reduced to "which classes fall on
+  // this weekday" without pulling in slots that aren't actually meeting.
+  const effectiveClasses = useMemo(
     () =>
-      buildUpcomingOccurrences(classes, sessions, classOccurrences, now, 1)
-        .filter((o) => o.dateIso === todayKey)
+      buildUpcomingOccurrences(classes, sessions, classOccurrences, now, 2)
+        .filter((o) => o.dateIso === effectiveDateIso)
         .map((o) => o.entry),
-    [classes, sessions, classOccurrences, now, todayKey],
+    [classes, sessions, classOccurrences, now, effectiveDateIso],
   )
-  const timelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
+  const timelineItems = useMemo(
+    () => buildTimelineItems(effectiveClasses, effectivePlan),
+    [effectiveClasses, effectivePlan],
+  )
   const tasksById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
 
   const showNudge =
@@ -118,10 +131,10 @@ export default function Today() {
     markEveningNudgeHandled()
   }
 
-  const completedKeys = plan?.completedItemKeys ?? []
+  const completedKeys = effectivePlan?.completedItemKeys ?? []
 
   function itemStatus(item: TimelineItem): ItemStatus {
-    return getTimelineItemStatus(item, tasksById, completedKeys, classOccurrences, todayKey)
+    return getTimelineItemStatus(item, tasksById, completedKeys, classOccurrences, effectiveDateIso)
   }
 
   function renderTimelineBlock(item: TimelineItem) {
@@ -133,7 +146,7 @@ export default function Today() {
         status={itemStatus(item)}
         onSetStatus={(status) => {
           if (item.classId) {
-            setClassOccurrenceStatus.mutate({ timetableBlockId: item.classId, dateIso: todayKey, status })
+            setClassOccurrenceStatus.mutate({ timetableBlockId: item.classId, dateIso: effectiveDateIso, status })
           } else {
             toggleTimelineItemDone.mutate({ key: item.key, done: status === 'done' })
           }
@@ -170,11 +183,11 @@ export default function Today() {
         <h1 className="font-display text-2xl font-semibold text-ink">Today</h1>
         <LiveClock />
       </div>
-      {plan && (
+      {effectivePlan && (
         <p className="mt-0.5 text-xs text-mist">
-          {describeGeneratedAt(plan.generatedAt, now)}
+          {describeGeneratedAt(effectivePlan.generatedAt, now)}
           {(() => {
-            const validUntil = describeValidUntil(plan.planUntil, todayKey, tomorrowKey)
+            const validUntil = describeValidUntil(effectivePlan.planUntil, todayKey, tomorrowKey)
             return validUntil ? ` · ${validUntil}` : ''
           })()}
         </p>
@@ -235,8 +248,18 @@ export default function Today() {
         </div>
       ) : (
         <>
+          {showingTomorrow && (
+            <p className="mb-3 rounded-xl border border-dusk/30 bg-dawn/20 px-3 py-2 text-xs text-dusk-deep">
+              It's late enough that your rolling plan starts tomorrow — today's list came back empty, so
+              here's what's next instead.
+            </p>
+          )}
+
           <div className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-mist-line bg-haze p-3">
-            <p className="text-sm text-dusk-deep">{plan.note}</p>
+            {/* effectivePlan is non-null here: this branch only runs when `plan` exists,
+                and effectivePlan only differs from `plan` when it falls back to a
+                confirmed-truthy tomorrowPlan (see showingTomorrow above). */}
+            <p className="text-sm text-dusk-deep">{effectivePlan!.note}</p>
             <button
               type="button"
               disabled={loading}
@@ -272,12 +295,12 @@ export default function Today() {
             </div>
           )}
 
-          <DeferredSection items={plan.deferred} />
+          <DeferredSection items={effectivePlan!.deferred} />
 
-          {plan.reasoning && (
+          {effectivePlan!.reasoning && (
             <div className="mt-4 rounded-xl border border-mist-line bg-paper-raised p-4">
               <h2 className="text-sm font-semibold text-ink">Why this plan</h2>
-              <p className="mt-1.5 text-sm text-ink-soft">{plan.reasoning}</p>
+              <p className="mt-1.5 text-sm text-ink-soft">{effectivePlan!.reasoning}</p>
             </div>
           )}
         </>
@@ -289,8 +312,8 @@ export default function Today() {
 
       <div className="mt-4">
         <ClearTodoListCard
-          dateIso={todayKey}
-          plan={plan}
+          dateIso={effectiveDateIso}
+          plan={effectivePlan}
           regenerating={loading}
           onRegenerate={(userNote) => void generate({ now, remainingOnly: false, userNote })}
         />
