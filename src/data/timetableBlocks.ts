@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import type { DayOfWeek, PrepRule } from './types'
 import { dayOfWeekToIndex, indexToDayOfWeek } from '../lib/time'
 import { resolveSubjectId, resolveSubjectIdTracked, SUBJECTS_QUERY_KEY } from './subjects'
-import { unwrap } from './shared'
+import { embeddedSubjectName, unwrap } from './shared'
 
 /** Same shape as the old localStorage ClassEntry, so Timetable components barely change. */
 export interface ClassEntry {
@@ -24,15 +24,13 @@ interface TimetableBlockRow {
   end_time: string
   location: string | null
   prep_rule: PrepRule | null
-  // Supabase infers embedded relations as arrays without generated DB types
-  // (it can't know the FK is many-to-one), even though there's at most one.
-  subjects: { name: string }[] | null
+  subjects: { name: string }[] | { name: string } | null
 }
 
 function fromRow(row: TimetableBlockRow): ClassEntry {
   return {
     id: row.id,
-    subject: row.subjects?.[0]?.name ?? '',
+    subject: embeddedSubjectName(row.subjects),
     day: indexToDayOfWeek(row.day_of_week),
     startTime: row.start_time.slice(0, 5),
     endTime: row.end_time.slice(0, 5),

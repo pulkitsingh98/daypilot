@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { resolveSubjectId, SUBJECTS_QUERY_KEY } from './subjects'
-import { unwrap } from './shared'
+import { embeddedSubjectName, unwrap } from './shared'
 import { toIsoDate } from '../lib/time'
 
 export type TaskType =
@@ -51,14 +51,14 @@ interface TaskRow {
   type: string
   completed_at: string | null
   created_at: string
-  subjects: { name: string }[] | null
+  subjects: { name: string }[] | { name: string } | null
 }
 
 function fromRow(row: TaskRow): Task {
   return {
     id: row.id,
     title: row.title,
-    subject: row.subjects?.[0]?.name ?? '',
+    subject: embeddedSubjectName(row.subjects),
     type: row.type as TaskType,
     priority: (row.priority as TaskPriority | null) ?? 2,
     status: row.status as TaskStatus,

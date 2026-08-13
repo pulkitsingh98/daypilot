@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { resolveSubjectId } from './subjects'
-import { unwrap } from './shared'
+import { embeddedSubjectName, unwrap } from './shared'
 import { toIsoDate } from '../lib/time'
 
 export type SessionStatus = 'upcoming' | 'prepped' | 'attended' | 'missed'
@@ -26,15 +26,13 @@ interface SessionRow {
   scheduled_date: string
   reading_material: string | null
   status: string
-  // Supabase infers embedded relations as arrays without generated DB types
-  // (it can't know the FK is many-to-one), even though there's exactly one.
-  subjects: { name: string }[] | null
+  subjects: { name: string }[] | { name: string } | null
 }
 
 function fromRow(row: SessionRow): UpcomingSession {
   return {
     id: row.id,
-    subject: row.subjects?.[0]?.name ?? '',
+    subject: embeddedSubjectName(row.subjects),
     sessionNumber: row.session_number,
     title: row.title,
     topics: row.topics ?? [],

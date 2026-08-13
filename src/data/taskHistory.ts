@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { resolveSubjectId } from './subjects'
-import { unwrap } from './shared'
+import { embeddedSubjectName, unwrap } from './shared'
 import type { TaskType } from './tasks'
 
 /** One completed task's planned-vs-actual time, for the planner's estimate calibration. */
@@ -22,14 +22,14 @@ interface TaskHistoryRow {
   planned_minutes: number
   actual_minutes: number
   completed_date: string
-  subjects: { name: string }[] | null
+  subjects: { name: string }[] | { name: string } | null
 }
 
 function fromRow(row: TaskHistoryRow): TaskHistoryEntry {
   return {
     id: row.id,
     type: row.task_type as TaskType,
-    subject: row.subjects?.[0]?.name ?? '',
+    subject: embeddedSubjectName(row.subjects),
     plannedMinutes: row.planned_minutes,
     actualMinutes: row.actual_minutes,
     completedDate: row.completed_date,
