@@ -130,11 +130,17 @@ export interface SessionInput {
   readingMaterial: string | null
 }
 
-/** Bulk-create from the document-extraction review flow. Rows are inserted
+/**
+ * Bulk-create from the document-extraction review flow. Rows are inserted
  * sequentially (not in parallel) for the same reason as useImportTasks —
  * subjects has no unique constraint on (user_id, name), so parallel
  * get-or-create calls for a repeated subject name would race and create
- * duplicates. */
+ * duplicates. Upserts on (user, subject, date, session_number) — see
+ * migration 0009 — so reviewing and importing the same document twice
+ * updates those sessions in place instead of duplicating them; a session
+ * with no number (common for a photo/PDF extraction) can't be deduped this
+ * way and always inserts fresh, same as before.
+ */
 export function useImportSessions() {
   const { session } = useAuth()
   const queryClient = useQueryClient()
@@ -150,16 +156,19 @@ export function useImportSessions() {
       if (!session) throw new Error('Not signed in.')
       for (const input of inputs) {
         const subjectId = await resolveSubjectId(input.subject, session.user.id)
-        const { error } = await supabase.from('sessions').insert({
-          user_id: session.user.id,
-          subject_id: subjectId,
-          session_number: input.sessionNumber,
-          title: input.title.trim(),
-          topics: input.topics,
-          scheduled_date: input.scheduledDate,
-          reading_material: input.readingMaterial,
-          source_document_id: sourceDocumentId ?? null,
-        })
+        const { error } = await supabase.from('sessions').upsert(
+          {
+            user_id: session.user.id,
+            subject_id: subjectId,
+            session_number: input.sessionNumber,
+            title: input.title.trim(),
+            topics: input.topics,
+            scheduled_date: input.scheduledDate,
+            reading_material: input.readingMaterial,
+            source_document_id: sourceDocumentId ?? null,
+          },
+          { onConflict: 'user_id,subject_id,scheduled_date,session_number' },
+        )
         if (error) throw new Error(error.message)
       }
     },

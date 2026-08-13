@@ -21,7 +21,10 @@ export interface ExcelImportSummary {
  * Every row's subject was already resolved (column, registry, or sheet
  * name) and validated non-blank by parseExcelWorkbook — a row with no
  * resolvable subject carries an error and is filtered out here, never
- * silently imported as untitled.
+ * silently imported as untitled. Sessions upsert on
+ * (user, subject, date, session_number) — see migration 0009 — so running
+ * this import again (the same file, or an updated one) updates existing
+ * sessions in place instead of duplicating them.
  */
 export async function importExcelSessions(rows: ParsedSessionRow[], userId: string): Promise<ExcelImportSummary> {
   const validRows = rows.filter((r) => !r.error && r.subject && r.date && r.startTime && r.endTime)
@@ -70,17 +73,20 @@ export async function importExcelSessions(rows: ParsedSessionRow[], userId: stri
   let sessionsCreated = 0
   for (const r of validRows) {
     const subjectId = await getSubjectId(r.subject)
-    const { error } = await supabase.from('sessions').insert({
-      user_id: userId,
-      subject_id: subjectId,
-      session_number: r.sessionNumber,
-      title: r.topic || '(untitled session)',
-      topics: r.topic ? [r.topic] : [],
-      scheduled_date: r.date,
-      reading_material: r.readingRequired || null,
-      start_time: r.startTime,
-      end_time: r.endTime,
-    })
+    const { error } = await supabase.from('sessions').upsert(
+      {
+        user_id: userId,
+        subject_id: subjectId,
+        session_number: r.sessionNumber,
+        title: r.topic || '(untitled session)',
+        topics: r.topic ? [r.topic] : [],
+        scheduled_date: r.date,
+        reading_material: r.readingRequired || null,
+        start_time: r.startTime,
+        end_time: r.endTime,
+      },
+      { onConflict: 'user_id,subject_id,scheduled_date,session_number' },
+    )
     if (error) throw new Error(error.message)
     sessionsCreated++
   }
