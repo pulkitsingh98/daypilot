@@ -39,7 +39,14 @@ export default function Login() {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: fullName.trim() ? { data: { full_name: fullName.trim() } } : undefined,
+        options: {
+          // Without this, Supabase falls back to the dashboard's static
+          // Site URL for the confirmation email's redirect — which drifts
+          // out of sync with wherever the app is actually deployed. This
+          // always matches the origin the signup actually happened from.
+          emailRedirectTo: window.location.origin,
+          ...(fullName.trim() ? { data: { full_name: fullName.trim() } } : {}),
+        },
       })
       if (signUpError) {
         setError(signUpError.message)
