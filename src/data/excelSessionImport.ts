@@ -21,10 +21,10 @@ export interface ExcelImportSummary {
  * Every row's subject was already resolved (column, registry, or sheet
  * name) and validated non-blank by parseExcelWorkbook — a row with no
  * resolvable subject carries an error and is filtered out here, never
- * silently imported as untitled. Sessions upsert on
- * (user, subject, date, session_number) — see migration 0009 — so running
- * this import again (the same file, or an updated one) updates existing
- * sessions in place instead of duplicating them.
+ * silently imported as untitled. Both tables upsert on their natural key
+ * (timetable_blocks: user/subject/weekday/time — migration 0011; sessions:
+ * user/subject/date/session_number — migration 0009), so running this
+ * import again updates existing rows in place instead of duplicating them.
  */
 export async function importExcelSessions(rows: ParsedSessionRow[], userId: string): Promise<ExcelImportSummary> {
   const validRows = rows.filter((r) => !r.error && r.subject && r.date && r.startTime && r.endTime)
@@ -49,25 +49,18 @@ export async function importExcelSessions(rows: ParsedSessionRow[], userId: stri
     seenPatterns.add(patternKey)
 
     const subjectId = await getSubjectId(r.subject)
-    const existing = await supabase
-      .from('timetable_blocks')
-      .select('id')
-      .eq('subject_id', subjectId)
-      .eq('day_of_week', dayOfWeekToIndex(dayKey))
-      .eq('start_time', r.startTime as string)
-      .eq('end_time', r.endTime as string)
-      .maybeSingle()
-    if (!existing.data) {
-      const { error } = await supabase.from('timetable_blocks').insert({
+    const { error } = await supabase.from('timetable_blocks').upsert(
+      {
         user_id: userId,
         subject_id: subjectId,
         day_of_week: dayOfWeekToIndex(dayKey),
         start_time: r.startTime,
         end_time: r.endTime,
-      })
-      if (error) throw new Error(error.message)
-      classesCreated++
-    }
+      },
+      { onConflict: 'user_id,subject_id,day_of_week,start_time,end_time' },
+    )
+    if (error) throw new Error(error.message)
+    classesCreated++
   }
 
   let sessionsCreated = 0

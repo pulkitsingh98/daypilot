@@ -36,9 +36,15 @@ export function buildTimelineItems(classesToday: ClassEntry[], plan: DailyPlan |
     classId: entry.id,
   }))
 
-  plan?.blocks.forEach((block, index) => {
+  plan?.blocks.forEach((block) => {
     items.push({
-      key: `block-${index}-${block.start}`,
+      // Content-based, not index-based: regenerating a plan can completely
+      // reorder or replace blocks, so a key built from array position
+      // (block-${index}-${start}) let a stale "done" mark from a previous
+      // generation's block silently attach itself to an unrelated new block
+      // that happened to land at the same index and start time — showing
+      // something as already completed that the user never touched.
+      key: `block-${block.date ?? ''}-${block.start}-${block.title}`,
       kind: 'planned',
       start: block.start,
       end: block.end,
