@@ -51,7 +51,11 @@ export default function Login() {
       if (signUpError) {
         setError(signUpError.message)
       } else if (data.session) {
-        navigate('/', { replace: true })
+        // Straight to Getting Started, not Today — nothing else in the app
+        // works without an AI provider key, so that's the one thing worth
+        // putting in front of a brand-new signup first. Sign-in doesn't get
+        // this redirect; a returning user has already seen the app.
+        navigate('/getting-started', { replace: true })
       } else {
         setInfo('Account created. Try signing in below.')
         setMode('signin')

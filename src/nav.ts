@@ -18,11 +18,11 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { to: '/', label: 'Today', icon: Sun },
+  { to: '/getting-started', label: 'Getting Started', icon: ListChecks },
   { to: '/timetable', label: 'Timetable', icon: CalendarDays },
   { to: '/backlog', label: 'Backlog', icon: ClipboardList },
   { to: '/goals', label: 'Goals', icon: Target },
   { to: '/my-life', label: 'Life', icon: Leaf },
   { to: '/history', label: 'History', icon: History },
-  { to: '/getting-started', label: 'Getting Started', icon: ListChecks },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
