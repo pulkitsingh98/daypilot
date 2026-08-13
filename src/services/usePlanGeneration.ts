@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { dailyPlanQueryKey } from '../data/dailyPlans'
-import { toIsoDate } from '../lib/time'
+import { addDays, toIsoDate } from '../lib/time'
 import { AIError } from './ai'
 import { generateDailyPlan, type GeneratePlanOptions } from './planGenerator'
 
@@ -37,8 +37,14 @@ export function usePlanGeneration(): UsePlanGenerationResult {
       setError(null)
       try {
         await generateDailyPlan(session.user.id, options)
-        const dateIso = toIsoDate(options.now ?? new Date())
-        await queryClient.invalidateQueries({ queryKey: dailyPlanQueryKey(dateIso) })
+        const anchor = options.now ?? new Date()
+        // Generation can spill blocks into tomorrow's plan too (a rolling
+        // window usually crosses midnight), so both queries need refreshing
+        // regardless of which one actually changed.
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: dailyPlanQueryKey(toIsoDate(anchor)) }),
+          queryClient.invalidateQueries({ queryKey: dailyPlanQueryKey(toIsoDate(addDays(anchor, 1))) }),
+        ])
       } catch (err) {
         setError(err instanceof AIError ? err : new AIError('Something went wrong. Please try again.', 'unknown'))
       } finally {

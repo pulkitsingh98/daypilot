@@ -7,25 +7,59 @@ interface ExcelSessionImportSheetProps {
   onClose: () => void
 }
 
-const PROMPT_TEXT = `I have a class timetable and session/reading schedule for my course(s). Read the attached document(s) and produce an Excel workbook in exactly this format.
+const PROMPT_TEXT = `I am attaching:
+1. A **master class timetable** (grid: rows = dates, columns = time slots, cells = course short codes; may be split into Section A and Section B side by side).
+2. **Course outlines** — one per subject — each containing a session-wise table of topics and pre-readings.
 
-SHEET 1 — name it "Subjects". Columns: Full Name | Short Name | Section
-One row per course, e.g. "Organizational Behavior | OB | Section A". This is the master list — get it right, everything else refers back to it.
+**My details**
+- Today's date: \`{{today's date}}\`. Term runs \`{{start date}}\` to \`{{end date}}\`.
+- My subjects and sections: \`{{e.g. OA1 – Sec A, DPM – Sec A, LDT – Sec A, DAMDM – Sec B, IAPM – Sec B, SMTI – Sec B}}\`
+- Holidays / dates to skip: \`{{list, or "none beyond what the timetable shows"}}\`
 
-REMAINING SHEETS — one per subject, named after that subject's Full Name from the Subjects sheet. Columns:
-Subject | Date | Start Time | End Time | Session # | Topic | Reading Required
+## Ask me first if anything is genuinely ambiguous
 
-Rules:
-- Subject: repeat the exact Full Name from the Subjects sheet on every row — don't leave this blank, and don't abbreviate it here even though the sheet name already says it. This column is what actually gets read, so it must never be empty.
-- Date: one row per actual class date, in YYYY-MM-DD format — the specific calendar date each session happens, not a day-of-week or a range.
-- Start Time / End Time: 24-hour "HH:MM" format (e.g. 14:00, not 2:00 PM).
-- Session #: the session number if known (1, 2, 3...), or leave blank.
-- Topic: what that session covers, briefly.
-- Reading Required: what to read or prepare before that session, or leave blank if there's nothing.
+Do not guess on these. Stop and ask, then build once I answer:
 
-If you don't have exact calendar dates for every session, use the class's known weekly meeting day(s) and time(s) starting from [the date your term/semester starts] and spread the sessions across them in order, skipping any holidays I've told you about.
+- **Section allocation.** If I haven't stated my section for a subject, or my list doesn't cover every subject that appears in my outlines, ask. Most courses run in both sections at different times, so this cannot be inferred from the timetable — a wrong guess puts every class of that subject at the wrong time and date.
+- **Which subjects are mine at all.** If the master timetable lists more courses than the outlines I attached, confirm my list is complete rather than assuming the outlines define it.
+- **Slot ambiguity.** If a cell is a shared or merged slot (\`SR | DPM\`) and it's unclear whether I attend one, the other, or both, ask.
+- **A count mismatch you cannot resolve.** If a subject's timetable slots don't equal its outline sessions and the cause isn't obvious from the grid, show me the candidate dates and ask which is right instead of picking one.
+- **A conflict in my own inputs.** If two attached documents disagree, or something I typed contradicts a document, quote both and ask which wins.
 
-Before producing the file, list out the Subjects sheet rows first and confirm them with me if anything about a course's name is ambiguous. Output only the Excel file (or a data table I can paste straight into Excel) matching this exact format.`
+Batch your questions into one message rather than asking them one at a time, and ask only what actually blocks you — if a detail is missing but genuinely inferable from the documents, infer it, state the assumption in your reply, and carry on.
+
+**Deliverable:** one Excel workbook (.xlsx). Give me the file only — no long explanation.
+
+## Sheet structure
+
+One sheet per subject, plus one reference sheet.
+
+Each **subject sheet** has exactly these headers in row 1, in this order:
+
+\`Date | Start Time | End Time | Session # | Topic | Reading Required\`
+
+- **Date** — \`YYYY-MM-DD\`, one row per actual calendar class date. Never a weekday name or a range.
+- **Start Time / End Time** — 24-hour \`HH:MM\` (e.g. \`14:00\`, not \`2:00 PM\`), taken from the timetable's slot header for the column that cell sits in.
+- **Session #** — the running session number.
+- **Topic** — what that session covers, briefly.
+- **Reading Required** — chapters, cases (include HBS/Ivey product numbers), exercises, or prep due before that session. Blank if none. Fold in any evaluation deadline the outline pins to a session (quiz, project submission).
+
+The first sheet is a **reference sheet named \`Subjects\`** with columns:
+\`Full Course Name | Short Form | My Section | Course Code | Credits | Instructor | Classroom | Total Sessions | Sheet in this Workbook\`
+
+## Rules that matter most
+
+1. **Read the timetable by column position, not by reading order.** Text extraction from a grid PDF loses which column a cell was in, and the column determines the class time. Extract each word with its x-coordinate, map x to the correct session-slot column, and derive Start/End Time from that column's header. If two sections sit side by side, map each half separately and pull each subject from the section I'm actually in.
+2. **Watch for shared slots** — a cell may read \`SR | DPM\`, meaning two electives run in parallel in that one slot. Both belong to their own column's time.
+3. **Number sessions across the entire term, then filter.** Assign session 1, 2, 3… to every occurrence of a subject from the first day of term in chronological order (by date, then by slot within a day). Only after numbering, drop every row dated on or before today. Numbering must reflect the full term so it lines up with the course outline.
+4. **Map outline sessions to slots one-to-one, in order.** Where the outline gives a range ("5–6", "12, 13"), that consumes that many slots; split the topic across them sensibly.
+5. **Verify before writing.** For each subject, the number of timetable slots must equal the number of sessions in its outline. If they differ, say so explicitly and tell me which date looks wrong rather than silently shifting the numbering — an off-by-one here misnumbers every later session.
+6. **Excel sheet names cap at 31 characters.** Shorten long course names, keep them recognisable, and record the mapping in the \`Subjects\` sheet's "Sheet in this Workbook" column. Whatever you shorten it to, keep it an exact prefix of the Full Course Name (don't abbreviate mid-word or reorder) so it can still be matched back automatically.
+7. Use a professional font throughout, bold header row, frozen header, sensible column widths, and wrapped text for Topic and Reading.
+
+## If I also give you a second, personalised timetable
+
+Diff it against the master across the **whole term**, not just future dates. Report every mismatch as a short table (date, what the master says, what the personal sheet says), state which one you built the workbook from, and call out any mismatch that shifts session numbering. Build from the master.`
 
 export default function ExcelSessionImportSheet({ onClose }: ExcelSessionImportSheetProps) {
   const [copied, setCopied] = useState(false)

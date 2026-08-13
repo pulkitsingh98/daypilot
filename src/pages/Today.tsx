@@ -2,14 +2,17 @@ import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan, useToggleTimelineItemDone } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
+import { useUpcomingSessions } from '../data/sessions'
 import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
-import { addDays, dayKeyForDate, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
+import { addDays, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
+import { buildUpcomingOccurrences } from '../lib/sessionRollover'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
 import { getLastEveningNudgeDate, setLastEveningNudgeDate } from '../lib/eveningNudge'
 import { buildTimelineItems, getTimelineItemStatus, type ItemStatus, type TimelineItem } from '../lib/todayView'
 import { useTodayStreak } from '../lib/useTodayStreak'
 import StreakSummary from '../components/StreakSummary'
 import { usePlanGeneration } from '../services/usePlanGeneration'
+import { SPILLOVER_NOTE } from '../services/planGenerator'
 import QuickAdd from '../components/today/QuickAdd'
 import MorningNudge from '../components/today/MorningNudge'
 import EveningNudge from '../components/today/EveningNudge'
@@ -39,6 +42,7 @@ export default function Today() {
   const tomorrowKey = toIsoDate(addDays(now, 1))
 
   const { data: classes = [], isLoading: classesLoading, error: classesError } = useClasses()
+  const { data: sessions = [] } = useUpcomingSessions()
   const { data: plan = null, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
   const { data: tomorrowPlan = null, isLoading: tomorrowPlanLoading } = useDailyPlan(tomorrowKey)
   const { data: tasks = [] } = useTasks()
@@ -50,9 +54,16 @@ export default function Today() {
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
   const [eveningNudgeDismissed, setEveningNudgeDismissed] = useState(false)
 
+  // Real per-date occurrences for today, not a raw weekday filter — see
+  // buildUpcomingOccurrences for why a block-schedule term calendar can't be
+  // reduced to "which classes fall on today's weekday" without pulling in
+  // slots that aren't actually meeting today.
   const todayClasses = useMemo(
-    () => classes.filter((c) => c.day === dayKeyForDate(now)),
-    [classes, now],
+    () =>
+      buildUpcomingOccurrences(classes, sessions, classOccurrences, now, 1)
+        .filter((o) => o.dateIso === todayKey)
+        .map((o) => o.entry),
+    [classes, sessions, classOccurrences, now, todayKey],
   )
   const timelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
   const tasksById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
@@ -61,9 +72,13 @@ export default function Today() {
     !plan && !planLoading && !loading && !nudgeDismissed && getLastPlanNudgeDate() !== todayKey
   // From 6 PM on, once — classes start in the morning, so the useful moment
   // to plan tomorrow (and get its reading done) is tonight, not tomorrow.
+  // A rolling-window plan generated earlier today can spill a few early
+  // blocks into tomorrow (see SPILLOVER_NOTE below) without covering the
+  // rest of it, so that alone shouldn't suppress the nudge — only a
+  // deliberately-generated full day for tomorrow should.
   const showEveningNudge =
     now.getHours() >= 18 &&
-    !tomorrowPlan &&
+    (!tomorrowPlan || tomorrowPlan.note === SPILLOVER_NOTE) &&
     !tomorrowPlanLoading &&
     !loading &&
     !eveningNudgeDismissed &&
@@ -85,7 +100,7 @@ export default function Today() {
   }
 
   async function handleGenerateTomorrow() {
-    await generate({ now: addDays(now, 1), remainingOnly: false })
+    await generate({ now: addDays(now, 1), remainingOnly: false, planAheadFullDay: true })
     markEveningNudgeHandled()
   }
 

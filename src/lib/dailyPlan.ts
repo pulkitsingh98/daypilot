@@ -4,6 +4,10 @@ function isValidTimeString(value: unknown): value is string {
   return typeof value === 'string' && /^\d{2}:\d{2}$/.test(value)
 }
 
+function isValidDateString(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+}
+
 function coerceString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback
 }
@@ -14,8 +18,11 @@ function coerceString(value: unknown, fallback = ''): string {
  * dropped rather than stored malformed — a garbled time block is worse than
  * no block. Call after parseJsonResponse() has handled markdown-fence
  * stripping and JSON syntax errors; this handles shape/semantic validity.
+ * `defaultDateIso` fills in a block's date when the AI omits it (or gets it
+ * wrong) — the requested window can cross midnight, so a missing date can't
+ * just be left blank; today's date is the safer assumption.
  */
-export function normalizeDailyPlanResult(raw: unknown): DailyPlan {
+export function normalizeDailyPlanResult(raw: unknown, defaultDateIso: string): DailyPlan {
   const obj = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>
 
   const rawBlocks = Array.isArray(obj.blocks) ? obj.blocks : []
@@ -23,6 +30,7 @@ export function normalizeDailyPlanResult(raw: unknown): DailyPlan {
     .filter((b): b is Record<string, unknown> => typeof b === 'object' && b !== null)
     .map(
       (b): PlanBlock => ({
+        date: isValidDateString(b.date) ? b.date : defaultDateIso,
         start: coerceString(b.start),
         end: coerceString(b.end),
         title: coerceString(b.title),

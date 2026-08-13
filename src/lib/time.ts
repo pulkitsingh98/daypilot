@@ -51,6 +51,10 @@ export function addDays(date: Date, days: number): Date {
   return result
 }
 
+export function addHours(date: Date, hours: number): Date {
+  return new Date(date.getTime() + hours * 60 * 60 * 1000)
+}
+
 /** First of the month `months` away from `date`'s month (negative to go back). */
 export function addMonths(date: Date, months: number): Date {
   return new Date(date.getFullYear(), date.getMonth() + months, 1)

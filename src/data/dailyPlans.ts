@@ -4,6 +4,14 @@ import { useAuth } from '../context/AuthContext'
 import { unwrap, unwrapNullable } from './shared'
 
 export interface PlanBlock {
+  /**
+   * "YYYY-MM-DD" — which calendar day this block belongs to. A plan's
+   * window can cross midnight (see planFrom/planUntil in PlanningState), so
+   * start/end time alone can't disambiguate today from tomorrow. Optional
+   * only for backward compatibility with plans stored before this field
+   * existed; treat a missing date as belonging to the plan's own row date.
+   */
+  date?: string
   /** "HH:MM" */
   start: string
   /** "HH:MM" */

@@ -20,8 +20,10 @@ import { fetchUpcomingSessions } from '../data/sessions'
 import { ACTIVE_STATUSES as ACTIVE_COMPETITION_STATUSES, getDeadlineInfo } from './competitions'
 import { fetchDailyPlan, fetchDailyPlansInRange } from '../data/dailyPlans'
 import { computeDayCompletion } from './dayCompletion'
+import type { ClassOccurrenceMap } from '../data/classOccurrences'
 import { fetchClassOccurrenceStatuses } from '../data/classOccurrences'
-import { addDays, dayKeyForDate, toIsoDate } from './time'
+import { buildUpcomingOccurrences } from './sessionRollover'
+import { addDays, addHours, dayKeyForDate, formatTimeOfDay, toIsoDate } from './time'
 
 export interface PlanningTimetableBlock {
   /** Whether this class falls on today's or tomorrow's schedule. */
@@ -109,9 +111,18 @@ export interface PlanningCompletionSummary {
   currentStreakDays: number
 }
 
+export interface PlanningDateTime {
+  date: string
+  time: string
+}
+
 export interface PlanningState {
   today: string
   tomorrow: string
+  /** Hard start of the requested plan window — never schedule anything before this. */
+  planFrom: PlanningDateTime
+  /** Hard end of the requested plan window. */
+  planUntil: PlanningDateTime
   timetable: PlanningTimetableBlock[]
   recurringActivities: PlanningRecurringActivity[]
   upcomingSessions: PlanningSession[]
@@ -149,29 +160,38 @@ function summarizeTaskHistory(taskHistory: TaskHistoryEntry[]): PlanningHistoryS
   }))
 }
 
-function gatherTimetable(classes: ClassEntry[], today: Date, tomorrow: Date): PlanningTimetableBlock[] {
-  const todayKey = dayKeyForDate(today)
-  const tomorrowKey = dayKeyForDate(tomorrow)
+/**
+ * Real per-date occurrences for today and tomorrow, not a raw weekday
+ * filter — a course whose real meeting times don't repeat on a fixed
+ * weekly cadence (a block-schedule term calendar) can reuse the same
+ * day/time slot across many different weeks, so filtering classes by
+ * weekday alone was feeding the AI classes that weren't actually
+ * happening either day. Cancelled and postponed occurrences are dropped
+ * entirely — the AI shouldn't treat a slot as immovable when the class
+ * isn't really meeting there.
+ */
+function gatherTimetable(
+  classes: ClassEntry[],
+  sessions: UpcomingSession[],
+  classOccurrences: ClassOccurrenceMap,
+  today: Date,
+  tomorrow: Date,
+): PlanningTimetableBlock[] {
+  const todayIso = toIsoDate(today)
+  const tomorrowIso = toIsoDate(tomorrow)
+  const occurrences = buildUpcomingOccurrences(classes, sessions, classOccurrences, today, 2)
 
   const blocks: PlanningTimetableBlock[] = []
-  for (const entry of classes) {
-    if (entry.day === todayKey) {
-      blocks.push({
-        when: 'today',
-        subject: entry.subject,
-        startTime: entry.startTime,
-        endTime: entry.endTime,
-        prepRule: entry.prepRule,
-      })
-    } else if (entry.day === tomorrowKey) {
-      blocks.push({
-        when: 'tomorrow',
-        subject: entry.subject,
-        startTime: entry.startTime,
-        endTime: entry.endTime,
-        prepRule: entry.prepRule,
-      })
-    }
+  for (const occ of occurrences) {
+    if (occ.status === 'cancelled' || occ.status === 'postponed') continue
+    if (occ.dateIso !== todayIso && occ.dateIso !== tomorrowIso) continue
+    blocks.push({
+      when: occ.dateIso === todayIso ? 'today' : 'tomorrow',
+      subject: occ.entry.subject,
+      startTime: occ.entry.startTime,
+      endTime: occ.entry.endTime,
+      prepRule: occ.entry.prepRule,
+    })
   }
   return blocks
 }
@@ -287,26 +307,52 @@ function buildSubjectProficiency(subjects: Subject[]): Record<string, number> {
   return map
 }
 
+export interface PlanningContextOptions {
+  /**
+   * Plans a full target day (its own wakeTime–sleepTime) instead of a
+   * rolling 24-hour window from `date`+1h. Used for the evening nudge's
+   * "plan tomorrow" flow, where `date` is deliberately tomorrow rather than
+   * the real current moment — rolling from "tomorrow+1h" would be wrong
+   * there, since the point is a complete plan for the whole target day.
+   */
+  planAheadFullDay?: boolean
+}
+
 /** Gathers everything the planner needs to reason about `date`, fetched fresh from Supabase. */
-export async function getPlanningContext(userId: string, date: Date): Promise<PlanningState> {
+export async function getPlanningContext(
+  userId: string,
+  date: Date,
+  options?: PlanningContextOptions,
+): Promise<PlanningState> {
   const tomorrow = addDays(date, 1)
   const yesterday = addDays(date, -1)
   const todayIso = toIsoDate(date)
   const tomorrowIso = toIsoDate(tomorrow)
   const yesterdayIso = toIsoDate(yesterday)
 
-  const [classes, tasks, goals, profile, subjects, taskHistory, recurringActivities, upcomingSessions, competitions] =
-    await Promise.all([
-      fetchTimetableBlocks(),
-      fetchTasks(),
-      fetchGoals(),
-      fetchProfile(userId),
-      fetchSubjects(),
-      fetchTaskHistory(),
-      fetchRecurringActivities(),
-      fetchUpcomingSessions(7, date),
-      fetchCompetitions(),
-    ])
+  const [
+    classes,
+    tasks,
+    goals,
+    profile,
+    subjects,
+    taskHistory,
+    recurringActivities,
+    upcomingSessions,
+    competitions,
+    classOccurrences,
+  ] = await Promise.all([
+    fetchTimetableBlocks(),
+    fetchTasks(),
+    fetchGoals(),
+    fetchProfile(userId),
+    fetchSubjects(),
+    fetchTaskHistory(),
+    fetchRecurringActivities(),
+    fetchUpcomingSessions(7, date),
+    fetchCompetitions(),
+    fetchClassOccurrenceStatuses(todayIso, tomorrowIso),
+  ])
 
   const openTasks: PlanningTask[] = tasks
     .filter((task) => task.status !== 'done')
@@ -332,10 +378,19 @@ export async function getPlanningContext(userId: string, date: Date): Promise<Pl
 
   const profileTyped: Profile = profile
 
+  const planFrom: PlanningDateTime = options?.planAheadFullDay
+    ? { date: todayIso, time: profileTyped.wakeTime }
+    : { date: toIsoDate(addHours(date, 1)), time: formatTimeOfDay(addHours(date, 1)) }
+  const planUntil: PlanningDateTime = options?.planAheadFullDay
+    ? { date: todayIso, time: profileTyped.sleepTime }
+    : { date: toIsoDate(addHours(date, 25)), time: formatTimeOfDay(addHours(date, 25)) }
+
   return {
     today: todayIso,
     tomorrow: tomorrowIso,
-    timetable: gatherTimetable(classes, date, tomorrow),
+    planFrom,
+    planUntil,
+    timetable: gatherTimetable(classes, upcomingSessions, classOccurrences, date, tomorrow),
     recurringActivities: recurringActivities.map(toPlanningRecurringActivity),
     upcomingSessions: upcomingSessions.map(toPlanningSession),
     openTasks,
@@ -357,16 +412,16 @@ export function buildPlanUserMessage(
   options?: { remainingOnly?: boolean; userNote?: string },
 ): string {
   const remainingOnlyNote = options?.remainingOnly
-    ? `\n\nThis is a re-plan partway through the day — only schedule blocks from ${state.wakeTime} onward. Do not schedule anything earlier than that, and do not re-plan work that already happened. Only the tasks still open (not yet completed) are listed below.`
+    ? `\n\nThis is a re-plan partway through the day — only the tasks still open (not yet completed) are listed below.`
     : ''
   const userNoteText = options?.userNote?.trim()
   const userNoteBlock = userNoteText
     ? `\n\nThe user left this note about today's plan — treat it as a direct instruction and reshape the plan to address it: "${userNoteText}"`
     : ''
 
-  return `Generate today's plan.${remainingOnlyNote}${userNoteBlock}
+  return `Generate the plan.${remainingOnlyNote}${userNoteBlock}
 
-Window: ${state.wakeTime}–${state.sleepTime}. Flexible-work capacity today: ${state.capacityMinutes} minutes (this excludes fixed class time).
+Plan window: start no earlier than ${state.planFrom.date} ${state.planFrom.time} and end no later than ${state.planUntil.date} ${state.planUntil.time}. If this window crosses midnight, tag every block and deferred item with its own "date" so it's unambiguous which calendar day it belongs to, and apply the ${state.capacityMinutes}-minute flexible-work capacity separately to each calendar day's portion of the window — never sum the two days together. Typical wake/sleep hours (${state.wakeTime}–${state.sleepTime}) are still useful context for meal times and avoiding unnaturally early or late blocks, but they are not the boundary — the plan window above is.
 
 Planning state (JSON):
 ${JSON.stringify(state, null, 2)}`

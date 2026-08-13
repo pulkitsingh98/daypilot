@@ -142,6 +142,11 @@ export async function parseExcelWorkbook(file: File): Promise<ParsedWorkbook> {
   // Matches an explicit Subject cell (or, failing that, the sheet name)
   // against the registry by short name first, then full name — so "OB" on
   // a row resolves to "Organizational Behavior" if that's what's registered.
+  // A third tier handles Excel's 31-character sheet-name cap: a long course
+  // name gets truncated to fit, so a near-cap-length candidate that's an
+  // exact, uniquely-matching prefix of one registered full name is treated
+  // as that subject rather than becoming its own separate (truncated) one.
+  const SHEET_NAME_LIMIT = 31
   function resolveSubjectName(candidate: string): string {
     const trimmed = candidate.trim()
     if (!trimmed) return ''
@@ -149,6 +154,10 @@ export async function parseExcelWorkbook(file: File): Promise<ParsedWorkbook> {
     if (byShort) return byShort.fullName
     const byFull = subjects.find((s) => s.fullName.toLowerCase() === trimmed.toLowerCase())
     if (byFull) return byFull.fullName
+    if (trimmed.length >= SHEET_NAME_LIMIT - 3) {
+      const prefixMatches = subjects.filter((s) => s.fullName.toLowerCase().startsWith(trimmed.toLowerCase()))
+      if (prefixMatches.length === 1) return prefixMatches[0].fullName
+    }
     return trimmed
   }
 
