@@ -195,7 +195,7 @@ export default function Timetable() {
                   <div key={day.dateIso} className="rounded-xl border border-mist-line bg-paper-raised p-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-mist">{day.label}</p>
                     <ul className="mt-1.5 flex flex-col gap-2">
-                      {day.occurrences.map(({ entry, dateIso, status, session }) => (
+                      {day.occurrences.map(({ entry, dateIso, status, session, timeUncertain }) => (
                         <li key={entry.id} className="flex items-start gap-2 text-sm">
                           <ClassStatusControl
                             status={status ?? 'pending'}
@@ -217,8 +217,14 @@ export default function Timetable() {
                                 {session.readingMaterial ? ` — read: ${session.readingMaterial}` : ''}
                               </p>
                             )}
+                            {timeUncertain && (
+                              <p className="mt-0.5 text-xs font-medium text-amber-600">
+                                Time may be wrong — re-upload your sheet to fix it
+                              </p>
+                            )}
                           </button>
-                          <span className="shrink-0 text-xs text-mist">
+                          <span className={`shrink-0 text-xs ${timeUncertain ? 'text-amber-600' : 'text-mist'}`}>
+                            {timeUncertain && '~'}
                             {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
                           </span>
                         </li>

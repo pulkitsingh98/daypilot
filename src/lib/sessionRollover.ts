@@ -11,6 +11,16 @@ export interface ClassOccurrence {
   status: ClassOccurrenceStatus | null
   /** The session whose reading applies to this occurrence, if any — see buildUpcomingOccurrences for how this rolls forward past postponed/cancelled dates. */
   session: UpcomingSession | null
+  /**
+   * True when this occurrence's class entry couldn't be matched by exact
+   * start time (the session has none, typically because it was imported
+   * before sessions carried their own start_time) AND the subject had more
+   * than one candidate time slot that day to choose from — so the shown
+   * time is a positional guess, not a verified one. False/undefined
+   * whenever there was only one possible slot anyway, since a guess among
+   * one option isn't really a guess.
+   */
+  timeUncertain?: boolean
 }
 
 function groupClassesBySubjectAndDay(classes: ClassEntry[]): Map<string, Map<DayOfWeek, ClassEntry[]>> {
@@ -77,6 +87,7 @@ export function buildUpcomingOccurrences(
 
   for (const [subject, subjectSessions] of sessionsBySubject) {
     const entryForSlot: (ClassEntry | null)[] = []
+    const uncertainForSlot: boolean[] = []
     let i = 0
     while (i < subjectSessions.length) {
       const dateIso = subjectSessions[i].scheduledDate
@@ -88,6 +99,7 @@ export function buildUpcomingOccurrences(
         const wantedStart = subjectSessions[k].startTime
         const byTime = wantedStart ? candidates.find((c) => c.startTime === wantedStart) : undefined
         entryForSlot.push(byTime ?? candidates[k - i] ?? candidates[candidates.length - 1] ?? null)
+        uncertainForSlot.push(!byTime && candidates.length > 1)
       }
       i = j
     }
@@ -102,7 +114,7 @@ export function buildUpcomingOccurrences(
       if (status !== 'postponed' && status !== 'cancelled') {
         session = queue.shift() ?? null
       }
-      occurrences.push({ entry, dateIso, status, session })
+      occurrences.push({ entry, dateIso, status, session, timeUncertain: uncertainForSlot[p] })
     }
   }
 
