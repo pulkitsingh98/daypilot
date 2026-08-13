@@ -20,6 +20,7 @@ import TimelineBlock from '../components/today/TimelineBlock'
 import NowMarker from '../components/today/NowMarker'
 import DeferredSection from '../components/today/DeferredSection'
 import OnboardingChecklist from '../components/today/OnboardingChecklist'
+import LiveClock from '../components/LiveClock'
 
 export default function Today() {
   const now = useMemo(() => new Date(), [])
@@ -137,10 +138,13 @@ export default function Today() {
 
   return (
     <div className="p-4">
-      <h1 className="font-display text-2xl font-semibold text-ink">Today</h1>
+      <div className="flex items-baseline justify-between gap-2">
+        <h1 className="font-display text-2xl font-semibold text-ink">Today</h1>
+        <LiveClock />
+      </div>
 
       {showOnboardingBanner && (
-        <div className="mt-4">
+        <div className="mt-4 md:hidden">
           <OnboardingChecklist onDismiss={dismissBanner} />
         </div>
       )}

@@ -1,14 +1,26 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { navItems } from '../nav'
 import { useTodayStreak } from '../lib/useTodayStreak'
+import { useOnboardingSteps } from '../lib/useOnboardingSteps'
+import { dismissOnboardingBanner, isOnboardingBannerDismissed } from '../lib/onboardingBanner'
 import StreakSummary from './StreakSummary'
 import AppLogo from './AppLogo'
+import OnboardingChecklist from './today/OnboardingChecklist'
 
 export default function Sidebar() {
   const streak = useTodayStreak()
+  const onboarding = useOnboardingSteps()
+  const [bannerDismissed, setBannerDismissed] = useState(() => isOnboardingBannerDismissed())
+  const showOnboardingChecklist = !onboarding.loading && !onboarding.allDone && !bannerDismissed
+
+  function dismissBanner() {
+    dismissOnboardingBanner()
+    setBannerDismissed(true)
+  }
 
   return (
-    <aside className="hidden md:flex md:w-56 md:flex-col md:border-r md:border-mist-line md:bg-paper-raised md:px-3 md:py-6">
+    <aside className="hidden md:flex md:w-64 md:flex-col md:overflow-y-auto md:border-r md:border-mist-line md:bg-paper-raised md:px-3 md:py-6">
       <div className="mb-6 flex items-center gap-2 px-3">
         <AppLogo size="sm" />
         <span className="font-display text-lg font-semibold text-dusk-deep">DayPilot</span>
@@ -32,6 +44,13 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {showOnboardingChecklist && (
+        <div className="mt-4 px-1">
+          <OnboardingChecklist onDismiss={dismissBanner} />
+        </div>
+      )}
+
       <div className="mt-4 px-1">
         <StreakSummary {...streak} />
       </div>

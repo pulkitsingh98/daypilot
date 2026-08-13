@@ -174,12 +174,12 @@ export default function QuickAdd() {
 
   return (
     <div className="mb-4">
-      <h2 className="text-sm font-semibold text-ink">Anything urgent? Add it here</h2>
+      <h2 className="text-lg font-semibold text-ink">Anything urgent? Add it here</h2>
       <p className="mt-0.5 text-xs text-mist">
         Type it naturally — like "quiz on marketing in 3 days" — and DayPilot turns it into a task
         with the right due date{speechSupported ? ', or tap the mic to speak it instead' : ''}.
       </p>
-      <form onSubmit={handleSubmit} className="mt-2 flex gap-2">
+      <form onSubmit={handleSubmit} className="mt-2 flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           value={text}
@@ -187,37 +187,39 @@ export default function QuickAdd() {
           placeholder='e.g. "quiz on marketing in 3 days"'
           className="min-w-0 flex-1 rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
         />
-        {speechSupported && (
+        <div className="flex gap-2">
+          {speechSupported && (
+            <button
+              type="button"
+              onClick={toggleListening}
+              aria-label={listening ? 'Stop voice input' : 'Add by voice'}
+              aria-pressed={listening}
+              className={`shrink-0 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                listening
+                  ? 'border-red-300 bg-red-100 text-red-700'
+                  : 'border-mist-line text-ink-soft hover:bg-haze'
+              }`}
+            >
+              <Mic className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
           <button
-            type="button"
-            onClick={toggleListening}
-            aria-label={listening ? 'Stop voice input' : 'Add by voice'}
-            aria-pressed={listening}
-            className={`shrink-0 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-              listening
-                ? 'border-red-300 bg-red-100 text-red-700'
-                : 'border-mist-line text-ink-soft hover:bg-haze'
-            }`}
+            type="submit"
+            disabled={loading || !text.trim()}
+            className="flex-1 shrink-0 rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
           >
-            <Mic className="h-4 w-4" aria-hidden="true" />
+            {loading ? 'Thinking…' : 'Add'}
           </button>
-        )}
-        <button
-          type="submit"
-          disabled={loading || !text.trim()}
-          className="shrink-0 rounded-lg bg-dusk px-3 py-2 text-sm font-medium text-paper-raised hover:bg-dusk-deep disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? 'Thinking…' : 'Add'}
-        </button>
-        <UploadDocumentButton
-          label={
-            <span className="flex items-center gap-1.5">
-              <Upload className="h-3.5 w-3.5" aria-hidden="true" /> Upload
-            </span>
-          }
-          helperText="A timetable, syllabus, or session list — DayPilot reads it and turns it into classes, sessions, or tasks."
-          className="shrink-0 rounded-lg border border-mist-line px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
-        />
+          <UploadDocumentButton
+            label={
+              <span className="flex items-center justify-center gap-1.5">
+                <Upload className="h-3.5 w-3.5" aria-hidden="true" /> Upload
+              </span>
+            }
+            helperText="A timetable, syllabus, or session list — DayPilot reads it and turns it into classes, sessions, or tasks."
+            className="flex-1 shrink-0 rounded-lg border border-mist-line px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze sm:flex-none"
+          />
+        </div>
       </form>
 
       {error && !loading && (

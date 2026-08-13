@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { resolveSubjectId, SUBJECTS_QUERY_KEY } from './subjects'
 import { unwrap } from './shared'
+import { toIsoDate } from '../lib/time'
 
 export type TaskType =
   | 'class-prep'
@@ -263,7 +264,15 @@ export function useDeleteTask() {
   })
 }
 
-/** Deletes every task on this user's backlog — Settings' "Clear to-do list", for wiping stale data the planner would otherwise keep reasoning about. */
+/**
+ * Deletes every task on this user's backlog — Settings' "Clear to-do list",
+ * for wiping stale data the planner would otherwise keep reasoning about.
+ * Today's (and any future) plan also gets cleared: its blocks are a
+ * generated snapshot that baked in titles from tasks that no longer exist,
+ * so leaving it in place would keep showing stale entries on Today even
+ * though the backlog itself is empty. Past plans are left alone — they're
+ * the historical record History reads from.
+ */
 export function useClearTasks() {
   const { session } = useAuth()
   const queryClient = useQueryClient()
@@ -273,8 +282,18 @@ export function useClearTasks() {
       if (!session) throw new Error('Not signed in.')
       const { error } = await supabase.from('tasks').delete().eq('user_id', session.user.id)
       if (error) throw new Error(error.message)
+
+      const { error: planError } = await supabase
+        .from('daily_plans')
+        .delete()
+        .eq('user_id', session.user.id)
+        .gte('plan_date', toIsoDate(new Date()))
+      if (planError) throw new Error(planError.message)
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: ['daily_plans'] })
+    },
   })
 }
 
