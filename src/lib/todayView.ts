@@ -75,32 +75,3 @@ export function getTimelineItemStatus(
   return completedItemKeys.includes(item.key) ? 'done' : 'pending'
 }
 
-/**
- * Best-effort check for whether today's plan already scheduled prep for a
- * given tomorrow-class subject. There's no explicit link between a plan
- * block and the class it preps for (the planner's JSON contract doesn't
- * carry one), so this matches on the block being prep-typed and mentioning
- * the subject — a heuristic, not a guarantee. Checks the full subject name,
- * its word-initials (e.g. "Organizational Behavior" -> "ob", since students
- * and the planner both use shorthand), and any individually distinctive word.
- */
-export function isPrepScheduledForClass(plan: DailyPlan | null, subject: string): boolean {
-  if (!plan || !subject.trim()) return false
-  const trimmedSubject = subject.trim()
-  const subjectLower = trimmedSubject.toLowerCase()
-  const subjectWords = trimmedSubject.split(/\s+/).filter(Boolean)
-  const subjectInitials = subjectWords.map((word) => word[0]).join('').toLowerCase()
-  const significantWords = subjectWords.filter((word) => word.length >= 4).map((word) => word.toLowerCase())
-
-  return plan.blocks.some((block) => {
-    if (!block.type.toLowerCase().includes('prep')) return false
-    const haystack = `${block.title} ${block.reason}`.toLowerCase()
-    const haystackWords = haystack.split(/\W+/).filter(Boolean)
-    const titleLower = block.title.trim().toLowerCase()
-
-    if (haystack.includes(subjectLower)) return true
-    if (titleLower && subjectLower.includes(titleLower)) return true
-    if (subjectInitials.length >= 2 && haystackWords.includes(subjectInitials)) return true
-    return significantWords.some((word) => haystackWords.includes(word))
-  })
-}

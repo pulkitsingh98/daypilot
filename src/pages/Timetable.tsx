@@ -5,13 +5,24 @@ import { useUpcomingSessions } from '../data/sessions'
 import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
 import type { DayOfWeek } from '../data/types'
 import { buildUpcomingOccurrences, type ClassOccurrence } from '../lib/sessionRollover'
-import { formatTimeLabel, toIsoDate } from '../lib/time'
+import { addDays, formatTimeLabel, toIsoDate } from '../lib/time'
 import ClassStatusControl from '../components/ClassStatusControl'
 import ClassFormSheet from '../components/timetable/ClassFormSheet'
 import ExcelSessionImportSheet from '../components/timetable/ExcelSessionImportSheet'
 import UploadDocumentButton from '../components/documents/UploadDocumentButton'
 
-const UPCOMING_DAYS = 14
+// How far to project classes that have no session data at all (manually
+// added, purely weekly-recurring) — those never end on their own, so
+// something has to bound them. Session-backed subjects aren't capped by
+// this at all; they show every session there is, however far out.
+const FALLBACK_PROJECTION_DAYS = 180
+
+type WindowOption = '7' | '14' | 'all'
+const WINDOW_OPTIONS: { value: WindowOption; label: string }[] = [
+  { value: '7', label: '7 days' },
+  { value: '14', label: '14 days' },
+  { value: 'all', label: 'All' },
+]
 
 interface UpcomingDay {
   dateIso: string
@@ -21,19 +32,31 @@ interface UpcomingDay {
 
 export default function Timetable() {
   const { data: classes = [], isLoading, error } = useClasses()
-  const { data: sessions = [] } = useUpcomingSessions(UPCOMING_DAYS)
+  const { data: sessions = [] } = useUpcomingSessions()
   const now = useMemo(() => new Date(), [])
   const rangeEndIso = useMemo(() => {
-    const end = new Date(now)
-    end.setDate(end.getDate() + UPCOMING_DAYS)
-    return toIsoDate(end)
-  }, [now])
+    const fallbackEnd = new Date(now)
+    fallbackEnd.setDate(fallbackEnd.getDate() + FALLBACK_PROJECTION_DAYS)
+    const fallbackIso = toIsoDate(fallbackEnd)
+    const maxSessionIso = sessions.reduce((max, s) => (s.scheduledDate > max ? s.scheduledDate : max), '')
+    return maxSessionIso > fallbackIso ? maxSessionIso : fallbackIso
+  }, [now, sessions])
+  const projectionDays = useMemo(
+    () => Math.ceil((new Date(`${rangeEndIso}T00:00:00`).getTime() - now.getTime()) / 86_400_000) + 1,
+    [now, rangeEndIso],
+  )
   const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(toIsoDate(now), rangeEndIso)
   const setClassOccurrenceStatus = useSetClassOccurrenceStatus()
   const [editing, setEditing] = useState<ClassEntry | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [excelImportOpen, setExcelImportOpen] = useState(false)
   const [defaultDay, setDefaultDay] = useState<DayOfWeek>('mon')
+  const [windowOption, setWindowOption] = useState<WindowOption>('all')
+
+  const displayEndIso = useMemo(() => {
+    if (windowOption === 'all') return rangeEndIso
+    return toIsoDate(addDays(now, Number(windowOption)))
+  }, [windowOption, rangeEndIso, now])
 
   function openAdd(day: DayOfWeek = 'mon') {
     setEditing(null)
@@ -51,7 +74,7 @@ export default function Timetable() {
   }
 
   const upcomingDays = useMemo(() => {
-    const occurrences = buildUpcomingOccurrences(classes, sessions, classOccurrences, now, UPCOMING_DAYS)
+    const occurrences = buildUpcomingOccurrences(classes, sessions, classOccurrences, now, projectionDays)
     const byDate = new Map<string, ClassOccurrence[]>()
     for (const occ of occurrences) {
       const list = byDate.get(occ.dateIso) ?? []
@@ -72,7 +95,12 @@ export default function Timetable() {
       })
     }
     return days.sort((a, b) => a.dateIso.localeCompare(b.dateIso))
-  }, [classes, sessions, classOccurrences, now])
+  }, [classes, sessions, classOccurrences, now, projectionDays])
+
+  const visibleDays = useMemo(
+    () => upcomingDays.filter((d) => d.dateIso <= displayEndIso),
+    [upcomingDays, displayEndIso],
+  )
 
   return (
     <div className="p-4">
@@ -136,16 +164,34 @@ export default function Timetable() {
       ) : (
         <>
           <section>
-            <h2 className="text-sm font-semibold text-ink">Upcoming</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-ink">Upcoming</h2>
+              <div className="flex shrink-0 gap-1 rounded-lg border border-mist-line p-0.5">
+                {WINDOW_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setWindowOption(opt.value)}
+                    className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                      windowOption === opt.value
+                        ? 'bg-dusk text-paper-raised'
+                        : 'text-ink-soft hover:bg-haze'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <p className="mt-0.5 text-xs text-mist">
               Mark a class postponed or cancelled and its reading rolls forward to the next time it
               actually happens.
             </p>
-            {upcomingDays.length === 0 ? (
-              <p className="mt-2 text-sm text-mist">No classes in the next {UPCOMING_DAYS} days.</p>
+            {visibleDays.length === 0 ? (
+              <p className="mt-2 text-sm text-mist">No upcoming classes.</p>
             ) : (
               <div className="mt-2 flex flex-col gap-2">
-                {upcomingDays.map((day) => (
+                {visibleDays.map((day) => (
                   <div key={day.dateIso} className="rounded-xl border border-mist-line bg-paper-raised p-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-mist">{day.label}</p>
                     <ul className="mt-1.5 flex flex-col gap-2">

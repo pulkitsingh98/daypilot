@@ -2,10 +2,8 @@ import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan, useToggleTimelineItemDone } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
-import { useUpcomingSessions } from '../data/sessions'
 import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
 import { addDays, dayKeyForDate, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
-import { buildUpcomingOccurrences } from '../lib/sessionRollover'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
 import { getLastEveningNudgeDate, setLastEveningNudgeDate } from '../lib/eveningNudge'
 import { buildTimelineItems, getTimelineItemStatus, type ItemStatus, type TimelineItem } from '../lib/todayView'
@@ -15,7 +13,6 @@ import { usePlanGeneration } from '../services/usePlanGeneration'
 import QuickAdd from '../components/today/QuickAdd'
 import MorningNudge from '../components/today/MorningNudge'
 import EveningNudge from '../components/today/EveningNudge'
-import TomorrowPreview from '../components/today/TomorrowPreview'
 import TimelineBlock from '../components/today/TimelineBlock'
 import NowMarker from '../components/today/NowMarker'
 import DeferredSection from '../components/today/DeferredSection'
@@ -45,10 +42,9 @@ export default function Today() {
   const { data: plan = null, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
   const { data: tomorrowPlan = null, isLoading: tomorrowPlanLoading } = useDailyPlan(tomorrowKey)
   const { data: tasks = [] } = useTasks()
-  const { data: sessions = [] } = useUpcomingSessions(2, now)
   const { loading, error, generate, retry } = usePlanGeneration()
   const toggleTimelineItemDone = useToggleTimelineItemDone(todayKey)
-  const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(todayKey, tomorrowKey)
+  const { data: classOccurrences = new Map() } = useClassOccurrenceStatuses(todayKey, todayKey)
   const setClassOccurrenceStatus = useSetClassOccurrenceStatus()
   const streak = useTodayStreak()
   const [nudgeDismissed, setNudgeDismissed] = useState(false)
@@ -57,15 +53,6 @@ export default function Today() {
   const todayClasses = useMemo(
     () => classes.filter((c) => c.day === dayKeyForDate(now)),
     [classes, now],
-  )
-  // Real per-date occurrences for tomorrow, not a raw weekday filter — a
-  // course whose real meeting times don't repeat on a fixed weekly cadence
-  // (a block-schedule term calendar) can reuse the same day/time slot
-  // across many different weeks, so filtering classes by weekday alone
-  // pulls in slots that aren't actually happening tomorrow.
-  const tomorrowOccurrences = useMemo(
-    () => buildUpcomingOccurrences(classes, sessions, classOccurrences, addDays(now, 1), 1),
-    [classes, sessions, classOccurrences, now],
   )
   const timelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
   const tasksById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
@@ -177,8 +164,6 @@ export default function Today() {
       )}
 
       {classesLoading && <p className="mb-4 text-sm text-mist">Loading your timetable…</p>}
-
-      <TomorrowPreview occurrences={tomorrowOccurrences} plan={plan} />
 
       {(classesError || planError) && (
         <p className="mb-4 text-sm text-red-600">Could not load today's data. Try refreshing.</p>

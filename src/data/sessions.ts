@@ -52,25 +52,35 @@ function fromRow(row: SessionRow): UpcomingSession {
 const SELECT_COLUMNS =
   'id, session_number, title, topics, scheduled_date, start_time, end_time, reading_material, status, subjects(name)'
 
-/** Returns sessions in the next `daysAhead` days that haven't already happened — planner input, and the Timetable page's session-matching for upcoming classes. */
-export async function fetchUpcomingSessions(daysAhead = 14, now: Date = new Date()): Promise<UpcomingSession[]> {
+/**
+ * Returns sessions that haven't already happened — planner input, and the
+ * Timetable page's session-matching for upcoming classes. `daysAhead` bounds
+ * the window when given (e.g. the planner only needs a week); omit it to
+ * fetch every future session with no upper cutoff, which is what the
+ * Timetable page's "whole term" Upcoming list needs — a course's real
+ * session list has its own natural end, so it doesn't need one imposed here.
+ */
+export async function fetchUpcomingSessions(daysAhead?: number, now: Date = new Date()): Promise<UpcomingSession[]> {
   const todayIso = toIsoDate(now)
-  const until = new Date(now)
-  until.setDate(until.getDate() + daysAhead)
-  const untilIso = toIsoDate(until)
 
-  const result = await supabase
+  let query = supabase
     .from('sessions')
     .select(SELECT_COLUMNS)
     .in('status', ['upcoming', 'prepped'])
     .gte('scheduled_date', todayIso)
-    .lte('scheduled_date', untilIso)
     .order('scheduled_date', { ascending: true })
 
+  if (daysAhead !== undefined) {
+    const until = new Date(now)
+    until.setDate(until.getDate() + daysAhead)
+    query = query.lte('scheduled_date', toIsoDate(until))
+  }
+
+  const result = await query
   return unwrap<SessionRow[]>(result).map(fromRow)
 }
 
-export function useUpcomingSessions(daysAhead = 14, now: Date = new Date()) {
+export function useUpcomingSessions(daysAhead?: number, now: Date = new Date()) {
   return useQuery({
     queryKey: ['sessions', 'upcoming', daysAhead, toIsoDate(now)],
     queryFn: () => fetchUpcomingSessions(daysAhead, now),
