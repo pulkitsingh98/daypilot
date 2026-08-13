@@ -352,12 +352,19 @@ export async function getPlanningContext(userId: string, date: Date): Promise<Pl
 }
 
 /** Formats the gathered state into the user message sent alongside PLANNER_SYSTEM_PROMPT. */
-export function buildPlanUserMessage(state: PlanningState, options?: { remainingOnly?: boolean }): string {
+export function buildPlanUserMessage(
+  state: PlanningState,
+  options?: { remainingOnly?: boolean; userNote?: string },
+): string {
   const remainingOnlyNote = options?.remainingOnly
     ? `\n\nThis is a re-plan partway through the day — only schedule blocks from ${state.wakeTime} onward. Do not schedule anything earlier than that, and do not re-plan work that already happened. Only the tasks still open (not yet completed) are listed below.`
     : ''
+  const userNoteText = options?.userNote?.trim()
+  const userNoteBlock = userNoteText
+    ? `\n\nThe user left this note about today's plan — treat it as a direct instruction and reshape the plan to address it: "${userNoteText}"`
+    : ''
 
-  return `Generate today's plan.${remainingOnlyNote}
+  return `Generate today's plan.${remainingOnlyNote}${userNoteBlock}
 
 Window: ${state.wakeTime}–${state.sleepTime}. Flexible-work capacity today: ${state.capacityMinutes} minutes (this excludes fixed class time).
 

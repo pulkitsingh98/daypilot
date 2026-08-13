@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import { unwrap, unwrapNullable } from './shared'
 
 export interface PlanBlock {
@@ -152,5 +153,40 @@ export function useToggleTimelineItemDone(dateIso: string) {
       if (context?.previous !== undefined) queryClient.setQueryData(queryKey, context.previous)
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  })
+}
+
+/**
+ * Clears a single day's generated plan and class-occurrence statuses —
+ * Today's "Clear today's list", scoped deliberately narrower than Settings'
+ * Danger Zone: it never touches the tasks table, so the Backlog (the
+ * durable list) is untouched. This just resets what Today shows back to
+ * "no plan yet", the same state as before "Plan my day" was ever pressed.
+ */
+export function useClearTodayPlan(dateIso: string) {
+  const { session } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (): Promise<void> => {
+      if (!session) throw new Error('Not signed in.')
+      const { error } = await supabase
+        .from('daily_plans')
+        .delete()
+        .eq('user_id', session.user.id)
+        .eq('plan_date', dateIso)
+      if (error) throw new Error(error.message)
+
+      const { error: occurrenceError } = await supabase
+        .from('class_occurrences')
+        .delete()
+        .eq('user_id', session.user.id)
+        .eq('occurrence_date', dateIso)
+      if (occurrenceError) throw new Error(occurrenceError.message)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: dailyPlanQueryKey(dateIso) })
+      queryClient.invalidateQueries({ queryKey: ['class_occurrences'] })
+    },
   })
 }

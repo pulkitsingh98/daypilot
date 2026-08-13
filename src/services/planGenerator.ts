@@ -10,6 +10,8 @@ export interface GeneratePlanOptions {
   now?: Date
   /** "Replan rest of day": only schedule from the current time onward. */
   remainingOnly?: boolean
+  /** Freeform instruction from the user about what's wrong with the current plan — passed straight to the AI alongside the structured state. */
+  userNote?: string
 }
 
 /**
@@ -23,7 +25,10 @@ export async function generateDailyPlan(userId: string, options: GeneratePlanOpt
   const state = await getPlanningContext(userId, now)
   const effectiveState = options.remainingOnly ? { ...state, wakeTime: formatTimeOfDay(now) } : state
 
-  const userMessage = buildPlanUserMessage(effectiveState, { remainingOnly: options.remainingOnly })
+  const userMessage = buildPlanUserMessage(effectiveState, {
+    remainingOnly: options.remainingOnly,
+    userNote: options.userNote,
+  })
 
   const raw = await callAI({
     system: PLANNER_SYSTEM_PROMPT,

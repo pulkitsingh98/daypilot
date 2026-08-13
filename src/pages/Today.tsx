@@ -236,7 +236,12 @@ export default function Today() {
       </div>
 
       <div className="mt-4">
-        <ClearTodoListCard />
+        <ClearTodoListCard
+          dateIso={todayKey}
+          plan={plan}
+          regenerating={loading}
+          onRegenerate={(userNote) => void generate({ now, remainingOnly: false, userNote })}
+        />
       </div>
     </div>
   )
