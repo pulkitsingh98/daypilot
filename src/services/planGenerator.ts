@@ -50,11 +50,12 @@ export async function generateDailyPlan(userId: string, options: GeneratePlanOpt
   })
   const parsed = parseJsonResponse<unknown>(raw)
   const plan = normalizeDailyPlanResult(parsed, state.today)
+  const planUntil = `${state.planUntil.date}T${state.planUntil.time}:00`
 
   const todayBlocks = plan.blocks.filter((b) => b.date === state.today)
   const tomorrowBlocks = plan.blocks.filter((b) => b.date === state.tomorrow)
 
-  const todayPlan: DailyPlan = { ...plan, blocks: todayBlocks }
+  const todayPlan: DailyPlan = { ...plan, blocks: todayBlocks, planUntil }
   await saveDailyPlan(state.today, todayPlan, userId)
 
   if (tomorrowBlocks.length > 0) {
@@ -65,6 +66,7 @@ export async function generateDailyPlan(userId: string, options: GeneratePlanOpt
         deferred: [],
         note: SPILLOVER_NOTE,
         generatedAt: plan.generatedAt,
+        planUntil,
         completedItemKeys: [],
       }
       await saveDailyPlan(state.tomorrow, tomorrowPlan, userId)

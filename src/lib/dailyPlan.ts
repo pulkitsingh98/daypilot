@@ -49,5 +49,5 @@ export function normalizeDailyPlanResult(raw: unknown, defaultDateIso: string): 
 
   const note = coerceString(obj.note)
 
-  return { blocks, deferred, note, generatedAt: new Date().toISOString(), completedItemKeys: [] }
+  return { blocks, deferred, note, generatedAt: new Date().toISOString(), planUntil: null, completedItemKeys: [] }
 }

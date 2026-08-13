@@ -33,6 +33,8 @@ export interface DailyPlan {
   note: string
   /** ISO timestamp of when this plan was generated. */
   generatedAt: string
+  /** ISO timestamp of the far edge of this plan's window — null for plans generated before rolling windows existed. */
+  planUntil: string | null
   /** TimelineItem.key values struck off directly on the timeline for items with no linked task (classes, buffer/meal blocks). Task-linked items use tasks.status instead. */
   completedItemKeys: string[]
 }
@@ -42,6 +44,7 @@ interface DailyPlanRow {
   deferred: PlanDeferredItem[]
   note: string
   generated_at: string
+  plan_until: string | null
   completed_item_keys: string[] | null
 }
 
@@ -51,6 +54,7 @@ function fromRow(row: DailyPlanRow): DailyPlan {
     deferred: row.deferred,
     note: row.note,
     generatedAt: row.generated_at,
+    planUntil: row.plan_until,
     completedItemKeys: row.completed_item_keys ?? [],
   }
 }
@@ -60,7 +64,7 @@ export const dailyPlanQueryKey = (dateIso: string) => ['daily_plans', dateIso] a
 export async function fetchDailyPlan(dateIso: string): Promise<DailyPlan | null> {
   const result = await supabase
     .from('daily_plans')
-    .select('blocks, deferred, note, generated_at, completed_item_keys')
+    .select('blocks, deferred, note, generated_at, plan_until, completed_item_keys')
     .eq('plan_date', dateIso)
     .maybeSingle()
   const row = unwrapNullable<DailyPlanRow>(result)
@@ -82,7 +86,7 @@ const dailyPlansRangeQueryKey = (startIso: string, endIso: string) =>
 export async function fetchDailyPlansInRange(startIso: string, endIso: string): Promise<DailyPlanWithDate[]> {
   const result = await supabase
     .from('daily_plans')
-    .select('plan_date, blocks, deferred, note, generated_at, completed_item_keys')
+    .select('plan_date, blocks, deferred, note, generated_at, plan_until, completed_item_keys')
     .gte('plan_date', startIso)
     .lte('plan_date', endIso)
     .order('plan_date', { ascending: true })
@@ -115,6 +119,7 @@ export async function saveDailyPlan(dateIso: string, plan: DailyPlan, userId: st
         deferred: plan.deferred,
         note: plan.note,
         generated_at: plan.generatedAt,
+        plan_until: plan.planUntil,
       },
       { onConflict: 'user_id,plan_date' },
     )

@@ -36,6 +36,20 @@ function describeGeneratedAt(generatedAt: string, now: Date): string {
   return `Planned today at ${timeLabel} · ${relative}`
 }
 
+/** "Covers you until 9:00 PM tonight" / "...tomorrow" / "...Fri, Aug 15, 9:00 AM" — tells the user exactly when this to-do list stops being valid, since a plan is now a rolling 24-hour window rather than a fixed calendar day. Null if the plan predates plan windows existing. */
+function describeValidUntil(planUntil: string | null, todayKey: string, tomorrowKey: string): string | null {
+  if (!planUntil) return null
+  const until = new Date(planUntil)
+  if (isNaN(until.getTime())) return null
+  const untilKey = toIsoDate(until)
+  const timeLabel = until.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+
+  if (untilKey === todayKey) return `Covers you until ${timeLabel} tonight`
+  if (untilKey === tomorrowKey) return `Covers you until ${timeLabel} tomorrow`
+  const dateLabel = until.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+  return `Covers you until ${dateLabel}, ${timeLabel}`
+}
+
 export default function Today() {
   const now = useMemo(() => new Date(), [])
   const todayKey = toIsoDate(now)
@@ -156,7 +170,15 @@ export default function Today() {
         <h1 className="font-display text-2xl font-semibold text-ink">Today</h1>
         <LiveClock />
       </div>
-      {plan && <p className="mt-0.5 text-xs text-mist">{describeGeneratedAt(plan.generatedAt, now)}</p>}
+      {plan && (
+        <p className="mt-0.5 text-xs text-mist">
+          {describeGeneratedAt(plan.generatedAt, now)}
+          {(() => {
+            const validUntil = describeValidUntil(plan.planUntil, todayKey, tomorrowKey)
+            return validUntil ? ` · ${validUntil}` : ''
+          })()}
+        </p>
+      )}
 
       <div className="mt-4">
         <QuickAdd />
