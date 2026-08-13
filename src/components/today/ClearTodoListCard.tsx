@@ -10,8 +10,7 @@ export default function ClearTodoListCard() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [cleared, setCleared] = useState(false)
-
-  if (tasks.length === 0) return null
+  const isEmpty = tasks.length === 0
 
   async function handleClear() {
     if (
@@ -52,10 +51,11 @@ export default function ClearTodoListCard() {
 
       {cleared && <p className="mt-2 text-sm text-emerald-700">Cleared. Thanks for the note.</p>}
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {isEmpty && !cleared && <p className="mt-2 text-xs text-mist">Your to-do list is already empty.</p>}
 
       <button
         type="button"
-        disabled={clearTasks.isPending || submitFeedback.isPending}
+        disabled={isEmpty || clearTasks.isPending || submitFeedback.isPending}
         onClick={() => void handleClear()}
         className="mt-2 rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
