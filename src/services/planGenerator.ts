@@ -52,8 +52,18 @@ export async function generateDailyPlan(userId: string, options: GeneratePlanOpt
   const plan = normalizeDailyPlanResult(parsed, state.today)
   const planUntil = state.planUntil.iso
 
-  const todayBlocks = plan.blocks.filter((b) => b.date === state.today)
-  const tomorrowBlocks = plan.blocks.filter((b) => b.date === state.tomorrow)
+  // Split by date, but never drop a block outright — an AI-supplied date
+  // that isn't exactly today or tomorrow (a stray "2026-08-15" instead of
+  // one of those two, say) used to fall through both filters and vanish
+  // silently, even though the block was genuinely in the response and the
+  // reasoning text still described it. Defaulting anything unrecognized to
+  // today means it's at worst shown on the wrong day, never lost.
+  const todayBlocks: typeof plan.blocks = []
+  const tomorrowBlocks: typeof plan.blocks = []
+  for (const block of plan.blocks) {
+    if (block.date === state.tomorrow) tomorrowBlocks.push(block)
+    else todayBlocks.push(block)
+  }
 
   const todayPlan: DailyPlan = { ...plan, blocks: todayBlocks, planUntil }
   await saveDailyPlan(state.today, todayPlan, userId)
