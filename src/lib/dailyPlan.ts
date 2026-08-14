@@ -40,6 +40,12 @@ export function normalizeDailyPlanResult(raw: unknown, defaultDateIso: string): 
       }),
     )
     .filter((b) => isValidTimeString(b.start) && isValidTimeString(b.end) && b.title.trim().length > 0)
+    // Fixed classes are already rendered from `timetable` directly — a block
+    // typed "class"/"fixed" is the AI re-describing one of those instead of
+    // scheduling flexible work around it, which shows up as a literal
+    // duplicate row on the timeline (same class, same time, twice). The
+    // prompt tells it not to; this is the backstop for when it does anyway.
+    .filter((b) => !['class', 'fixed', 'fixed-class'].includes(b.type.trim().toLowerCase()))
 
   const rawDeferred = Array.isArray(obj.deferred) ? obj.deferred : []
   const deferred: PlanDeferredItem[] = rawDeferred

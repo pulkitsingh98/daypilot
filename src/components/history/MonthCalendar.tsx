@@ -13,7 +13,8 @@ interface MonthCalendarProps {
   onSelectDate: (dateIso: string) => void
   plansByDate: Map<string, DailyPlan>
   tasksById: Map<string, Task>
-  classes: ClassEntry[]
+  /** Real per-date classes for a given day — see History.tsx for why this isn't a raw weekday filter. */
+  classesForDate: (dateIso: string) => ClassEntry[]
   classOccurrences: ClassOccurrenceMap
   todayIso: string
 }
@@ -34,7 +35,7 @@ export default function MonthCalendar({
   onSelectDate,
   plansByDate,
   tasksById,
-  classes,
+  classesForDate,
   classOccurrences,
   todayIso,
 }: MonthCalendarProps) {
@@ -84,8 +85,7 @@ export default function MonthCalendar({
           if (!cellDate) return <div key={`blank-${i}`} />
           const dateIso = toIsoDate(cellDate)
           const plan = plansByDate.get(dateIso)
-          const classesForDay = classes.filter((c) => c.day === dayKeyForDate(cellDate))
-          const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDay, classOccurrences)
+          const completion = computeDayCompletion(plan, dateIso, tasksById, classesForDate(dateIso), classOccurrences)
           const isSelected = dateIso === selectedDateIso
           const isToday = dateIso === todayIso
 
