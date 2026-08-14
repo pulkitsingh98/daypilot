@@ -25,14 +25,14 @@ export default function Documents() {
       </div>
 
       {flow.extractionError && (
-        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="mt-4 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
           {flow.extractionError}
         </p>
       )}
 
       {isLoading && <p className="mt-4 text-sm text-mist">Loading your documents…</p>}
       {error && (
-        <p className="mt-4 text-sm text-red-600">Could not load your documents. Try refreshing.</p>
+        <p className="mt-4 text-sm text-danger">Could not load your documents. Try refreshing.</p>
       )}
 
       {!isLoading && documents.length === 0 && (

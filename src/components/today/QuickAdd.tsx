@@ -196,7 +196,7 @@ export default function QuickAdd() {
               aria-pressed={listening}
               className={`shrink-0 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                 listening
-                  ? 'border-red-300 bg-red-100 text-red-700'
+                  ? 'border-danger/40 bg-danger-soft text-danger'
                   : 'border-mist-line text-ink-soft hover:bg-haze'
               }`}
             >
@@ -223,7 +223,7 @@ export default function QuickAdd() {
       </form>
 
       {error && !loading && (
-        <div className="mt-2 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mt-2 flex items-center gap-3 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
           <span>{error.message}</span>
           <button
             type="button"
@@ -332,7 +332,7 @@ export default function QuickAdd() {
                         type="button"
                         onClick={() => removePrepSession(session.key)}
                         aria-label={`Remove prep session: ${session.title}`}
-                        className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
+                        className="rounded-full p-1 text-mist hover:bg-haze hover:text-danger"
                       >
                         <X className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
@@ -342,8 +342,8 @@ export default function QuickAdd() {
               </div>
             )}
 
-            {!draft.title.trim() && <p className="text-sm text-red-600">Title is required.</p>}
-            {saveError && <p className="text-sm text-red-600">{saveError}</p>}
+            {!draft.title.trim() && <p className="text-sm text-danger">Title is required.</p>}
+            {saveError && <p className="text-sm text-danger">{saveError}</p>}
 
             <div className="mt-1 flex items-center justify-end gap-2">
               <button

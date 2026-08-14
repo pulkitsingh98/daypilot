@@ -54,7 +54,7 @@ export default function MyLife() {
         <div
           className={`mt-4 rounded-xl border p-3 ${
             nearestDeadlineInfo.isOverdue || nearestDeadlineInfo.isDueSoon
-              ? 'border-amber-200 bg-amber-50'
+              ? 'border-warning/40 bg-warning-soft'
               : 'border-mist-line bg-paper-raised'
           }`}
         >
@@ -67,8 +67,8 @@ export default function MyLife() {
       )}
 
       {urgent.length > 0 && (
-        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-red-700">
+        <div className="mt-3 rounded-xl border border-danger/30 bg-danger-soft p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-danger">
             Due within 7 days
           </p>
           <ul className="mt-1 flex flex-col gap-1">
@@ -98,7 +98,7 @@ export default function MyLife() {
 
         {activitiesLoading && <p className="text-sm text-mist">Loading…</p>}
         {activitiesError && (
-          <p className="text-sm text-red-600">Could not load your activities. Try refreshing.</p>
+          <p className="text-sm text-danger">Could not load your activities. Try refreshing.</p>
         )}
         {!activitiesLoading && activities.length === 0 && (
           <p className="text-sm text-mist">
@@ -128,7 +128,7 @@ export default function MyLife() {
 
         {competitionsLoading && <p className="text-sm text-mist">Loading…</p>}
         {competitionsError && (
-          <p className="text-sm text-red-600">Could not load your competitions. Try refreshing.</p>
+          <p className="text-sm text-danger">Could not load your competitions. Try refreshing.</p>
         )}
         {!competitionsLoading && competitions.length === 0 && (
           <p className="text-sm text-mist">

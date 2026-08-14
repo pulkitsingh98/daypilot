@@ -135,7 +135,7 @@ export default function ExcelSessionImportSheet({ onClose }: ExcelSessionImportS
 
         {summary ? (
           <div className="mt-3">
-            <p className="text-sm text-emerald-700">
+            <p className="text-sm text-success">
               Imported {summary.classesCreated} class{summary.classesCreated === 1 ? '' : 'es'} and{' '}
               {summary.sessionsCreated} session{summary.sessionsCreated === 1 ? '' : 's'}.
             </p>
@@ -190,7 +190,7 @@ export default function ExcelSessionImportSheet({ onClose }: ExcelSessionImportS
               </p>
             </div>
 
-            {parseError && <p className="mt-2 text-sm text-red-600">{parseError}</p>}
+            {parseError && <p className="mt-2 text-sm text-danger">{parseError}</p>}
 
             {rows && (
               <div className="mt-4">
@@ -211,7 +211,7 @@ export default function ExcelSessionImportSheet({ onClose }: ExcelSessionImportS
                 </ul>
 
                 {errorRows.length > 0 && (
-                  <div className="mt-2 max-h-32 overflow-y-auto rounded-lg border border-amber-200 bg-amber-50 p-2">
+                  <div className="mt-2 max-h-32 overflow-y-auto rounded-lg border border-warning/40 bg-warning-soft p-2">
                     {errorRows.map((r, i) => (
                       <p key={i} className="text-xs text-amber-800">
                         {r.sheetName}, row {r.sheetRow}: {r.error}
@@ -220,7 +220,7 @@ export default function ExcelSessionImportSheet({ onClose }: ExcelSessionImportS
                   </div>
                 )}
 
-                {saveError && <p className="mt-2 text-sm text-red-600">{saveError}</p>}
+                {saveError && <p className="mt-2 text-sm text-danger">{saveError}</p>}
 
                 <div className="mt-3 flex items-center justify-end gap-2">
                   <button

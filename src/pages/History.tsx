@@ -52,7 +52,7 @@ export default function History() {
 
       {plansLoading && <p className="mt-4 text-sm text-mist">Loading…</p>}
       {plansError && (
-        <p className="mt-4 text-sm text-red-600">Could not load your history. Try refreshing.</p>
+        <p className="mt-4 text-sm text-danger">Could not load your history. Try refreshing.</p>
       )}
 
       <div className="mt-4 rounded-xl border border-mist-line bg-paper-raised p-4">

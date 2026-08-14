@@ -140,7 +140,7 @@ function AccountCard() {
       <button
         type="button"
         onClick={() => void handleLogOut()}
-        className="mt-3 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+        className="mt-3 rounded-lg border border-danger/30 px-3 py-2 text-sm font-medium text-danger hover:bg-danger-soft"
       >
         Log out
       </button>
@@ -260,7 +260,7 @@ function ImportLocalDataCard() {
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+    <div className="mt-6 rounded-xl border border-warning/40 bg-warning-soft p-4">
       <h2 className="text-sm font-semibold text-ink">Import my old local data</h2>
       <p className="mt-1 text-xs text-ink-soft">
         We found data saved in this browser from before sign-in was added. Import it into your
@@ -268,13 +268,13 @@ function ImportLocalDataCard() {
       </p>
 
       {summary ? (
-        <p className="mt-3 text-sm text-emerald-700">
+        <p className="mt-3 text-sm text-success">
           Imported {summary.classes} classes, {summary.goals} goals, {summary.tasks} tasks,{' '}
           {summary.taskHistory} history entries, and {summary.dailyPlans} daily plans.
         </p>
       ) : (
         <>
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-sm text-danger">{error}</p>}
           <button
             type="button"
             disabled={importing}
@@ -329,21 +329,21 @@ function DangerZoneCard() {
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+    <div className="mt-6 rounded-xl border border-danger/30 bg-danger-soft p-4">
       <h2 className="text-sm font-semibold text-ink">Danger zone</h2>
       <p className="mt-1 text-xs text-ink-soft">
         Permanently removes data from your account (not just this browser) — useful if stale
         classes or tasks are throwing off what the planner sees.
       </p>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           disabled={clearTimetable.isPending || classes.length === 0}
           onClick={() => void handleClearTimetable()}
-          className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-danger/40 px-3 py-2 text-sm font-medium text-danger hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-50"
         >
           {clearTimetable.isPending ? 'Clearing…' : 'Clear timetable'}
         </button>
@@ -351,7 +351,7 @@ function DangerZoneCard() {
           type="button"
           disabled={clearTasks.isPending || tasks.length === 0}
           onClick={() => void handleClearTasks()}
-          className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-danger/40 px-3 py-2 text-sm font-medium text-danger hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-50"
         >
           {clearTasks.isPending ? 'Clearing…' : 'Clear to-do list'}
         </button>

@@ -129,7 +129,7 @@ export default function Timetable() {
       </div>
 
       {isLoading && <p className="text-sm text-mist">Loading your timetable…</p>}
-      {error && <p className="text-sm text-red-600">Could not load your timetable. Try refreshing.</p>}
+      {error && <p className="text-sm text-danger">Could not load your timetable. Try refreshing.</p>}
 
       {!isLoading && classes.length === 0 ? (
         <div className="rounded-xl border border-dashed border-mist-line bg-paper-raised p-6 text-center">
@@ -218,12 +218,12 @@ export default function Timetable() {
                               </p>
                             )}
                             {timeUncertain && (
-                              <p className="mt-0.5 text-xs font-medium text-amber-600">
+                              <p className="mt-0.5 text-xs font-medium text-dawn-deep">
                                 Time may be wrong — re-upload your sheet to fix it
                               </p>
                             )}
                           </button>
-                          <span className={`shrink-0 text-xs ${timeUncertain ? 'text-amber-600' : 'text-mist'}`}>
+                          <span className={`shrink-0 text-xs ${timeUncertain ? 'text-dawn-deep' : 'text-mist'}`}>
                             {timeUncertain && '~'}
                             {formatTimeLabel(entry.startTime)}–{formatTimeLabel(entry.endTime)}
                           </span>

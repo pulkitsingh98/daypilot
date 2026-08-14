@@ -86,7 +86,7 @@ export default function TimelineBlock({ item, task, status, onSetStatus }: Timel
                     {item.title}
                   </span>
                 </div>
-                <div className="mt-0.5 text-xs text-mist">
+                <div className="mt-0.5 font-mono text-xs text-mist">
                   {formatTimeLabel(item.start)} – {formatTimeLabel(item.end)}
                 </div>
               </div>

@@ -18,9 +18,9 @@ export const TASK_TYPES: { key: TaskType; label: string; chipClass: string }[] =
 ]
 
 export const TASK_PRIORITIES: { key: TaskPriority; label: string; chipClass: string }[] = [
-  { key: 1, label: 'High', chipClass: 'bg-red-100 text-red-700' },
-  { key: 2, label: 'Medium', chipClass: 'bg-amber-100 text-amber-700' },
-  { key: 3, label: 'Low', chipClass: 'bg-slate-100 text-slate-600' },
+  { key: 1, label: 'High', chipClass: 'bg-danger-soft text-danger' },
+  { key: 2, label: 'Medium', chipClass: 'bg-warning-soft text-dawn-deep' },
+  { key: 3, label: 'Low', chipClass: 'bg-haze text-ink-soft' },
 ]
 
 export function typeMeta(type: TaskType) {

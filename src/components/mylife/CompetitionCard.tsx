@@ -41,9 +41,9 @@ export default function CompetitionCard({ competition, onEdit }: CompetitionCard
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
               deadline.isOverdue
-                ? 'bg-red-100 text-red-700'
+                ? 'bg-danger-soft text-danger'
                 : deadline.isDueSoon
-                  ? 'bg-amber-100 text-amber-700'
+                  ? 'bg-warning-soft text-dawn-deep'
                   : 'bg-haze text-ink-soft'
             }`}
           >

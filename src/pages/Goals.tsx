@@ -42,7 +42,7 @@ export default function Goals() {
       </div>
 
       {isLoading && <p className="mb-4 text-sm text-mist">Loading your goals…</p>}
-      {error && <p className="mb-4 text-sm text-red-600">Could not load your goals. Try refreshing.</p>}
+      {error && <p className="mb-4 text-sm text-danger">Could not load your goals. Try refreshing.</p>}
 
       <div className="flex flex-col gap-6">
         {GOAL_HORIZONS.map((horizon) => {

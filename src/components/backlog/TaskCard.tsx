@@ -48,7 +48,7 @@ export default function TaskCard({ task, onEdit }: TaskCardProps) {
         {task.dueDate && (
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-              overdue ? 'bg-red-100 text-red-700' : 'bg-haze text-ink-soft'
+              overdue ? 'bg-danger-soft text-danger' : 'bg-haze text-ink-soft'
             }`}
           >
             {overdue && <AlertTriangle className="h-3 w-3" aria-hidden="true" />}

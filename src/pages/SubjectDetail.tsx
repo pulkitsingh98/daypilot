@@ -95,7 +95,7 @@ export default function SubjectDetail() {
         <h2 className="text-sm font-semibold text-ink">Sessions</h2>
         {sessionsLoading && <p className="mt-2 text-sm text-mist">Loading…</p>}
         {sessionsError && (
-          <p className="mt-2 text-sm text-red-600">Could not load sessions. Try refreshing.</p>
+          <p className="mt-2 text-sm text-danger">Could not load sessions. Try refreshing.</p>
         )}
 
         {!sessionsLoading && sessions.length === 0 && (

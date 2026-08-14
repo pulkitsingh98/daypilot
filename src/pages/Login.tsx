@@ -66,10 +66,14 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-haze p-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-haze p-4">
       <FloatingIconsBackground />
 
-      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-mist-line bg-paper-raised p-6">
+      <p className="relative z-10 mb-5 max-w-xs text-center font-display text-[28px] leading-tight text-ink sm:text-3xl">
+        The term you're <span className="italic text-dusk">actually</span> on top of.
+      </p>
+
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-mist-line bg-paper-raised p-6 shadow-[0_1px_0_0_var(--color-mist-line)]">
         <div className="flex items-center gap-2.5">
           <AppLogo size="md" />
           <h1 className="font-display text-2xl font-semibold text-ink">DayPilot</h1>
@@ -116,8 +120,8 @@ export default function Login() {
             />
           </label>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {info && <p className="text-sm text-emerald-600">{info}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
+          {info && <p className="text-sm text-success">{info}</p>}
 
           <button
             type="submit"

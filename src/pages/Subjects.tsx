@@ -42,7 +42,7 @@ export default function Subjects() {
       </div>
 
       {isLoading && <p className="text-sm text-mist">Loading your subjects…</p>}
-      {error && <p className="text-sm text-red-600">Could not load your subjects. Try refreshing.</p>}
+      {error && <p className="text-sm text-danger">Could not load your subjects. Try refreshing.</p>}
 
       {!isLoading && subjects.length === 0 && (
         <p className="text-sm text-mist">

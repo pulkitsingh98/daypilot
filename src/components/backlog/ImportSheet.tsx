@@ -194,7 +194,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                   </div>
                 </div>
                 {!hasTitleColumn && (
-                  <p className="mt-2 text-sm text-red-600">Map a column to Title to continue.</p>
+                  <p className="mt-2 text-sm text-danger">Map a column to Title to continue.</p>
                 )}
               </div>
             )}
@@ -244,7 +244,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                     return (
                       <tr
                         key={row.key}
-                        className={`border-b border-mist-line align-top ${titleMissing ? 'bg-red-50' : ''}`}
+                        className={`border-b border-mist-line align-top ${titleMissing ? 'bg-danger-soft' : ''}`}
                       >
                         <td className="px-3 py-2">
                           <input
@@ -254,7 +254,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             className="w-36 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           />
                           {titleMissing && (
-                            <p className="mt-1 text-xs text-red-600">Title required — row skipped</p>
+                            <p className="mt-1 text-xs text-danger">Title required — row skipped</p>
                           )}
                         </td>
                         <td className="px-3 py-2">
@@ -318,7 +318,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                           />
                           {row.dueDateWarning && (
-                            <p className="mt-1 w-32 text-xs text-amber-600">{row.dueDateWarning}</p>
+                            <p className="mt-1 w-32 text-xs text-dawn-deep">{row.dueDateWarning}</p>
                           )}
                         </td>
                         <td className="px-3 py-2">
@@ -326,7 +326,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
                             type="button"
                             onClick={() => removeRow(row.key)}
                             aria-label="Remove row"
-                            className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
+                            className="rounded-full p-1 text-mist hover:bg-haze hover:text-danger"
                           >
                             <X className="h-3.5 w-3.5" aria-hidden="true" />
                           </button>
@@ -343,7 +343,7 @@ export default function ImportSheet({ onClose }: ImportSheetProps) {
               {skippedCount > 0 ? `, ${skippedCount} skipped (missing title)` : ''}.
             </p>
 
-            {importError && <p className="text-sm text-red-600">{importError}</p>}
+            {importError && <p className="text-sm text-danger">{importError}</p>}
 
             <div className="mt-1 flex items-center justify-end gap-2">
               <button

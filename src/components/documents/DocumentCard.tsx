@@ -74,7 +74,7 @@ export default function DocumentCard({ appDocument, isExtracting, onReview, onCl
           onClick={handleDelete}
           disabled={deleteDocument.isPending}
           aria-label={`Delete ${appDocument.fileName}`}
-          className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-red-600 disabled:opacity-50"
+          className="shrink-0 rounded-full p-1 text-mist hover:bg-haze hover:text-danger disabled:opacity-50"
         >
           <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>

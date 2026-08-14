@@ -5,11 +5,11 @@ export const PROFICIENCY_LEVELS: {
   label: string
   chipClass: string
 }[] = [
-  { key: 1, label: 'Struggling', chipClass: 'bg-red-100 text-red-700' },
-  { key: 2, label: 'Shaky', chipClass: 'bg-orange-100 text-orange-700' },
-  { key: 3, label: 'Okay', chipClass: 'bg-amber-100 text-amber-700' },
-  { key: 4, label: 'Comfortable', chipClass: 'bg-sky-100 text-sky-700' },
-  { key: 5, label: 'Strong', chipClass: 'bg-emerald-100 text-emerald-700' },
+  { key: 1, label: 'Struggling', chipClass: 'bg-danger-soft text-danger' },
+  { key: 2, label: 'Shaky', chipClass: 'bg-danger-soft text-dusk-deep' },
+  { key: 3, label: 'Okay', chipClass: 'bg-warning-soft text-dawn-deep' },
+  { key: 4, label: 'Comfortable', chipClass: 'bg-haze text-ink-soft' },
+  { key: 5, label: 'Strong', chipClass: 'bg-success-soft text-success' },
 ]
 
 export function proficiencyMeta(level: ProficiencyLevel | null) {

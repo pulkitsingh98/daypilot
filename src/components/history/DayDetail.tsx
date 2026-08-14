@@ -15,8 +15,8 @@ interface DayDetailProps {
 }
 
 const STATUS_BADGE: Record<'done' | 'postponed' | 'cancelled' | 'not-completed', string> = {
-  done: 'bg-emerald-100 text-emerald-700',
-  postponed: 'bg-amber-100 text-amber-700',
+  done: 'bg-success-soft text-success',
+  postponed: 'bg-warning-soft text-dawn-deep',
   cancelled: 'bg-mist-line text-mist',
   'not-completed': 'bg-haze text-mist',
 }
@@ -65,7 +65,7 @@ export default function DayDetail({ dateIso, classesForDay, plan, tasksById, cla
                   <span className={done ? 'text-mist line-through' : 'text-ink'}>
                     {item.title}
                   </span>
-                  <span className="ml-1.5 text-xs text-mist">
+                  <span className="ml-1.5 font-mono text-xs text-mist">
                     {formatTimeLabel(item.start)}–{formatTimeLabel(item.end)}
                   </span>
                 </div>

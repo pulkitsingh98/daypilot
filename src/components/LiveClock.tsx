@@ -22,7 +22,7 @@ export default function LiveClock() {
   const timeLabel = now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 
   return (
-    <span className="shrink-0 text-xs font-medium text-mist sm:text-sm">
+    <span className="shrink-0 font-mono text-xs font-medium text-mist sm:text-sm">
       {dateLabel} · {timeLabel}
     </span>
   )

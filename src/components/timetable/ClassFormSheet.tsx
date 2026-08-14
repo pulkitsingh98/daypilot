@@ -250,7 +250,7 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
             )}
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
 
           <div className="mt-1 flex items-center justify-between gap-3">
             {initial ? (
@@ -258,7 +258,7 @@ export default function ClassFormSheet({ initial, defaultDay, onClose }: ClassFo
                 type="button"
                 onClick={handleDelete}
                 disabled={deleteClass.isPending}
-                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                className="text-sm font-medium text-danger hover:text-danger disabled:opacity-50"
               >
                 Delete
               </button>

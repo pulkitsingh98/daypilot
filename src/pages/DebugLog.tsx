@@ -91,10 +91,10 @@ function DebugEntryCard({ entry }: { entry: AIDebugEntry }) {
               {KIND_LABELS[entry.kind]}
             </span>
             {failed && (
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Error</span>
+              <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger">Error</span>
             )}
           </div>
-          <p className="mt-1 text-xs text-mist">{new Date(entry.timestamp).toLocaleString()}</p>
+          <p className="mt-1 font-mono text-xs text-mist">{new Date(entry.timestamp).toLocaleString()}</p>
         </div>
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-mist transition-transform ${open ? 'rotate-180' : ''}`}
@@ -279,7 +279,7 @@ function RawSection({ label, content, tone }: { label: string; content: string; 
       <p className="text-xs font-medium text-ink-soft">{label}</p>
       <pre
         className={`mt-1 max-h-72 overflow-auto rounded-lg border p-2 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words ${
-          tone === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-mist-line bg-haze text-ink-soft'
+          tone === 'error' ? 'border-danger/30 bg-danger-soft text-danger' : 'border-mist-line bg-haze text-ink-soft'
         }`}
       >
         {content}

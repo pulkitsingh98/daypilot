@@ -216,11 +216,11 @@ export default function Today() {
       {classesLoading && <p className="mb-4 text-sm text-mist">Loading your timetable…</p>}
 
       {(classesError || planError) && (
-        <p className="mb-4 text-sm text-red-600">Could not load today's data. Try refreshing.</p>
+        <p className="mb-4 text-sm text-danger">Could not load today's data. Try refreshing.</p>
       )}
 
       {error && (
-        <div className="mb-4 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-4 flex items-center gap-3 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
           <span>{error.message}</span>
           <button
             type="button"

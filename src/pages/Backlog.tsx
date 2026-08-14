@@ -113,7 +113,7 @@ export default function Backlog() {
       </div>
 
       {isLoading && <p className="mb-4 text-sm text-mist">Loading your backlog…</p>}
-      {error && <p className="mb-4 text-sm text-red-600">Could not load your backlog. Try refreshing.</p>}
+      {error && <p className="mb-4 text-sm text-danger">Could not load your backlog. Try refreshing.</p>}
 
       {view === 'timeline' ? (
         <TaskTimelineView tasks={filteredTasks} now={new Date()} />

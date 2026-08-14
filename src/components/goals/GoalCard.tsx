@@ -46,7 +46,7 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
       </div>
 
       {isZero && (
-        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-red-600">
+        <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-danger">
           <AlertTriangle className="h-3 w-3" aria-hidden="true" />
           <span>No time logged this week</span>
         </div>

@@ -30,14 +30,14 @@ function ConfidenceCell({
 }) {
   if (confidence === 'high') {
     return (
-      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+      <span className="rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-medium text-success">
         High
       </span>
     )
   }
   return (
     <div>
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+      <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-medium text-dawn-deep">
         <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" /> Low
       </span>
       {note && <p className="mt-1 w-32 text-xs text-mist">{note}</p>}
@@ -338,7 +338,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
-        <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <p className="mb-3 rounded-lg border border-warning/40 bg-warning-soft px-3 py-2 text-xs text-amber-800">
           AI reads documents well but not perfectly — double-check every row below, especially
           anything marked "Low" confidence, and edit whatever looks off before confirming.
         </p>
@@ -400,7 +400,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                       return (
                         <tr
                           key={row.key}
-                          className={`border-b border-mist-line align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
+                          className={`border-b border-mist-line align-top ${invalid ? 'bg-danger-soft' : !row.touched ? 'bg-warning-soft' : ''}`}
                         >
                           <td className="px-3 py-2">
                             <input
@@ -468,7 +468,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="button"
                               onClick={() => setTimetableRows((rows) => rows.filter((r) => r.key !== row.key))}
                               aria-label="Remove row"
-                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
+                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-danger"
                             >
                               <X className="h-3.5 w-3.5" aria-hidden="true" />
                             </button>
@@ -500,7 +500,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                       return (
                         <tr
                           key={row.key}
-                          className={`border-b border-mist-line align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
+                          className={`border-b border-mist-line align-top ${invalid ? 'bg-danger-soft' : !row.touched ? 'bg-warning-soft' : ''}`}
                         >
                           <td className="px-3 py-2">
                             <input
@@ -510,7 +510,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               className="w-24 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                             {row.subject.trim().length === 0 && (
-                              <p className="mt-1 text-xs text-red-600">Required</p>
+                              <p className="mt-1 text-xs text-danger">Required</p>
                             )}
                           </td>
                           <td className="px-3 py-2">
@@ -530,7 +530,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               className="w-36 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                             {row.title.trim().length === 0 && (
-                              <p className="mt-1 text-xs text-red-600">Required</p>
+                              <p className="mt-1 text-xs text-danger">Required</p>
                             )}
                           </td>
                           <td className="px-3 py-2">
@@ -550,7 +550,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               className="rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                             {row.date.trim().length === 0 && (
-                              <p className="mt-1 w-28 text-xs text-red-600">Date required</p>
+                              <p className="mt-1 w-28 text-xs text-danger">Date required</p>
                             )}
                           </td>
                           <td className="px-3 py-2">
@@ -574,7 +574,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="button"
                               onClick={() => setSessionRows((rows) => rows.filter((r) => r.key !== row.key))}
                               aria-label="Remove row"
-                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
+                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-danger"
                             >
                               <X className="h-3.5 w-3.5" aria-hidden="true" />
                             </button>
@@ -607,7 +607,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                       return (
                         <tr
                           key={row.key}
-                          className={`border-b border-mist-line align-top ${invalid ? 'bg-red-50' : !row.touched ? 'bg-amber-50' : ''}`}
+                          className={`border-b border-mist-line align-top ${invalid ? 'bg-danger-soft' : !row.touched ? 'bg-warning-soft' : ''}`}
                         >
                           <td className="px-3 py-2">
                             <input
@@ -617,7 +617,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               className="w-36 rounded-md border border-mist-line px-2 py-1 text-sm focus:border-dusk focus:outline-none"
                             />
                             {row.title.trim().length === 0 && (
-                              <p className="mt-1 text-xs text-red-600">Required</p>
+                              <p className="mt-1 text-xs text-danger">Required</p>
                             )}
                           </td>
                           <td className="px-3 py-2">
@@ -693,7 +693,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
                               type="button"
                               onClick={() => setMixedRows((rows) => rows.filter((r) => r.key !== row.key))}
                               aria-label="Remove row"
-                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-red-600"
+                              className="rounded-full p-1 text-mist hover:bg-haze hover:text-danger"
                             >
                               <X className="h-3.5 w-3.5" aria-hidden="true" />
                             </button>
@@ -726,7 +726,7 @@ export default function ExtractionReviewSheet({ appDocument, extraction, onClose
           <p className="mt-3 text-sm text-mist">{validCount} of {totalFound} ready to save.</p>
         )}
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
         <div className="mt-4 flex items-center justify-end gap-2">
           <button

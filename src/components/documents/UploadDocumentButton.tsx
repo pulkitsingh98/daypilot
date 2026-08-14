@@ -55,7 +55,7 @@ export default function UploadDocumentButton({ label = 'Upload', helperText, cla
       )}
 
       {flow.extractionError && (
-        <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="mt-2 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
           {flow.extractionError}
         </p>
       )}

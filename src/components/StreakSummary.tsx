@@ -50,18 +50,18 @@ export default function StreakSummary({ todayDone, todayTotal, streakDays, loadi
           {pct === 100 ? (
             <PartyPopper className="h-4 w-4" aria-hidden="true" />
           ) : (
-            <span className="text-[11px] font-semibold">{pct}%</span>
+            <span className="font-mono text-[11px] font-semibold">{pct}%</span>
           )}
         </span>
       </div>
 
       <div className="min-w-0">
         <p className="truncate text-xs font-semibold text-ink-soft">{statusLabel(pct, todayTotal)}</p>
-        <p className="text-[11px] text-mist">
+        <p className="font-mono text-[11px] text-mist">
           {todayDone} of {todayTotal} today
         </p>
         {streakDays > 0 && (
-          <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-dawn-deep">
+          <div className="mt-0.5 flex items-center gap-1 font-mono text-[11px] font-semibold text-dawn-deep">
             <Flame className="h-3 w-3" aria-hidden="true" />
             {streakDays}-day streak
           </div>

@@ -6,8 +6,8 @@ const LABEL_WIDTH = 140
 
 const STATUS_META: Record<TaskBarStatus, { bar: string; label: string }> = {
   'on-track': { bar: 'bg-dusk', label: 'On track' },
-  'due-soon': { bar: 'bg-amber-500', label: 'Due soon' },
-  overdue: { bar: 'bg-red-500', label: 'Overdue — still open' },
+  'due-soon': { bar: 'bg-warning', label: 'Due soon' },
+  overdue: { bar: 'bg-danger', label: 'Overdue — still open' },
 }
 
 interface TaskTimelineViewProps {

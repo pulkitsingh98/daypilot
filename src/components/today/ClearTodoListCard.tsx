@@ -71,8 +71,8 @@ export default function ClearTodoListCard({ dateIso, plan, onRegenerate, regener
         />
       </label>
 
-      {cleared && <p className="mt-2 text-sm text-emerald-700">Cleared. Thanks for the note.</p>}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {cleared && <p className="mt-2 text-sm text-success">Cleared. Thanks for the note.</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       {isEmpty && !cleared && <p className="mt-2 text-xs text-mist">Today's list is already empty.</p>}
 
       <div className="mt-2 flex flex-wrap gap-2">
@@ -88,7 +88,7 @@ export default function ClearTodoListCard({ dateIso, plan, onRegenerate, regener
           type="button"
           disabled={isEmpty || clearTodayPlan.isPending || submitFeedback.isPending}
           onClick={() => void handleClear()}
-          className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-danger/40 px-3 py-2 text-sm font-medium text-danger hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-50"
         >
           {clearTodayPlan.isPending ? 'Clearing…' : "Clear today's list"}
         </button>

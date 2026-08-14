@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Check, Clock3, X } from 'lucide-react'
 import type { ItemStatus } from '../lib/todayView'
 
-export const CLASS_STATUS_META: Record<'done' | 'postponed' | 'cancelled', { label: string; dot: string }> = {
-  done: { label: 'Done', dot: 'bg-dusk' },
-  postponed: { label: 'Postponed', dot: 'bg-amber-500' },
-  cancelled: { label: 'Cancelled', dot: 'bg-mist' },
+export const CLASS_STATUS_META: Record<'done' | 'postponed' | 'cancelled', { label: string; dot: string; text: string }> = {
+  done: { label: 'Done', dot: 'bg-success', text: 'text-success' },
+  postponed: { label: 'Postponed', dot: 'bg-warning', text: 'text-dawn-deep' },
+  cancelled: { label: 'Cancelled', dot: 'bg-mist', text: 'text-mist' },
 }
 
 interface ClassStatusControlProps {
@@ -51,7 +51,7 @@ export default function ClassStatusControl({ status, onSetStatus }: ClassStatusC
                 setOpen(false)
               }}
               className={`rounded px-2 py-1 text-left hover:bg-haze ${
-                status === s ? 'font-semibold text-dusk' : 'text-ink-soft'
+                status === s ? `font-semibold ${CLASS_STATUS_META[s].text}` : 'text-ink-soft'
               }`}
             >
               {CLASS_STATUS_META[s].label}
