@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Clock3, X } from 'lucide-react'
 import type { ItemStatus } from '../lib/todayView'
 
@@ -21,6 +21,14 @@ function formatRescheduledDate(dateIso: string): string {
 }
 
 /**
+ * A page can render dozens of these at once (Timetable's whole Upcoming
+ * list). Each instance registers a "close yourself" callback here on mount;
+ * opening a popover broadcasts to every other registered instance first, so
+ * only one is ever open across the whole page, not just within one control.
+ */
+const openInstances = new Set<() => void>()
+
+/**
  * A class occurrence's status control — tap to open Done/Postponed/Cancelled,
  * tap the active one again to reset to pending. Used on Today's timeline and
  * Timetable's Upcoming list, so a class marked postponed reads the same
@@ -33,11 +41,41 @@ export default function ClassStatusControl({ status, rescheduledDate, onSetStatu
   const [open, setOpen] = useState(false)
   const [datePromptOpen, setDatePromptOpen] = useState(false)
   const [dateInput, setDateInput] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  function closeAll() {
+    setOpen(false)
+    setDatePromptOpen(false)
+  }
+
+  // Register/unregister this instance's close function, and close on any
+  // click outside this control — covers both "another control opened
+  // elsewhere on the page" and "the user clicked away entirely."
+  useEffect(() => {
+    openInstances.add(closeAll)
+    function handleOutsideClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) closeAll()
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => {
+      openInstances.delete(closeAll)
+      document.removeEventListener('mousedown', handleOutsideClick)
+    }
+  }, [])
+
+  function openExclusive(next: () => void) {
+    for (const close of openInstances) {
+      if (close !== closeAll) close()
+    }
+    next()
+  }
 
   function openDatePrompt() {
     setDateInput(rescheduledDate ?? '')
-    setDatePromptOpen(true)
-    setOpen(false)
+    openExclusive(() => {
+      setOpen(false)
+      setDatePromptOpen(true)
+    })
   }
 
   function handleStatusPick(s: 'done' | 'postponed' | 'cancelled') {
@@ -65,13 +103,16 @@ export default function ClassStatusControl({ status, rescheduledDate, onSetStatu
   }
 
   return (
-    <div className="relative mt-0.5 shrink-0">
+    <div ref={containerRef} className="relative mt-0.5 shrink-0">
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation()
-          setDatePromptOpen(false)
-          setOpen((o) => !o)
+          if (open) {
+            setOpen(false)
+          } else {
+            openExclusive(() => setOpen(true))
+          }
         }}
         aria-label="Set class status"
         className={`flex h-4 w-4 items-center justify-center rounded-[4px] border-2 ${
@@ -90,7 +131,6 @@ export default function ClassStatusControl({ status, rescheduledDate, onSetStatu
           type="button"
           onClick={(e) => {
             e.stopPropagation()
-            setOpen(false)
             openDatePrompt()
           }}
           className="mt-0.5 block whitespace-nowrap text-[10px] font-medium text-dawn-deep hover:underline"
