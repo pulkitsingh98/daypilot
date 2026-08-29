@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
-import { useUpcomingSessions } from '../data/sessions'
+import { useUpcomingSessions, useSessionBackedSubjects } from '../data/sessions'
 import { useDailyPlansInRange, type DailyPlan } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
 import { useClassOccurrenceStatuses } from '../data/classOccurrences'
@@ -22,6 +22,7 @@ export default function History() {
 
   const { data: classes = [] } = useClasses()
   const { data: sessions = [] } = useUpcomingSessions()
+  const { data: sessionBackedSubjects = new Set<string>() } = useSessionBackedSubjects()
   const { data: tasks = [] } = useTasks()
   const {
     data: monthPlans = [],
@@ -51,7 +52,14 @@ export default function History() {
   const monthEndDate = new Date(`${monthEndIso}T00:00:00`)
   const forwardDaysAhead = Math.max(0, Math.ceil((monthEndDate.getTime() - now.getTime()) / 86_400_000) + 1)
   const classesByDateForward = useMemo(() => {
-    const occurrences = buildUpcomingOccurrences(classes, sessions, classOccurrences, now, forwardDaysAhead)
+    const occurrences = buildUpcomingOccurrences(
+      classes,
+      sessions,
+      classOccurrences,
+      now,
+      forwardDaysAhead,
+      sessionBackedSubjects,
+    )
     const map = new Map<string, ClassEntry[]>()
     for (const occ of occurrences) {
       const list = map.get(occ.dateIso) ?? []
@@ -59,7 +67,7 @@ export default function History() {
       map.set(occ.dateIso, list)
     }
     return map
-  }, [classes, sessions, classOccurrences, now, forwardDaysAhead])
+  }, [classes, sessions, sessionBackedSubjects, classOccurrences, now, forwardDaysAhead])
 
   function classesForDate(dateIso: string): ClassEntry[] {
     if (dateIso >= todayIso) return classesByDateForward.get(dateIso) ?? []

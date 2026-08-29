@@ -25,6 +25,19 @@ export interface ExcelImportSummary {
  * (timetable_blocks: user/subject/weekday/time — migration 0011; sessions:
  * user/subject/date/session_number — migration 0009), so running this
  * import again updates existing rows in place instead of duplicating them.
+ *
+ * Block and session are created together in one pass over the rows —
+ * deliberately NOT two separate passes (all blocks, then all sessions).
+ * Two passes meant a mid-import failure on the sessions pass (a bad row, a
+ * transient network blip) left every subject processed after that point
+ * with a timetable_block already committed from the first pass but no
+ * session at all. buildUpcomingOccurrences can't tell that apart from a
+ * subject that's genuinely session-less by design, so it fell back to
+ * projecting that "class" as recurring every week indefinitely — the
+ * ghost classes still showing up months past the actual term. One pass
+ * means a failure partway through leaves a clean prefix (every row before
+ * it fully created, block and session together) and a clean gap after it
+ * (nothing created yet) — never an orphaned block.
  */
 export async function importExcelSessions(rows: ParsedSessionRow[], userId: string): Promise<ExcelImportSummary> {
   const validRows = rows.filter((r) => !r.error && r.subject && r.date && r.startTime && r.endTime)
@@ -41,32 +54,30 @@ export async function importExcelSessions(rows: ParsedSessionRow[], userId: stri
 
   const seenPatterns = new Set<string>()
   let classesCreated = 0
+  let sessionsCreated = 0
 
   for (const r of validRows) {
+    const subjectId = await getSubjectId(r.subject)
+
     const dayKey = dayKeyForDate(new Date(`${r.date}T00:00:00`))
     const patternKey = `${r.subject}::${dayKey}::${r.startTime}::${r.endTime}`
-    if (seenPatterns.has(patternKey)) continue
-    seenPatterns.add(patternKey)
+    if (!seenPatterns.has(patternKey)) {
+      seenPatterns.add(patternKey)
+      const { error: blockError } = await supabase.from('timetable_blocks').upsert(
+        {
+          user_id: userId,
+          subject_id: subjectId,
+          day_of_week: dayOfWeekToIndex(dayKey),
+          start_time: r.startTime,
+          end_time: r.endTime,
+        },
+        { onConflict: 'user_id,subject_id,day_of_week,start_time,end_time' },
+      )
+      if (blockError) throw new Error(blockError.message)
+      classesCreated++
+    }
 
-    const subjectId = await getSubjectId(r.subject)
-    const { error } = await supabase.from('timetable_blocks').upsert(
-      {
-        user_id: userId,
-        subject_id: subjectId,
-        day_of_week: dayOfWeekToIndex(dayKey),
-        start_time: r.startTime,
-        end_time: r.endTime,
-      },
-      { onConflict: 'user_id,subject_id,day_of_week,start_time,end_time' },
-    )
-    if (error) throw new Error(error.message)
-    classesCreated++
-  }
-
-  let sessionsCreated = 0
-  for (const r of validRows) {
-    const subjectId = await getSubjectId(r.subject)
-    const { error } = await supabase.from('sessions').upsert(
+    const { error: sessionError } = await supabase.from('sessions').upsert(
       {
         user_id: userId,
         subject_id: subjectId,
@@ -80,7 +91,7 @@ export async function importExcelSessions(rows: ParsedSessionRow[], userId: stri
       },
       { onConflict: 'user_id,subject_id,scheduled_date,session_number' },
     )
-    if (error) throw new Error(error.message)
+    if (sessionError) throw new Error(sessionError.message)
     sessionsCreated++
   }
 

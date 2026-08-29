@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
-import { useUpcomingSessions } from '../data/sessions'
+import { useUpcomingSessions, useSessionBackedSubjects } from '../data/sessions'
 import { useClassOccurrenceStatuses } from '../data/classOccurrences'
 import { buildUpcomingOccurrences } from './sessionRollover'
 import { buildTimelineItems, getTimelineItemStatus } from './todayView'
@@ -32,6 +32,7 @@ export function useTodayStreak(): TodayStreak {
 
   const { data: classes = [], isLoading: classesLoading } = useClasses()
   const { data: sessions = [] } = useUpcomingSessions()
+  const { data: sessionBackedSubjects = new Set<string>() } = useSessionBackedSubjects()
   const { data: plan = null, isLoading: planLoading } = useDailyPlan(todayIso)
   const { data: tasks = [], isLoading: tasksLoading } = useTasks()
   const { data: classOccurrences = new Map(), isLoading: occurrencesLoading } = useClassOccurrenceStatuses(
@@ -45,10 +46,10 @@ export function useTodayStreak(): TodayStreak {
   // classes are actually happening today.
   const todayClasses = useMemo(
     () =>
-      buildUpcomingOccurrences(classes, sessions, classOccurrences, now, 1)
+      buildUpcomingOccurrences(classes, sessions, classOccurrences, now, 1, sessionBackedSubjects)
         .filter((o) => o.dateIso === todayIso)
         .map((o) => o.entry),
-    [classes, sessions, classOccurrences, now, todayIso],
+    [classes, sessions, sessionBackedSubjects, classOccurrences, now, todayIso],
   )
   const allTimelineItems = useMemo(() => buildTimelineItems(todayClasses, plan), [todayClasses, plan])
   const timelineItems = useMemo(

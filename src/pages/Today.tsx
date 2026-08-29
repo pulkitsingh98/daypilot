@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan, useToggleTimelineItemDone } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
-import { useUpcomingSessions } from '../data/sessions'
+import { useUpcomingSessions, useSessionBackedSubjects } from '../data/sessions'
 import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
 import { addDays, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
 import { buildUpcomingOccurrences } from '../lib/sessionRollover'
@@ -57,6 +57,7 @@ export default function Today() {
 
   const { data: classes = [], isLoading: classesLoading, error: classesError } = useClasses()
   const { data: sessions = [] } = useUpcomingSessions()
+  const { data: sessionBackedSubjects = new Set<string>() } = useSessionBackedSubjects()
   const { data: plan = null, isLoading: planLoading, error: planError } = useDailyPlan(todayKey)
   const { data: tomorrowPlan = null, isLoading: tomorrowPlanLoading } = useDailyPlan(tomorrowKey)
   const { data: tasks = [] } = useTasks()
@@ -84,10 +85,10 @@ export default function Today() {
   // this weekday" without pulling in slots that aren't actually meeting.
   const effectiveClasses = useMemo(
     () =>
-      buildUpcomingOccurrences(classes, sessions, classOccurrences, now, 2)
+      buildUpcomingOccurrences(classes, sessions, classOccurrences, now, 2, sessionBackedSubjects)
         .filter((o) => o.dateIso === effectiveDateIso)
         .map((o) => o.entry),
-    [classes, sessions, classOccurrences, now, effectiveDateIso],
+    [classes, sessions, sessionBackedSubjects, classOccurrences, now, effectiveDateIso],
   )
   const timelineItems = useMemo(
     () => buildTimelineItems(effectiveClasses, effectivePlan),

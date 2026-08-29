@@ -16,7 +16,7 @@ import { fetchRecurringActivities } from '../data/recurringActivities'
 import type { Competition, CompetitionStatus } from '../data/competitions'
 import { fetchCompetitions } from '../data/competitions'
 import type { UpcomingSession } from '../data/sessions'
-import { fetchUpcomingSessions } from '../data/sessions'
+import { fetchUpcomingSessions, fetchSessionBackedSubjects } from '../data/sessions'
 import { ACTIVE_STATUSES as ACTIVE_COMPETITION_STATUSES, getDeadlineInfo } from './competitions'
 import { fetchDailyPlan, fetchDailyPlansInRange } from '../data/dailyPlans'
 import { computeDayCompletion } from './dayCompletion'
@@ -215,10 +215,11 @@ function gatherTimetable(
   classOccurrences: ClassOccurrenceMap,
   today: Date,
   tomorrow: Date,
+  sessionBackedSubjects: ReadonlySet<string>,
 ): PlanningTimetableBlock[] {
   const todayIso = toIsoDate(today)
   const tomorrowIso = toIsoDate(tomorrow)
-  const occurrences = buildUpcomingOccurrences(classes, sessions, classOccurrences, today, 2)
+  const occurrences = buildUpcomingOccurrences(classes, sessions, classOccurrences, today, 2, sessionBackedSubjects)
 
   const blocks: PlanningTimetableBlock[] = []
   for (const occ of occurrences) {
@@ -395,6 +396,7 @@ export async function getPlanningContext(
     recurringActivities,
     upcomingSessions,
     allSessions,
+    sessionBackedSubjects,
     competitions,
     classOccurrences,
     existingTodayPlan,
@@ -416,6 +418,12 @@ export async function getPlanningContext(
     // with the Timetable page — which already fetches sessions unbounded —
     // about whether that class is actually meeting tomorrow.
     fetchUpcomingSessions(undefined, date),
+    // All-time, not just today-forward — a subject whose real sessions have
+    // already ALL happened (course concluded) needs to be told apart from
+    // one that never had session data at all, or gatherTimetable treats a
+    // finished course as still recurring weekly forever. See
+    // buildUpcomingOccurrences.
+    fetchSessionBackedSubjects(),
     fetchCompetitions(),
     fetchClassOccurrenceStatuses(todayIso, tomorrowIso),
     fetchDailyPlan(todayIso),
@@ -465,7 +473,7 @@ export async function getPlanningContext(
     tomorrow: tomorrowIso,
     planFrom,
     planUntil,
-    timetable: gatherTimetable(classes, allSessions, classOccurrences, date, tomorrow),
+    timetable: gatherTimetable(classes, allSessions, classOccurrences, date, tomorrow, sessionBackedSubjects),
     recurringActivities: recurringActivities.map(toPlanningRecurringActivity),
     upcomingSessions: upcomingSessions.map(toPlanningSession),
     openTasks,

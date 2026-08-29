@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FileSpreadsheet, GraduationCap } from 'lucide-react'
 import { useClasses, type ClassEntry } from '../data/timetableBlocks'
-import { useUpcomingSessions } from '../data/sessions'
+import { useUpcomingSessions, useSessionBackedSubjects } from '../data/sessions'
 import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
 import { useTasks, useToggleTaskDone, type Task } from '../data/tasks'
 import type { DayOfWeek } from '../data/types'
@@ -35,6 +35,7 @@ interface UpcomingDay {
 export default function Timetable() {
   const { data: classes = [], isLoading, error } = useClasses()
   const { data: sessions = [] } = useUpcomingSessions()
+  const { data: sessionBackedSubjects = new Set<string>() } = useSessionBackedSubjects()
   const { data: tasks = [] } = useTasks()
   const toggleTaskDone = useToggleTaskDone()
   const moodleTasks = useMemo(() => tasks.filter((t) => t.source === 'moodle'), [tasks])
@@ -100,7 +101,14 @@ export default function Timetable() {
   }
 
   const upcomingDays = useMemo(() => {
-    const occurrences = buildUpcomingOccurrences(classes, sessions, classOccurrences, now, projectionDays)
+    const occurrences = buildUpcomingOccurrences(
+      classes,
+      sessions,
+      classOccurrences,
+      now,
+      projectionDays,
+      sessionBackedSubjects,
+    )
     const byDate = new Map<string, ClassOccurrence[]>()
     for (const occ of occurrences) {
       const list = byDate.get(occ.dateIso) ?? []
@@ -123,7 +131,7 @@ export default function Timetable() {
       })
     }
     return days.sort((a, b) => a.dateIso.localeCompare(b.dateIso))
-  }, [classes, sessions, classOccurrences, now, projectionDays, moodleTasksByDate])
+  }, [classes, sessions, sessionBackedSubjects, classOccurrences, now, projectionDays, moodleTasksByDate])
 
   const visibleDays = useMemo(
     () => upcomingDays.filter((d) => d.dateIso <= displayEndIso),

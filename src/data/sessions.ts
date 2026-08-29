@@ -87,6 +87,30 @@ export function useUpcomingSessions(daysAhead?: number, now: Date = new Date()) 
   })
 }
 
+export const SESSION_BACKED_SUBJECTS_QUERY_KEY = ['sessions', 'session-backed-subjects'] as const
+
+/**
+ * Which subjects have EVER had session data — any date, any status, not
+ * just today-forward like fetchUpcomingSessions. buildUpcomingOccurrences
+ * needs this to tell "this course's real sessions have all already
+ * happened" apart from "this class was never given session data at all":
+ * the former should simply stop showing up once its last real session has
+ * passed, the latter is the manually-added, genuinely-recurring-forever
+ * case the weekly-projection fallback exists for. Without this signal, a
+ * subject whose last session already happened looked session-less to that
+ * fallback and got projected as meeting every week indefinitely — classes
+ * still showing up months after the actual term ended.
+ */
+export async function fetchSessionBackedSubjects(): Promise<Set<string>> {
+  const result = await supabase.from('sessions').select('subjects(name)')
+  const rows = unwrap<{ subjects: { name: string }[] | { name: string } | null }[]>(result)
+  return new Set(rows.map((r) => embeddedSubjectName(r.subjects)).filter((name) => name.length > 0))
+}
+
+export function useSessionBackedSubjects() {
+  return useQuery({ queryKey: SESSION_BACKED_SUBJECTS_QUERY_KEY, queryFn: fetchSessionBackedSubjects })
+}
+
 export const HAS_SESSIONS_QUERY_KEY = ['sessions', 'has-any'] as const
 
 /** Existence check, not a real fetch — for the "have you set anything up yet" onboarding checklist. */

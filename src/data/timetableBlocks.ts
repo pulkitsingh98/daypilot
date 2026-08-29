@@ -186,6 +186,15 @@ export function useDeleteClass() {
  * re-import is exactly what produced doubled-up entries on the Timetable
  * page before this fix — every session from the prior import stayed in the
  * database and a fresh import just added a second copy on top.
+ *
+ * A Postgres DELETE that an RLS policy blocks doesn't error — it just
+ * matches zero rows and reports success, which is indistinguishable from
+ * "there was nothing to delete" from the client's point of view. That would
+ * look exactly like "the button only cleared the local view": the query
+ * cache invalidates and the page goes empty, but the rows are still there
+ * server-side and reappear on the next fetch. So this re-counts each table
+ * after deleting and throws a real, visible error if anything survived,
+ * instead of reporting success on a silent no-op.
  */
 export function useClearTimetable() {
   const { session } = useAuth()
@@ -203,6 +212,18 @@ export function useClearTimetable() {
       if (blocksResult.error) throw new Error(blocksResult.error.message)
       if (sessionsResult.error) throw new Error(sessionsResult.error.message)
       if (occurrencesResult.error) throw new Error(occurrencesResult.error.message)
+
+      const [remainingBlocks, remainingSessions] = await Promise.all([
+        supabase.from('timetable_blocks').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('sessions').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+      ])
+      const leftoverBlocks = remainingBlocks.count ?? 0
+      const leftoverSessions = remainingSessions.count ?? 0
+      if (leftoverBlocks > 0 || leftoverSessions > 0) {
+        throw new Error(
+          `${leftoverBlocks} class${leftoverBlocks === 1 ? '' : 'es'} and ${leftoverSessions} session${leftoverSessions === 1 ? '' : 's'} could not be deleted — try signing out and back in, then clearing again.`,
+        )
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: TIMETABLE_QUERY_KEY })

@@ -63,6 +63,17 @@ function groupClassesBySubjectAndDay(classes: ClassEntry[]): Map<string, Map<Day
  * A subject with no session data at all (a manually added class, or a bare
  * timetable extraction with no reading list) still gets the classic weekly
  * projection, since that's the only information available for it.
+ *
+ * `sessions` here is typically today-forward only (fetchUpcomingSessions),
+ * so a subject whose real sessions are all in the past looks identical to
+ * one that never had session data — both are absent from it. Left alone,
+ * that subject would fall into the weekly-projection fallback below and
+ * keep "meeting" every week forever, long after its actual last session.
+ * `sessionBackedSubjects` (all-time, unbounded by date — see
+ * fetchSessionBackedSubjects) disambiguates the two: a subject in that set
+ * has real session data somewhere, just not upcoming, so it's excluded
+ * from the fallback and simply stops appearing once its sessions end,
+ * instead of projecting a class that isn't really happening anymore.
  */
 export function buildUpcomingOccurrences(
   classes: ClassEntry[],
@@ -70,6 +81,7 @@ export function buildUpcomingOccurrences(
   occurrenceStatuses: ClassOccurrenceMap,
   from: Date,
   daysAhead: number,
+  sessionBackedSubjects: ReadonlySet<string> = new Set(),
 ): ClassOccurrence[] {
   const classesBySubjectDay = groupClassesBySubjectAndDay(classes)
 
@@ -123,7 +135,7 @@ export function buildUpcomingOccurrences(
     const dateIso = toIsoDate(date)
     const dayKey = dayKeyForDate(date)
     const dayClasses = classes
-      .filter((c) => c.day === dayKey && !sessionsBySubject.has(c.subject))
+      .filter((c) => c.day === dayKey && !sessionsBySubject.has(c.subject) && !sessionBackedSubjects.has(c.subject))
       .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
 
     for (const entry of dayClasses) {
