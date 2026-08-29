@@ -62,7 +62,16 @@ export default async function handler(request: Request): Promise<Response> {
   try {
     const upstream = await fetch(parsed.toString(), {
       signal: controller.signal,
-      headers: { Accept: 'text/calendar, text/plain, */*' },
+      headers: {
+        Accept: 'text/calendar, text/plain, */*',
+        // Many institutional Moodle deployments sit behind bot/WAF protection
+        // that 403s any request without a normal-looking browser User-Agent —
+        // the default fetch UA (or lack of one) in a serverless runtime reads
+        // as a bot to those filters even though this is the calendar owner's
+        // own authorized, token-authenticated request.
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+      },
     })
 
     if (!upstream.ok) {
