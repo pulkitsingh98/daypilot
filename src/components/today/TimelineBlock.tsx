@@ -11,11 +11,13 @@ interface TimelineBlockProps {
   /** The task this block is linked to, if any — lets it be struck off directly from the timeline. */
   task?: Task
   status: ItemStatus
+  /** Only meaningful for a class item whose status is 'postponed'. */
+  rescheduledDate?: string | null
   /** Sets status for items with no linked task (classes, buffer/meal blocks). null resets to pending. Ignored when `task` is set — TaskDoneToggle handles those. */
-  onSetStatus: (status: Exclude<ItemStatus, 'pending'> | null) => void
+  onSetStatus: (status: Exclude<ItemStatus, 'pending'> | null, rescheduledDate?: string | null) => void
 }
 
-export default function TimelineBlock({ item, task, status, onSetStatus }: TimelineBlockProps) {
+export default function TimelineBlock({ item, task, status, rescheduledDate, onSetStatus }: TimelineBlockProps) {
   const [expanded, setExpanded] = useState(false)
   const isClass = item.kind === 'class'
   const done = status === 'done'
@@ -44,7 +46,7 @@ export default function TimelineBlock({ item, task, status, onSetStatus }: Timel
           {task ? (
             <TaskDoneToggle task={task} className="mt-0.5" />
           ) : isClass ? (
-            <ClassStatusControl status={status} onSetStatus={onSetStatus} />
+            <ClassStatusControl status={status} rescheduledDate={rescheduledDate} onSetStatus={onSetStatus} />
           ) : (
             <input
               type="checkbox"

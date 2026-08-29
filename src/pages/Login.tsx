@@ -6,6 +6,8 @@ import FloatingIconsBackground from '../components/FloatingIconsBackground'
 
 type Mode = 'signin' | 'signup'
 
+const ADMIN_EMAIL = 'pulkitsingh98@gmail.com'
+
 export default function Login() {
   const [mode, setMode] = useState<Mode>('signin')
   const [fullName, setFullName] = useState('')
@@ -14,6 +16,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false)
   const navigate = useNavigate()
 
   function switchMode() {
@@ -108,7 +111,18 @@ export default function Login() {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink-soft">Password</span>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-ink-soft">Password</span>
+              {mode === 'signin' && (
+                <button
+                  type="button"
+                  onClick={() => setForgotPasswordOpen(true)}
+                  className="text-xs font-medium text-dusk hover:text-dusk-deep"
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <input
               type="password"
               required
@@ -140,6 +154,36 @@ export default function Login() {
           {mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
         </button>
       </div>
+
+      {forgotPasswordOpen && (
+        <div
+          className="fixed inset-0 z-20 flex items-center justify-center bg-ink/40 p-4"
+          onClick={() => setForgotPasswordOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl border border-mist-line bg-paper-raised p-5 shadow-lg"
+          >
+            <h2 className="font-display text-lg font-semibold text-ink">Forgot your password?</h2>
+            <p className="mt-2 text-sm text-ink-soft">
+              DayPilot doesn't have a self-serve reset yet — contact the admin and they'll get you back in.
+            </p>
+            <a
+              href={`mailto:${ADMIN_EMAIL}`}
+              className="mt-3 block rounded-lg border border-mist-line bg-haze px-3 py-2 text-center text-sm font-medium text-ink hover:bg-mist-line/50"
+            >
+              {ADMIN_EMAIL}
+            </a>
+            <button
+              type="button"
+              onClick={() => setForgotPasswordOpen(false)}
+              className="mt-3 w-full rounded-lg px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

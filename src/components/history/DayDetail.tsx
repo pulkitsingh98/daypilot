@@ -50,7 +50,9 @@ export default function DayDetail({ dateIso, classesForDay, plan, tasksById, cla
       {items.length > 0 && (
         <ul className="mt-3 flex flex-col gap-1.5">
           {items.map((item) => {
-            const occurrenceStatus = item.classId ? classOccurrences.get(occurrenceKey(item.classId, dateIso)) : undefined
+            const occurrenceStatus = item.classId
+              ? classOccurrences.get(occurrenceKey(item.classId, dateIso))?.status
+              : undefined
             const done = wasTimelineItemCompletedOn(item, tasksById, completedItemKeys, classOccurrences, dateIso)
             const badgeKey: keyof typeof STATUS_BADGE =
               occurrenceStatus === 'postponed' || occurrenceStatus === 'cancelled'

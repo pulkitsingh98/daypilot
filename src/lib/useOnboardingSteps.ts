@@ -50,6 +50,14 @@ export function useOnboardingSteps(): OnboardingSteps {
         to: '/timetable',
       },
       {
+        key: 'moodle',
+        label: 'Connect your Moodle calendar (optional)',
+        description:
+          "Paste your Moodle \"Export calendar\" link in Settings to pull assignment deadlines straight into Timetable and your daily plan. It refreshes on its own a few hours after you open the app — or hit \"Sync now\" in Settings any time you want the latest deadlines right away.",
+        done: !!profile?.moodleIcsUrl,
+        to: '/settings',
+      },
+      {
         key: 'subjects',
         label: 'Add subjects & rate your proficiency',
         description: 'Rate how comfortable you are with each subject so prep time gets sized and spaced accordingly.',

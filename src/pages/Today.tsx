@@ -3,7 +3,7 @@ import { useClasses } from '../data/timetableBlocks'
 import { useDailyPlan, useToggleTimelineItemDone } from '../data/dailyPlans'
 import { useTasks } from '../data/tasks'
 import { useUpcomingSessions, useSessionBackedSubjects } from '../data/sessions'
-import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
+import { occurrenceKey, useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
 import { addDays, formatTimeLabel, formatTimeOfDay, toIsoDate, toMinutes } from '../lib/time'
 import { buildUpcomingOccurrences } from '../lib/sessionRollover'
 import { getLastPlanNudgeDate, setLastPlanNudgeDate } from '../lib/planNudge'
@@ -140,14 +140,23 @@ export default function Today() {
 
   function renderTimelineBlock(item: TimelineItem) {
     const task = item.taskId ? tasksById.get(item.taskId) : undefined
+    const rescheduledDate = item.classId
+      ? classOccurrences.get(occurrenceKey(item.classId, effectiveDateIso))?.rescheduledDate
+      : undefined
     return (
       <TimelineBlock
         item={item}
         task={task}
         status={itemStatus(item)}
-        onSetStatus={(status) => {
+        rescheduledDate={rescheduledDate}
+        onSetStatus={(status, rescheduledDate) => {
           if (item.classId) {
-            setClassOccurrenceStatus.mutate({ timetableBlockId: item.classId, dateIso: effectiveDateIso, status })
+            setClassOccurrenceStatus.mutate({
+              timetableBlockId: item.classId,
+              dateIso: effectiveDateIso,
+              status,
+              rescheduledDate,
+            })
           } else {
             toggleTimelineItemDone.mutate({ key: item.key, done: status === 'done' })
           }

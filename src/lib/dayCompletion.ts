@@ -24,7 +24,7 @@ export function isExcludedFromCompletion(
   dateIso: string,
 ): boolean {
   if (!item.classId) return false
-  const status = classOccurrences.get(occurrenceKey(item.classId, dateIso))
+  const status = classOccurrences.get(occurrenceKey(item.classId, dateIso))?.status
   return status === 'postponed' || status === 'cancelled'
 }
 
@@ -45,7 +45,7 @@ export function wasTimelineItemCompletedOn(
   dateIso: string,
 ): boolean {
   if (item.taskId) return wasTaskCompletedOn(tasksById.get(item.taskId), dateIso)
-  if (item.classId) return classOccurrences.get(occurrenceKey(item.classId, dateIso)) === 'done'
+  if (item.classId) return classOccurrences.get(occurrenceKey(item.classId, dateIso))?.status === 'done'
   return completedItemKeys.includes(item.key)
 }
 

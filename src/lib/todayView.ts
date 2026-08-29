@@ -77,7 +77,7 @@ export function getTimelineItemStatus(
   dateIso: string,
 ): ItemStatus {
   if (item.taskId) return tasksById.get(item.taskId)?.status === 'done' ? 'done' : 'pending'
-  if (item.classId) return classOccurrences.get(occurrenceKey(item.classId, dateIso)) ?? 'pending'
+  if (item.classId) return classOccurrences.get(occurrenceKey(item.classId, dateIso))?.status ?? 'pending'
   return completedItemKeys.includes(item.key) ? 'done' : 'pending'
 }
 

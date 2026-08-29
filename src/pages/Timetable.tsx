@@ -279,8 +279,8 @@ export default function Timetable() {
               </div>
             </div>
             <p className="mt-0.5 text-xs text-mist">
-              Mark a class postponed or cancelled and its reading rolls forward to the next time it
-              actually happens.
+              Mark a class postponed and say when it'll actually happen (or leave it unset for now)
+              — its reading moves with it. Cancel one and its reading rolls to the next real class.
             </p>
             {visibleDays.length === 0 ? (
               <p className="mt-2 text-sm text-mist">No upcoming classes.</p>
@@ -290,12 +290,18 @@ export default function Timetable() {
                   <div key={day.dateIso} className="rounded-xl border border-mist-line bg-paper-raised p-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-mist">{day.label}</p>
                     <ul className="mt-1.5 flex flex-col gap-2">
-                      {day.occurrences.map(({ entry, dateIso, status, session, timeUncertain }) => (
+                      {day.occurrences.map(({ entry, dateIso, status, rescheduledDate, session, timeUncertain }) => (
                         <li key={entry.id} className="flex items-start gap-2 text-sm">
                           <ClassStatusControl
                             status={status ?? 'pending'}
-                            onSetStatus={(next) =>
-                              setClassOccurrenceStatus.mutate({ timetableBlockId: entry.id, dateIso, status: next })
+                            rescheduledDate={rescheduledDate}
+                            onSetStatus={(next, nextRescheduledDate) =>
+                              setClassOccurrenceStatus.mutate({
+                                timetableBlockId: entry.id,
+                                dateIso,
+                                status: next,
+                                rescheduledDate: nextRescheduledDate,
+                              })
                             }
                           />
                           <button

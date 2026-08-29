@@ -4,11 +4,19 @@ import type { DayOfWeek } from '../data/types'
 import { occurrenceKey, type ClassOccurrenceMap, type ClassOccurrenceStatus } from '../data/classOccurrences'
 import { addDays, dayKeyForDate, toIsoDate, toMinutes } from './time'
 
+interface PendingReschedule {
+  entry: ClassEntry
+  targetDateIso: string
+  session: UpcomingSession | null
+}
+
 export interface ClassOccurrence {
   entry: ClassEntry
   dateIso: string
   /** null = default "scheduled, not yet marked" state. */
   status: ClassOccurrenceStatus | null
+  /** Only meaningful when status is 'postponed'. Null = postponed with no known date yet. */
+  rescheduledDate: string | null
   /** The session whose reading applies to this occurrence, if any — see buildUpcomingOccurrences for how this rolls forward past postponed/cancelled dates. */
   session: UpcomingSession | null
   /**
@@ -74,6 +82,16 @@ function groupClassesBySubjectAndDay(classes: ClassEntry[]): Map<string, Map<Day
  * has real session data somewhere, just not upcoming, so it's excluded
  * from the fallback and simply stops appearing once its sessions end,
  * instead of projecting a class that isn't really happening anymore.
+ *
+ * A postponed occurrence with a known `rescheduledDate` (see
+ * ClassOccurrenceInfo) gets a second, injected occurrence at that exact
+ * date instead of relying purely on the implicit rollover above — the
+ * session/reading that would have played at the original slot moves with
+ * it. That reschedule target is skipped if an occurrence already exists
+ * there (a manually-recurring class postponed onto one of its own future
+ * normal weekdays would otherwise double up), and the injected occurrence
+ * gets its own status looked up fresh, so marking it done/cancelled later
+ * works exactly like any other occurrence.
  */
 export function buildUpcomingOccurrences(
   classes: ClassEntry[],
@@ -96,6 +114,7 @@ export function buildUpcomingOccurrences(
   }
 
   const occurrences: ClassOccurrence[] = []
+  const pendingReschedules: PendingReschedule[] = []
 
   for (const [subject, subjectSessions] of sessionsBySubject) {
     const entryForSlot: (ClassEntry | null)[] = []
@@ -121,12 +140,30 @@ export function buildUpcomingOccurrences(
       const entry = entryForSlot[p]
       if (!entry) continue
       const dateIso = subjectSessions[p].scheduledDate
-      const status = occurrenceStatuses.get(occurrenceKey(entry.id, dateIso)) ?? null
+      const info = occurrenceStatuses.get(occurrenceKey(entry.id, dateIso))
+      const status = info?.status ?? null
       let session: UpcomingSession | null = null
-      if (status !== 'postponed' && status !== 'cancelled') {
+
+      if (status === 'postponed' && info?.rescheduledDate) {
+        // Spent here, not rolled forward naturally — found by identity
+        // (queue is a copy of subjectSessions, shifted from the front as
+        // earlier slots consume it) since an earlier postponed-without-a-date
+        // occurrence may still be sitting at the front waiting for the
+        // implicit rollover, so this session isn't necessarily there yet.
+        const queueIdx = queue.indexOf(subjectSessions[p])
+        const deferredSession = queueIdx >= 0 ? queue.splice(queueIdx, 1)[0] : null
+        pendingReschedules.push({ entry, targetDateIso: info.rescheduledDate, session: deferredSession })
+      } else if (status !== 'postponed' && status !== 'cancelled') {
         session = queue.shift() ?? null
       }
-      occurrences.push({ entry, dateIso, status, session, timeUncertain: uncertainForSlot[p] })
+      occurrences.push({
+        entry,
+        dateIso,
+        status,
+        rescheduledDate: info?.rescheduledDate ?? null,
+        session,
+        timeUncertain: uncertainForSlot[p],
+      })
     }
   }
 
@@ -139,9 +176,30 @@ export function buildUpcomingOccurrences(
       .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
 
     for (const entry of dayClasses) {
-      const status = occurrenceStatuses.get(occurrenceKey(entry.id, dateIso)) ?? null
-      occurrences.push({ entry, dateIso, status, session: null })
+      const info = occurrenceStatuses.get(occurrenceKey(entry.id, dateIso))
+      const status = info?.status ?? null
+      occurrences.push({ entry, dateIso, status, rescheduledDate: info?.rescheduledDate ?? null, session: null })
+      if (status === 'postponed' && info?.rescheduledDate) {
+        pendingReschedules.push({ entry, targetDateIso: info.rescheduledDate, session: null })
+      }
     }
+  }
+
+  // Inject each reschedule as its own occurrence at the target date, unless
+  // that exact (class, date) slot already exists there.
+  const existingSlots = new Set(occurrences.map((o) => occurrenceKey(o.entry.id, o.dateIso)))
+  for (const { entry, targetDateIso, session } of pendingReschedules) {
+    const targetKey = occurrenceKey(entry.id, targetDateIso)
+    if (existingSlots.has(targetKey)) continue
+    existingSlots.add(targetKey)
+    const targetInfo = occurrenceStatuses.get(targetKey)
+    occurrences.push({
+      entry,
+      dateIso: targetDateIso,
+      status: targetInfo?.status ?? null,
+      rescheduledDate: targetInfo?.rescheduledDate ?? null,
+      session,
+    })
   }
 
   occurrences.sort(
