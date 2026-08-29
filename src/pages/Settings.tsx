@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useProfile, useUpdateProfile, type AIProvider } from '../data/profiles'
 import { useClasses, useClearTimetable } from '../data/timetableBlocks'
 import { useClearTasks, useTasks } from '../data/tasks'
+import { useSyncMoodleCalendar } from '../data/moodleSync'
 import {
   clearLegacyLocalData,
   hasLegacyLocalData,
@@ -55,6 +56,8 @@ export default function Settings() {
       </div>
 
       <AISettingsCard />
+
+      <MoodleSyncCard />
 
       <ImportLocalDataCard />
 
@@ -219,6 +222,102 @@ function AISettingsCard() {
               use Gemini or Claude for PDF timetables/syllabi.
             </p>
           )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function formatSyncedAt(iso: string | null): string {
+  if (!iso) return 'Never synced'
+  return `Last synced ${new Date(iso).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })}`
+}
+
+function MoodleSyncCard() {
+  const { data: profile, isLoading } = useProfile()
+  const updateProfile = useUpdateProfile()
+  const syncMoodle = useSyncMoodleCalendar()
+  const [urlInput, setUrlInput] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [justImported, setJustImported] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (profile) setUrlInput(profile.moodleIcsUrl ?? '')
+  }, [profile])
+
+  function handleUrlBlur() {
+    const trimmed = urlInput.trim()
+    if (profile && trimmed !== (profile.moodleIcsUrl ?? '')) {
+      updateProfile.mutate({ moodleIcsUrl: trimmed || null })
+    }
+  }
+
+  async function handleSyncNow() {
+    const trimmed = urlInput.trim()
+    if (!trimmed) return
+    setError(null)
+    setJustImported(null)
+    try {
+      if (trimmed !== (profile?.moodleIcsUrl ?? '')) {
+        await updateProfile.mutateAsync({ moodleIcsUrl: trimmed })
+      }
+      const result = await syncMoodle.mutateAsync(trimmed)
+      setJustImported(result.imported)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not sync your Moodle calendar. Try again.')
+    }
+  }
+
+  const syncing = syncMoodle.isPending
+
+  return (
+    <div className="mt-6 rounded-xl border border-mist-line bg-paper-raised p-4">
+      <h2 className="text-sm font-semibold text-ink">Moodle calendar</h2>
+      <p className="mt-1 text-xs text-mist">
+        Paste your Moodle "Export calendar" link (Calendar → Export calendar on Moodle) to pull
+        assignment deadlines into your Timetable and daily plan automatically. This link contains
+        a personal access token — treat it like a password.
+      </p>
+
+      {isLoading || !profile ? (
+        <p className="mt-3 text-sm text-mist">Loading…</p>
+      ) : (
+        <div className="mt-3 flex flex-col gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-ink-soft">Calendar URL</span>
+            <input
+              type="password"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onBlur={handleUrlBlur}
+              placeholder="https://moodle.example.edu/calendar/export_execute.php?..."
+              className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
+            />
+          </label>
+
+          {error && <p className="text-sm text-danger">{error}</p>}
+          {justImported !== null && !error && (
+            <p className="text-sm text-success">
+              Synced — {justImported} item{justImported === 1 ? '' : 's'} from Moodle.
+            </p>
+          )}
+
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-mist">{formatSyncedAt(profile.moodleLastSyncedAt)}</p>
+            <button
+              type="button"
+              disabled={syncing || !urlInput.trim()}
+              onClick={() => void handleSyncNow()}
+              className="shrink-0 rounded-lg border border-mist-line px-3 py-2 text-sm font-medium text-ink-soft hover:bg-haze disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {syncing ? 'Syncing…' : 'Sync now'}
+            </button>
+          </div>
         </div>
       )}
     </div>

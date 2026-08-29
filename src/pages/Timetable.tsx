@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { FileSpreadsheet } from 'lucide-react'
+import { FileSpreadsheet, GraduationCap } from 'lucide-react'
 import { useClasses, type ClassEntry } from '../data/timetableBlocks'
 import { useUpcomingSessions } from '../data/sessions'
 import { useClassOccurrenceStatuses, useSetClassOccurrenceStatus } from '../data/classOccurrences'
+import { useTasks, useToggleTaskDone, type Task } from '../data/tasks'
 import type { DayOfWeek } from '../data/types'
 import { buildUpcomingOccurrences, type ClassOccurrence } from '../lib/sessionRollover'
 import { addDays, formatTimeLabel, toIsoDate } from '../lib/time'
@@ -28,12 +29,37 @@ interface UpcomingDay {
   dateIso: string
   label: string
   occurrences: ClassOccurrence[]
+  moodleItems: Task[]
 }
 
 export default function Timetable() {
   const { data: classes = [], isLoading, error } = useClasses()
   const { data: sessions = [] } = useUpcomingSessions()
+  const { data: tasks = [] } = useTasks()
+  const toggleTaskDone = useToggleTaskDone()
+  const moodleTasks = useMemo(() => tasks.filter((t) => t.source === 'moodle'), [tasks])
+  const openMoodleTasks = useMemo(
+    () =>
+      moodleTasks
+        .filter((t) => t.status !== 'done')
+        .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? '')),
+    [moodleTasks],
+  )
+  const [showMoodleSection, setShowMoodleSection] = useState(false)
   const now = useMemo(() => new Date(), [])
+  const todayIso = useMemo(() => toIsoDate(now), [now])
+  const moodleTasksByDate = useMemo(() => {
+    // Only today-forward — an overdue, undone Moodle deadline stays visible via the dedicated
+    // Moodle section below (sorted oldest-due-first) instead of cluttering Upcoming indefinitely.
+    const map = new Map<string, Task[]>()
+    for (const task of moodleTasks) {
+      if (!task.dueDate || task.status === 'done' || task.dueDate < todayIso) continue
+      const list = map.get(task.dueDate) ?? []
+      list.push(task)
+      map.set(task.dueDate, list)
+    }
+    return map
+  }, [moodleTasks, todayIso])
   const rangeEndIso = useMemo(() => {
     const fallbackEnd = new Date(now)
     fallbackEnd.setDate(fallbackEnd.getDate() + FALLBACK_PROJECTION_DAYS)
@@ -82,8 +108,9 @@ export default function Timetable() {
       byDate.set(occ.dateIso, list)
     }
 
+    const dateIsos = new Set([...byDate.keys(), ...moodleTasksByDate.keys()])
     const days: UpcomingDay[] = []
-    for (const [dateIso, dayOccurrences] of byDate) {
+    for (const dateIso of dateIsos) {
       days.push({
         dateIso,
         label: new Date(`${dateIso}T00:00:00`).toLocaleDateString(undefined, {
@@ -91,11 +118,12 @@ export default function Timetable() {
           month: 'short',
           day: 'numeric',
         }),
-        occurrences: dayOccurrences,
+        occurrences: byDate.get(dateIso) ?? [],
+        moodleItems: moodleTasksByDate.get(dateIso) ?? [],
       })
     }
     return days.sort((a, b) => a.dateIso.localeCompare(b.dateIso))
-  }, [classes, sessions, classOccurrences, now, projectionDays])
+  }, [classes, sessions, classOccurrences, now, projectionDays, moodleTasksByDate])
 
   const visibleDays = useMemo(
     () => upcomingDays.filter((d) => d.dateIso <= displayEndIso),
@@ -110,6 +138,18 @@ export default function Timetable() {
           <p className="mt-1 text-sm text-mist">Your classes, day by day.</p>
         </div>
         <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={() => setShowMoodleSection((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium ${
+              showMoodleSection
+                ? 'border-tide bg-tide text-paper-raised'
+                : 'border-tide/40 text-tide hover:bg-tide-soft'
+            }`}
+          >
+            <GraduationCap className="h-4 w-4" aria-hidden="true" />
+            Moodle{openMoodleTasks.length > 0 ? ` (${openMoodleTasks.length})` : ''}
+          </button>
           <button
             type="button"
             onClick={() => setExcelImportOpen(true)}
@@ -128,10 +168,57 @@ export default function Timetable() {
         </div>
       </div>
 
+      {showMoodleSection && (
+        <section className="mb-4 rounded-xl border border-tide/40 bg-tide-soft p-3">
+          <h2 className="text-sm font-semibold text-ink">From Moodle</h2>
+          <p className="mt-0.5 text-xs text-ink-soft">
+            Deadlines synced from your Moodle calendar export.{' '}
+            <a href="/settings" className="font-medium text-tide underline hover:no-underline">
+              Manage in Settings
+            </a>
+            .
+          </p>
+          {openMoodleTasks.length === 0 ? (
+            <p className="mt-2 text-sm text-mist">
+              No Moodle deadlines yet — add your calendar URL in Settings to sync them in.
+            </p>
+          ) : (
+            <ul className="mt-2 flex flex-col gap-2">
+              {openMoodleTasks.map((task) => (
+                <li key={task.id} className="flex items-start gap-2 rounded-lg bg-paper-raised p-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    onChange={() => toggleTaskDone.mutate({ id: task.id, done: true })}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-tide"
+                    aria-label={`Mark "${task.title}" done`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-ink">{task.title}</p>
+                    <p className="text-xs text-mist">
+                      {task.subject ? `${task.subject} · ` : ''}
+                      {task.dueDate && task.dueDate < todayIso ? (
+                        <span className="font-medium text-danger">
+                          Overdue — was due {new Date(`${task.dueDate}T00:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </span>
+                      ) : (
+                        task.dueDate &&
+                        `Due ${new Date(`${task.dueDate}T00:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                      )}
+                    </p>
+                    {task.notes && <p className="mt-0.5 text-xs text-mist">{task.notes}</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       {isLoading && <p className="text-sm text-mist">Loading your timetable…</p>}
       {error && <p className="text-sm text-danger">Could not load your timetable. Try refreshing.</p>}
 
-      {!isLoading && classes.length === 0 ? (
+      {!isLoading && classes.length === 0 && moodleTasks.length === 0 ? (
         <div className="rounded-xl border border-dashed border-mist-line bg-paper-raised p-6 text-center">
           <p className="text-sm font-medium text-ink-soft">No classes yet</p>
           <p className="mt-1 text-sm text-mist">
@@ -230,6 +317,22 @@ export default function Timetable() {
                         </li>
                       ))}
                     </ul>
+                    {day.moodleItems.length > 0 && (
+                      <ul className="mt-1.5 flex flex-col gap-1.5 border-t border-tide/20 pt-1.5">
+                        {day.moodleItems.map((task) => (
+                          <li key={task.id} className="flex items-start gap-2 text-sm">
+                            <GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-tide" aria-hidden="true" />
+                            <div className="min-w-0 flex-1">
+                              <span className="text-ink">{task.title}</span>
+                              <p className="text-xs text-tide">{task.subject || 'Moodle'}</p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-tide-soft px-2 py-0.5 text-xs font-medium text-tide">
+                              Moodle
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>

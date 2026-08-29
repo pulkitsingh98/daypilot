@@ -17,7 +17,7 @@ export type TaskType =
 
 export type TaskPriority = 1 | 2 | 3
 export type TaskStatus = 'open' | 'done' | 'deferred'
-export type TaskSource = 'manual' | 'quick-add' | 'document'
+export type TaskSource = 'manual' | 'quick-add' | 'document' | 'moodle'
 
 export interface Task {
   id: string

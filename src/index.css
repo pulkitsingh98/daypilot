@@ -31,6 +31,12 @@
   --color-warning: #d99a1b;
   --color-warning-soft: #f6e6c4;
 
+  /* A single cool color, deliberately outside the warm cream/orange system —
+     marks anything sourced from Moodle rather than the user's own timetable
+     import, so the two are never visually confusable at a glance. */
+  --color-tide: #1f6f78;
+  --color-tide-soft: #dbe9e8;
+
   --font-display: "Fraunces", ui-serif, Georgia, serif;
   --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
   /* Small, deliberate texture from the reference: chip labels, timestamps,

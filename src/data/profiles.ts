@@ -15,6 +15,8 @@ export interface Profile {
   aiProvider: AIProvider
   apiKey: string
   darkMode: boolean
+  moodleIcsUrl: string | null
+  moodleLastSyncedAt: string | null
 }
 
 const DEFAULTS = {
@@ -31,6 +33,8 @@ interface ProfileRow {
   ai_provider: string
   ai_api_key: string | null
   dark_mode: boolean
+  moodle_ics_url: string | null
+  moodle_last_synced_at: string | null
 }
 
 function fromRow(row: ProfileRow): Profile {
@@ -42,6 +46,8 @@ function fromRow(row: ProfileRow): Profile {
     aiProvider: VALID_PROVIDERS.includes(row.ai_provider as AIProvider) ? (row.ai_provider as AIProvider) : 'gemini',
     apiKey: row.ai_api_key ?? '',
     darkMode: row.dark_mode,
+    moodleIcsUrl: row.moodle_ics_url,
+    moodleLastSyncedAt: row.moodle_last_synced_at,
   }
 }
 
@@ -88,6 +94,7 @@ export function useUpdateProfile() {
       if (input.aiProvider !== undefined) patch.ai_provider = input.aiProvider
       if (input.apiKey !== undefined) patch.ai_api_key = input.apiKey
       if (input.darkMode !== undefined) patch.dark_mode = input.darkMode
+      if (input.moodleIcsUrl !== undefined) patch.moodle_ics_url = input.moodleIcsUrl
 
       const result = await supabase
         .from('profiles')

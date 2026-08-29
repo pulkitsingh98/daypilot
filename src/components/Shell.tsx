@@ -1,8 +1,11 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
+import { useMoodleAutoSync } from '../data/moodleSync'
 
 export default function Shell() {
+  useMoodleAutoSync()
+
   return (
     <div className="flex min-h-screen bg-paper">
       <Sidebar />
