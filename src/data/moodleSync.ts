@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { parseIcsEvents } from '../lib/icsImport'
-import { unwrapNullable } from './shared'
+import { unwrap } from './shared'
 import { resolveSubjectId, SUBJECTS_QUERY_KEY } from './subjects'
 import { TASKS_QUERY_KEY } from './tasks'
 import { PROFILE_QUERY_KEY, useProfile } from './profiles'
@@ -16,18 +16,30 @@ export interface MoodleSyncResult {
 }
 
 /**
- * Finds a subject whose course code matches (case-insensitive), for mapping
- * a Moodle CATEGORIES value like "DAMDMT4P25-B" onto the same subject the
- * Excel/document import already created. Falls back to lookup-or-create by
- * name using the raw code, so a course Moodle knows about before any
- * timetable import still gets a sensible (if unpolished) subject — the user
- * can rename it in Settings > Subjects once codes are backfilled elsewhere.
+ * Finds the subject whose own code is the *longest matching prefix* of a
+ * Moodle CATEGORIES value, e.g. "DAMDMT4P25-B" for a subject whose code is
+ * "DAMDM" — Moodle's course code is that short subject code plus a
+ * term/section suffix (T4P25-B here), not the bare code itself, so an exact
+ * match against subjects.code never fires. Longest-prefix (rather than
+ * first-match) means a subject coded "DAMDM" wins over one coded "DA" for
+ * the same category, if both existed. Falls back to lookup-or-create by the
+ * raw code (as its own subject) when no existing subject's code is a
+ * prefix — typically because that subject doesn't have a code set yet in
+ * Settings > Subjects.
  */
-async function resolveSubjectIdByCode(code: string, userId: string): Promise<string | null> {
-  const existing = await supabase.from('subjects').select('id').ilike('code', code).maybeSingle()
-  const found = unwrapNullable<{ id: string }>(existing)
-  if (found) return found.id
-  return resolveSubjectId(code, userId)
+function findSubjectIdByCodePrefix(
+  categories: string,
+  subjectsWithCodes: { id: string; code: string }[],
+): string | null {
+  const categoriesUpper = categories.trim().toUpperCase()
+  let best: { id: string; code: string } | null = null
+  for (const subject of subjectsWithCodes) {
+    const codeUpper = subject.code.toUpperCase()
+    if (categoriesUpper.startsWith(codeUpper) && (!best || codeUpper.length > best.code.length)) {
+      best = { id: subject.id, code: codeUpper }
+    }
+  }
+  return best?.id ?? null
 }
 
 /**
@@ -46,6 +58,9 @@ export async function syncMoodleCalendar(userId: string, icsUrl: string): Promis
   }
   const events = parseIcsEvents(await response.text())
 
+  const subjectsResult = await supabase.from('subjects').select('id, code').not('code', 'is', null)
+  const subjectsWithCodes = unwrap<{ id: string; code: string }[]>(subjectsResult)
+
   const subjectIdByCode = new Map<string, string | null>()
   const rows: Record<string, unknown>[] = []
   for (const event of events) {
@@ -54,7 +69,8 @@ export async function syncMoodleCalendar(userId: string, icsUrl: string): Promis
       if (subjectIdByCode.has(event.courseCode)) {
         subjectId = subjectIdByCode.get(event.courseCode)!
       } else {
-        subjectId = await resolveSubjectIdByCode(event.courseCode, userId)
+        subjectId = findSubjectIdByCodePrefix(event.courseCode, subjectsWithCodes)
+        if (!subjectId) subjectId = await resolveSubjectId(event.courseCode, userId)
         subjectIdByCode.set(event.courseCode, subjectId)
       }
     }
