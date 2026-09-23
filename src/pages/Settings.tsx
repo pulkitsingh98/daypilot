@@ -13,6 +13,7 @@ import {
 } from '../data/legacyImport'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { GROQ_MODELS, GROQ_DEFAULT_MODEL } from '../services/ai'
 
 export default function Settings() {
   return (
@@ -162,6 +163,12 @@ const PROVIDER_META: Record<AIProvider, { label: string; keyLabel: string; pdfSu
     pdfSupport: false,
     helpUrl: 'https://openrouter.ai/keys',
   },
+  groq: {
+    label: 'Groq (free, open-source model)',
+    keyLabel: 'Groq API key',
+    pdfSupport: false,
+    helpUrl: 'https://console.groq.com/keys',
+  },
 }
 
 function AISettingsCard() {
@@ -174,13 +181,21 @@ function AISettingsCard() {
   }, [profile])
 
   function handleProviderChange(provider: AIProvider) {
-    updateProfile.mutate({ aiProvider: provider })
+    // Clear a stale model override from a previous provider (e.g. a Groq
+    // model id) when switching away from Groq — every other provider is
+    // pinned to its own hardcoded default and ignores this field, but
+    // there's no reason to leave a mismatched value sitting in the row.
+    updateProfile.mutate({ aiProvider: provider, aiModel: provider === 'groq' ? GROQ_DEFAULT_MODEL : null })
   }
 
   function handleApiKeyBlur() {
     if (profile && apiKeyInput !== profile.apiKey) {
       updateProfile.mutate({ apiKey: apiKeyInput })
     }
+  }
+
+  function handleModelChange(model: string) {
+    updateProfile.mutate({ aiModel: model })
   }
 
   return (
@@ -234,7 +249,24 @@ function AISettingsCard() {
             />
           </label>
 
-          {profile.aiProvider === 'openrouter' && (
+          {profile.aiProvider === 'groq' && (
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-ink-soft">Model</span>
+              <select
+                value={profile.aiModel ?? GROQ_DEFAULT_MODEL}
+                onChange={(e) => handleModelChange(e.target.value)}
+                className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
+              >
+                {GROQ_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {(profile.aiProvider === 'openrouter' || profile.aiProvider === 'groq') && (
             <p className="text-xs text-mist">
               Uses a free, open-source model — no billing needed, and its usage limit is
               completely separate from Gemini's or OpenAI's. Good fallback if you keep hitting

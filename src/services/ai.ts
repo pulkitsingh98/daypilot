@@ -55,7 +55,14 @@ export async function callAI({ system, user, fileBase64, mimeType, kind = 'other
   const systemWithJsonInstruction = `${system}${JSON_ONLY_INSTRUCTION}`
 
   try {
-    const raw = await CALLERS[profile.aiProvider](apiKey, systemWithJsonInstruction, user, fileBase64, mimeType)
+    const raw = await CALLERS[profile.aiProvider](
+      apiKey,
+      systemWithJsonInstruction,
+      user,
+      fileBase64,
+      mimeType,
+      profile.aiModel,
+    )
     logAICall({ kind, system: systemWithJsonInstruction, user, response: raw, error: null })
     return raw
   } catch (err) {
@@ -71,6 +78,8 @@ type ProviderCaller = (
   user: string,
   fileBase64?: string,
   mimeType?: string,
+  /** Provider-specific model override from profiles.ai_model — ignored by every caller except the ones that expose a picker (currently just Groq). */
+  modelOverride?: string | null,
 ) => Promise<string>
 
 const CALLERS: Record<import('../data/profiles').AIProvider, ProviderCaller> = {
@@ -79,6 +88,7 @@ const CALLERS: Record<import('../data/profiles').AIProvider, ProviderCaller> = {
   openai: callOpenAI,
   perplexity: callPerplexity,
   openrouter: callOpenRouter,
+  groq: callGroq,
 }
 
 async function callGemini(
@@ -324,6 +334,48 @@ async function callOpenRouter(
       'HTTP-Referer': 'https://daypilot-omega.vercel.app',
       'X-Title': 'DayPilot',
     },
+  )
+}
+
+/**
+ * Groq's free tier (no card required — confirmed against the console's own
+ * "No charge today" language on the base plan) hosts several meaningfully
+ * different models, unlike every other provider here which is pinned to one
+ * hardcoded default because there was nothing worth choosing between. Kept
+ * as a small curated list rather than fetched live from Groq's /models
+ * endpoint, since that requires a key to call and would mean Settings
+ * showing a stale or empty list before one's entered. Confirmed live on
+ * console.groq.com's own model catalog before picking these three.
+ */
+export const GROQ_MODELS: { id: string; label: string }[] = [
+  { id: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B — strongest, recommended' },
+  { id: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B — smaller and faster' },
+  { id: 'qwen/qwen3.8-27b', label: 'Qwen 3.8 27B — supports image uploads' },
+]
+export const GROQ_DEFAULT_MODEL = GROQ_MODELS[0].id
+
+async function callGroq(
+  apiKey: string,
+  system: string,
+  user: string,
+  fileBase64?: string,
+  mimeType?: string,
+  modelOverride?: string | null,
+): Promise<string> {
+  return callOpenAICompatible(
+    'Groq',
+    'https://api.groq.com/openai/v1/chat/completions',
+    modelOverride || GROQ_DEFAULT_MODEL,
+    // Unlike OpenRouter/Perplexity (where response_format support varies by
+    // whichever third-party model is behind the endpoint), Groq's own docs
+    // explicitly confirm response_format: json_object across its models —
+    // safe to force here rather than only leaning on the prompt instruction.
+    true,
+    apiKey,
+    system,
+    user,
+    fileBase64,
+    mimeType,
   )
 }
 

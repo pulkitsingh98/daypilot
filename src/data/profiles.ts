@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { unwrap, unwrapNullable } from './shared'
 
-export type AIProvider = 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter'
+export type AIProvider = 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter' | 'groq'
 
-const VALID_PROVIDERS: AIProvider[] = ['gemini', 'claude', 'openai', 'perplexity', 'openrouter']
+const VALID_PROVIDERS: AIProvider[] = ['gemini', 'claude', 'openai', 'perplexity', 'openrouter', 'groq']
 
 export interface Profile {
   displayName: string | null
@@ -14,6 +14,8 @@ export interface Profile {
   sleepTime: string
   aiProvider: AIProvider
   apiKey: string
+  /** Provider-specific model override — null means "use that provider's default." Only Groq currently exposes a picker in Settings. */
+  aiModel: string | null
   darkMode: boolean
   moodleIcsUrl: string | null
   moodleLastSyncedAt: string | null
@@ -32,6 +34,7 @@ interface ProfileRow {
   sleep_time: string | null
   ai_provider: string
   ai_api_key: string | null
+  ai_model: string | null
   dark_mode: boolean
   moodle_ics_url: string | null
   moodle_last_synced_at: string | null
@@ -45,6 +48,7 @@ function fromRow(row: ProfileRow): Profile {
     sleepTime: row.sleep_time?.slice(0, 5) ?? DEFAULTS.sleepTime,
     aiProvider: VALID_PROVIDERS.includes(row.ai_provider as AIProvider) ? (row.ai_provider as AIProvider) : 'gemini',
     apiKey: row.ai_api_key ?? '',
+    aiModel: row.ai_model,
     darkMode: row.dark_mode,
     moodleIcsUrl: row.moodle_ics_url,
     moodleLastSyncedAt: row.moodle_last_synced_at,
@@ -93,6 +97,7 @@ export function useUpdateProfile() {
       if (input.sleepTime !== undefined) patch.sleep_time = input.sleepTime
       if (input.aiProvider !== undefined) patch.ai_provider = input.aiProvider
       if (input.apiKey !== undefined) patch.ai_api_key = input.apiKey
+      if (input.aiModel !== undefined) patch.ai_model = input.aiModel
       if (input.darkMode !== undefined) patch.dark_mode = input.darkMode
       if (input.moodleIcsUrl !== undefined) patch.moodle_ics_url = input.moodleIcsUrl
 
