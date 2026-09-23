@@ -78,6 +78,7 @@ const CALLERS: Record<import('../data/profiles').AIProvider, ProviderCaller> = {
   claude: callClaude,
   openai: callOpenAI,
   perplexity: callPerplexity,
+  openrouter: callOpenRouter,
 }
 
 async function callGemini(
@@ -196,6 +197,7 @@ async function callOpenAICompatible(
   user: string,
   fileBase64?: string,
   mimeType?: string,
+  extraHeaders?: Record<string, string>,
 ): Promise<string> {
   if (mimeType === 'application/pdf') {
     throw new AIError(
@@ -220,7 +222,11 @@ async function callOpenAICompatible(
 
   const response = await fetchOrThrow(url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${apiKey}`,
+      ...extraHeaders,
+    },
     body: JSON.stringify(body),
   })
 
@@ -277,6 +283,47 @@ async function callPerplexity(
     user,
     fileBase64,
     mimeType,
+  )
+}
+
+// A genuinely free, no-billing-required model on OpenRouter's `:free` tier —
+// unlike OpenAI (which has required a paid, billed account for new keys
+// since it dropped free trial credits) or Gemini's tightly-capped free
+// quota, this needs nothing but a free OpenRouter account and has its own
+// separate rate-limit pool. Pinned to one specific model rather than left
+// open, so behavior stays predictable — confirmed live against
+// openrouter.ai/api/v1/models before picking it. OpenRouter's free-model
+// catalog rotates fairly often (models get added and retired), so re-check
+// that list if this one starts 404ing.
+const OPENROUTER_FREE_MODEL = 'qwen/qwen3.8-27b:free'
+
+async function callOpenRouter(
+  apiKey: string,
+  system: string,
+  user: string,
+  fileBase64?: string,
+  mimeType?: string,
+): Promise<string> {
+  return callOpenAICompatible(
+    'OpenRouter',
+    'https://openrouter.ai/api/v1/chat/completions',
+    OPENROUTER_FREE_MODEL,
+    // Not every free model on OpenRouter honors response_format reliably —
+    // relying on the JSON-only prompt instruction (plus defensive parsing
+    // in parseJsonResponse) works across all of them, same reasoning as
+    // Perplexity below.
+    false,
+    apiKey,
+    system,
+    user,
+    fileBase64,
+    mimeType,
+    {
+      // Recommended by OpenRouter (not required) so requests are attributed
+      // to this app rather than showing up as anonymous in their dashboard.
+      'HTTP-Referer': 'https://daypilot-omega.vercel.app',
+      'X-Title': 'DayPilot',
+    },
   )
 }
 

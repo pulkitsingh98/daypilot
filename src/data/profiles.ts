@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { unwrap, unwrapNullable } from './shared'
 
-export type AIProvider = 'gemini' | 'claude' | 'openai' | 'perplexity'
+export type AIProvider = 'gemini' | 'claude' | 'openai' | 'perplexity' | 'openrouter'
 
-const VALID_PROVIDERS: AIProvider[] = ['gemini', 'claude', 'openai', 'perplexity']
+const VALID_PROVIDERS: AIProvider[] = ['gemini', 'claude', 'openai', 'perplexity', 'openrouter']
 
 export interface Profile {
   displayName: string | null

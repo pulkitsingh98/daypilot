@@ -151,11 +151,17 @@ function AccountCard() {
   )
 }
 
-const PROVIDER_META: Record<AIProvider, { label: string; keyLabel: string; pdfSupport: boolean }> = {
+const PROVIDER_META: Record<AIProvider, { label: string; keyLabel: string; pdfSupport: boolean; helpUrl?: string }> = {
   gemini: { label: 'Gemini (free tier)', keyLabel: 'Gemini API key', pdfSupport: true },
   claude: { label: 'Claude', keyLabel: 'Claude API key', pdfSupport: true },
   openai: { label: 'ChatGPT (OpenAI)', keyLabel: 'OpenAI API key', pdfSupport: false },
   perplexity: { label: 'Perplexity', keyLabel: 'Perplexity API key', pdfSupport: false },
+  openrouter: {
+    label: 'OpenRouter (free, open-source model)',
+    keyLabel: 'OpenRouter API key',
+    pdfSupport: false,
+    helpUrl: 'https://openrouter.ai/keys',
+  },
 }
 
 function AISettingsCard() {
@@ -205,7 +211,19 @@ function AISettingsCard() {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink-soft">{PROVIDER_META[profile.aiProvider].keyLabel}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-ink-soft">{PROVIDER_META[profile.aiProvider].keyLabel}</span>
+              {PROVIDER_META[profile.aiProvider].helpUrl && (
+                <a
+                  href={PROVIDER_META[profile.aiProvider].helpUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-medium text-dusk hover:text-dusk-deep"
+                >
+                  Get a free key
+                </a>
+              )}
+            </div>
             <input
               type="password"
               value={apiKeyInput}
@@ -215,6 +233,14 @@ function AISettingsCard() {
               className="rounded-lg border border-mist-line px-3 py-2 text-sm focus:border-dusk focus:outline-none"
             />
           </label>
+
+          {profile.aiProvider === 'openrouter' && (
+            <p className="text-xs text-mist">
+              Uses a free, open-source model — no billing needed, and its usage limit is
+              completely separate from Gemini's or OpenAI's. Good fallback if you keep hitting
+              quota errors elsewhere.
+            </p>
+          )}
 
           {!PROVIDER_META[profile.aiProvider].pdfSupport && (
             <p className="text-xs text-mist">
