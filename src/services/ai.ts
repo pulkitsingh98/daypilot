@@ -208,6 +208,7 @@ async function callOpenAICompatible(
   fileBase64?: string,
   mimeType?: string,
   extraHeaders?: Record<string, string>,
+  extraBody?: Record<string, unknown>,
 ): Promise<string> {
   if (mimeType === 'application/pdf') {
     throw new AIError(
@@ -227,6 +228,7 @@ async function callOpenAICompatible(
       { role: 'system', content: system },
       { role: 'user', content },
     ],
+    ...extraBody,
   }
   if (useJsonMode) body.response_format = { type: 'json_object' }
 
@@ -376,6 +378,24 @@ async function callGroq(
     user,
     fileBase64,
     mimeType,
+    undefined,
+    {
+      // Every model on Groq's free tier here is a "reasoning" model — its
+      // hidden chain-of-thought counts against the same output-token budget
+      // as the actual answer, and Groq's default max_completion_tokens is
+      // only 1024. A full day's plan (many time blocks plus a reasoning
+      // paragraph) plus that reasoning overhead blew straight past it,
+      // truncating the JSON mid-object and tripping Groq's own
+      // server-side "Failed to validate JSON" check. reasoning_effort:
+      // 'low' keeps the hidden reasoning pass short for what's fundamentally
+      // a structured-extraction task, not a hard reasoning problem, and
+      // reasoning_format: 'parsed' keeps any reasoning that does happen out
+      // of the content field entirely (required for JSON mode — 'raw' 400s
+      // outright) rather than mixed in with the JSON.
+      max_completion_tokens: 8000,
+      reasoning_effort: 'low',
+      reasoning_format: 'parsed',
+    },
   )
 }
 
